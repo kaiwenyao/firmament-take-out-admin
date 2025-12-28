@@ -34,8 +34,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Plus, ChevronDown, ChevronLeft, ChevronRight, Upload } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { Search, Plus, ChevronDown, Upload } from "lucide-react";
+import { useEffect, useState, useRef, Fragment } from "react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   getSetmealList,
   deleteSetmeal,
@@ -48,6 +57,9 @@ import {
   type SetmealFormData,
 } from "@/api/setmeal";
 import { getCategoryListByType, type Category } from "@/api/category";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 
 // 提取错误信息的辅助函数
@@ -642,13 +654,12 @@ export default function Setmeal() {
                           className="hover:bg-muted/30 transition-colors"
                         >
                           <TableCell>
-                            <input
-                              type="checkbox"
+                            <Checkbox
                               checked={selectedIds.includes(item.id)}
-                              onChange={(e) =>
-                                handleSelectItem(item.id, e.target.checked)
+                              onCheckedChange={(checked) =>
+                                handleSelectItem(item.id, checked === true)
                               }
-                              className="h-4 w-4 cursor-pointer"
+                              className="cursor-pointer"
                             />
                           </TableCell>
                           <TableCell className="font-medium">
@@ -694,14 +705,14 @@ export default function Setmeal() {
                               >
                                 修改
                               </button>
-                              <span className="text-muted-foreground/50">|</span>
+                              <Separator orientation="vertical" className="h-4" />
                               <button
                                 onClick={() => handleDelete(item)}
                                 className="text-destructive hover:text-destructive/80 hover:underline text-sm font-medium cursor-pointer transition-colors"
                               >
                                 删除
                               </button>
-                              <span className="text-muted-foreground/50">|</span>
+                              <Separator orientation="vertical" className="h-4" />
                               <button
                                 onClick={() => handleOpenConfirmDialog(item)}
                                 className={`${
@@ -724,8 +735,8 @@ export default function Setmeal() {
               {/* 分页组件 */}
               {total > 0 && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                  <div className="flex items-center gap-4">
-                    <div className="text-sm text-muted-foreground">
+                  <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
+                    <div className="text-sm text-muted-foreground whitespace-nowrap">
                       共 {total} 条记录，第 {page} / {totalPages} 页
                     </div>
                     <div className="flex items-center gap-2">
@@ -769,17 +780,18 @@ export default function Setmeal() {
                       </DropdownMenu>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(page - 1)}
-                      disabled={page === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      上一页
-                    </Button>
-                    <div className="flex items-center gap-1">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (page > 1) handlePageChange(page - 1);
+                          }}
+                          className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                        />
+                      </PaginationItem>
                       {Array.from({ length: totalPages }, (_, i) => i + 1)
                         .filter((p) => {
                           return (
@@ -792,38 +804,44 @@ export default function Setmeal() {
                           const prev = array[index - 1];
                           const showEllipsis = prev && p - prev > 1;
                           return (
-                            <div key={p} className="flex items-center gap-1">
+                            <Fragment key={p}>
                               {showEllipsis && (
-                                <span className="px-2 text-muted-foreground">
-                                  ...
-                                </span>
+                                <PaginationItem>
+                                  <PaginationEllipsis />
+                                </PaginationItem>
                               )}
-                              <Button
-                                variant={p === page ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => handlePageChange(p)}
-                                className={
-                                  p === page
-                                    ? "bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
-                                    : ""
-                                }
-                              >
-                                {p}
-                              </Button>
-                            </div>
+                              <PaginationItem>
+                                <PaginationLink
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handlePageChange(p);
+                                  }}
+                                  isActive={p === page}
+                                  className={
+                                    p === page
+                                      ? "bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
+                                      : ""
+                                  }
+                                >
+                                  {p}
+                                </PaginationLink>
+                              </PaginationItem>
+                            </Fragment>
                           );
                         })}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(page + 1)}
-                      disabled={page === totalPages}
-                    >
-                      下一页
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (page < totalPages) handlePageChange(page + 1);
+                          }}
+                          className={page === totalPages ? "pointer-events-none opacity-50" : ""}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
                 </div>
               )}
             </>
@@ -1084,7 +1102,7 @@ export default function Setmeal() {
               <Label htmlFor="form-description" className="text-sm">
                 套餐描述：
               </Label>
-              <textarea
+              <Textarea
                 id="form-description"
                 value={formData.description}
                 onChange={(e) =>
@@ -1092,7 +1110,7 @@ export default function Setmeal() {
                 }
                 placeholder="请输入套餐描述"
                 disabled={formLoading}
-                className="min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+                className="min-h-[100px]"
               />
             </div>
           </div>

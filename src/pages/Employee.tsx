@@ -35,8 +35,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Plus, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import { Search, Plus, ChevronDown } from "lucide-react";
+import { useEffect, useState, Fragment } from "react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   getEmployeeList,
   enableOrDisableEmployee,
@@ -407,7 +418,7 @@ export default function Employee() {
                             >
                               修改
                             </button>
-                            <span className="text-muted-foreground/50">|</span>
+                            <Separator orientation="vertical" className="h-4" />
                             <button
                               onClick={() => handleOpenConfirmDialog(item)}
                               className={`${
@@ -430,8 +441,8 @@ export default function Employee() {
             {/* 分页组件 */}
             {total > 0 && (
               <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                <div className="flex items-center gap-4">
-                  <div className="text-sm text-muted-foreground">
+                <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
+                  <div className="text-sm text-muted-foreground whitespace-nowrap">
                     共 {total} 条记录，第 {page} / {totalPages} 页
                   </div>
                   <div className="flex items-center gap-2">
@@ -467,20 +478,20 @@ export default function Employee() {
                     </DropdownMenu>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(page - 1)}
-                    disabled={page === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    上一页
-                  </Button>
-                  <div className="flex items-center gap-1">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (page > 1) handlePageChange(page - 1);
+                        }}
+                        className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
                     {Array.from({ length: totalPages }, (_, i) => i + 1)
                       .filter((p) => {
-                        // 只显示当前页附近的页码
                         return (
                           p === 1 ||
                           p === totalPages ||
@@ -488,42 +499,47 @@ export default function Employee() {
                         );
                       })
                       .map((p, index, array) => {
-                        // 处理省略号
                         const prev = array[index - 1];
                         const showEllipsis = prev && p - prev > 1;
                         return (
-                          <div key={p} className="flex items-center gap-1">
+                          <Fragment key={p}>
                             {showEllipsis && (
-                              <span className="px-2 text-muted-foreground">
-                                ...
-                              </span>
+                              <PaginationItem>
+                                <PaginationEllipsis />
+                              </PaginationItem>
                             )}
-                            <Button
-                              variant={p === page ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => handlePageChange(p)}
-                              className={
-                                p === page
-                                  ? "bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
-                                  : ""
-                              }
-                            >
-                              {p}
-                            </Button>
-                          </div>
+                            <PaginationItem>
+                              <PaginationLink
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handlePageChange(p);
+                                }}
+                                isActive={p === page}
+                                className={
+                                  p === page
+                                    ? "bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
+                                    : ""
+                                }
+                              >
+                                {p}
+                              </PaginationLink>
+                            </PaginationItem>
+                          </Fragment>
                         );
                       })}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(page + 1)}
-                    disabled={page === totalPages}
-                  >
-                    下一页
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (page < totalPages) handlePageChange(page + 1);
+                        }}
+                        className={page === totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             )}
           </>
@@ -654,42 +670,27 @@ export default function Employee() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="form-sex">性别</Label>
-              <div className="flex items-center gap-4">
+              <RadioGroup
+                value={formData.sex}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, sex: value })
+                }
+                disabled={formLoading}
+                className="flex items-center gap-4"
+              >
                 <div className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    id="sex-male"
-                    name="sex"
-                    value="1"
-                    checked={formData.sex === "1"}
-                    onChange={(e) =>
-                      setFormData({ ...formData, sex: e.target.value })
-                    }
-                    disabled={formLoading}
-                    className="h-4 w-4"
-                  />
+                  <RadioGroupItem value="1" id="sex-male" />
                   <Label htmlFor="sex-male" className="cursor-pointer">
                     男
                   </Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    id="sex-female"
-                    name="sex"
-                    value="0"
-                    checked={formData.sex === "0"}
-                    onChange={(e) =>
-                      setFormData({ ...formData, sex: e.target.value })
-                    }
-                    disabled={formLoading}
-                    className="h-4 w-4"
-                  />
+                  <RadioGroupItem value="0" id="sex-female" />
                   <Label htmlFor="sex-female" className="cursor-pointer">
                     女
                   </Label>
                 </div>
-              </div>
+              </RadioGroup>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="form-idNumber">身份证号</Label>

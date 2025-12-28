@@ -36,8 +36,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { Search, ChevronDown } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { useEffect, useState, Fragment } from "react";
 import {
   getOrderList,
   getOrderStatistics,
@@ -674,7 +685,7 @@ export default function Order() {
                                   >
                                     接单
                                   </button>
-                                  <span className="text-muted-foreground/50">|</span>
+                                  <Separator orientation="vertical" className="h-4" />
                                   <button
                                     onClick={() => handleOpenRejectDialog(item)}
                                     disabled={actionLoading}
@@ -694,7 +705,7 @@ export default function Order() {
                                   >
                                     派送
                                   </button>
-                                  <span className="text-muted-foreground/50">|</span>
+                                  <Separator orientation="vertical" className="h-4" />
                                   <button
                                     onClick={() => handleOpenCancelDialog(item)}
                                     disabled={actionLoading}
@@ -726,8 +737,8 @@ export default function Order() {
               {/* 分页组件 */}
               {total > 0 && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                  <div className="flex items-center gap-4">
-                    <div className="text-sm text-muted-foreground">
+                  <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
+                    <div className="text-sm text-muted-foreground whitespace-nowrap">
                       共 {total} 条记录，第 {page} / {totalPages} 页
                     </div>
                     <div className="flex items-center gap-2">
@@ -771,17 +782,18 @@ export default function Order() {
                       </DropdownMenu>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(page - 1)}
-                      disabled={page === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      上一页
-                    </Button>
-                    <div className="flex items-center gap-1">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (page > 1) handlePageChange(page - 1);
+                          }}
+                          className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                        />
+                      </PaginationItem>
                       {Array.from({ length: totalPages }, (_, i) => i + 1)
                         .filter((p) => {
                           return (
@@ -794,38 +806,44 @@ export default function Order() {
                           const prev = array[index - 1];
                           const showEllipsis = prev && p - prev > 1;
                           return (
-                            <div key={p} className="flex items-center gap-1">
+                            <Fragment key={p}>
                               {showEllipsis && (
-                                <span className="px-2 text-muted-foreground">
-                                  ...
-                                </span>
+                                <PaginationItem>
+                                  <PaginationEllipsis />
+                                </PaginationItem>
                               )}
-                              <Button
-                                variant={p === page ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => handlePageChange(p)}
-                                className={
-                                  p === page
-                                    ? "bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
-                                    : ""
-                                }
-                              >
-                                {p}
-                              </Button>
-                            </div>
+                              <PaginationItem>
+                                <PaginationLink
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handlePageChange(p);
+                                  }}
+                                  isActive={p === page}
+                                  className={
+                                    p === page
+                                      ? "bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
+                                      : ""
+                                  }
+                                >
+                                  {p}
+                                </PaginationLink>
+                              </PaginationItem>
+                            </Fragment>
                           );
                         })}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(page + 1)}
-                      disabled={page === totalPages}
-                    >
-                      下一页
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (page < totalPages) handlePageChange(page + 1);
+                          }}
+                          className={page === totalPages ? "pointer-events-none opacity-50" : ""}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
                 </div>
               )}
             </>
@@ -869,13 +887,13 @@ export default function Order() {
             <Label htmlFor="rejection-reason" className="text-sm">
               拒单原因：
             </Label>
-            <textarea
+            <Textarea
               id="rejection-reason"
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               placeholder="请输入拒单原因"
               disabled={actionLoading}
-              className="mt-2 min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+              className="mt-2 min-h-[100px]"
             />
           </div>
           <DialogFooter>
@@ -944,13 +962,13 @@ export default function Order() {
                 <Label htmlFor="custom-cancel-reason" className="text-sm">
                   请输入自定义原因：
                 </Label>
-                <textarea
+                <Textarea
                   id="custom-cancel-reason"
                   value={customCancelReason}
                   onChange={(e) => handleCustomCancelReasonChange(e.target.value)}
                   placeholder="请输入取消原因"
                   disabled={actionLoading}
-                  className="mt-2 min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+                  className="mt-2 min-h-[100px]"
                 />
               </div>
             )}

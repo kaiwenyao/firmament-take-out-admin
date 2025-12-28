@@ -34,8 +34,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Plus, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Separator } from "@/components/ui/separator";
+import { Search, Plus, ChevronDown } from "lucide-react";
+import { useEffect, useState, Fragment } from "react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   getCategoryList,
   enableOrDisableCategory,
@@ -512,14 +522,14 @@ export default function Category() {
                               >
                                 修改
                               </button>
-                              <span className="text-muted-foreground/50">|</span>
+                              <Separator orientation="vertical" className="h-4" />
                               <button
                                 onClick={() => handleDelete(item)}
                                 className="text-destructive hover:text-destructive/80 hover:underline text-sm font-medium cursor-pointer transition-colors"
                               >
                                 删除
                               </button>
-                              <span className="text-muted-foreground/50">|</span>
+                              <Separator orientation="vertical" className="h-4" />
                               <button
                                 onClick={() => handleOpenConfirmDialog(item)}
                                 className={`${
@@ -542,8 +552,8 @@ export default function Category() {
               {/* 分页组件 */}
               {total > 0 && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                  <div className="flex items-center gap-4">
-                    <div className="text-sm text-muted-foreground">
+                  <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
+                    <div className="text-sm text-muted-foreground whitespace-nowrap">
                       共 {total} 条记录，第 {page} / {totalPages} 页
                     </div>
                     <div className="flex items-center gap-2">
@@ -587,20 +597,20 @@ export default function Category() {
                       </DropdownMenu>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(page - 1)}
-                      disabled={page === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      上一页
-                    </Button>
-                    <div className="flex items-center gap-1">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (page > 1) handlePageChange(page - 1);
+                          }}
+                          className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                        />
+                      </PaginationItem>
                       {Array.from({ length: totalPages }, (_, i) => i + 1)
                         .filter((p) => {
-                          // 只显示当前页附近的页码
                           return (
                             p === 1 ||
                             p === totalPages ||
@@ -608,42 +618,47 @@ export default function Category() {
                           );
                         })
                         .map((p, index, array) => {
-                          // 处理省略号
                           const prev = array[index - 1];
                           const showEllipsis = prev && p - prev > 1;
                           return (
-                            <div key={p} className="flex items-center gap-1">
+                            <Fragment key={p}>
                               {showEllipsis && (
-                                <span className="px-2 text-muted-foreground">
-                                  ...
-                                </span>
+                                <PaginationItem>
+                                  <PaginationEllipsis />
+                                </PaginationItem>
                               )}
-                              <Button
-                                variant={p === page ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => handlePageChange(p)}
-                                className={
-                                  p === page
-                                    ? "bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
-                                    : ""
-                                }
-                              >
-                                {p}
-                              </Button>
-                            </div>
+                              <PaginationItem>
+                                <PaginationLink
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handlePageChange(p);
+                                  }}
+                                  isActive={p === page}
+                                  className={
+                                    p === page
+                                      ? "bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
+                                      : ""
+                                  }
+                                >
+                                  {p}
+                                </PaginationLink>
+                              </PaginationItem>
+                            </Fragment>
                           );
                         })}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(page + 1)}
-                      disabled={page === totalPages}
-                    >
-                      下一页
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (page < totalPages) handlePageChange(page + 1);
+                          }}
+                          className={page === totalPages ? "pointer-events-none opacity-50" : ""}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
                 </div>
               )}
             </>
