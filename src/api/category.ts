@@ -45,7 +45,7 @@ export interface CategoryFormData {
  * @param params 查询参数
  * @returns 分页数据
  */
-export const getCategoryList = async (
+export const getCategoryListAPI = async (
   params: CategoryPageQuery
 ): Promise<CategoryPageResponse> => {
   // GET 请求，将参数作为 query string
@@ -68,7 +68,7 @@ export const getCategoryList = async (
  * @param categoryId 分类ID
  * @returns 操作结果
  */
-export const enableOrDisableCategory = async (
+export const enableOrDisableCategoryAPI = async (
   status: number,
   categoryId: string
 ): Promise<void> => {
@@ -80,7 +80,7 @@ export const enableOrDisableCategory = async (
  * @param params 查询参数
  * @returns 分类列表
  */
-export const getCategoryListByType = async (
+export const getCategoryListByTypeAPI = async (
   params: CategoryListQuery
 ): Promise<Category[]> => {
   const queryParams = new URLSearchParams();
@@ -94,7 +94,7 @@ export const getCategoryListByType = async (
  * @param data 分类表单数据
  * @returns 操作结果
  */
-export const saveCategory = async (data: CategoryFormData): Promise<string> => {
+export const saveCategoryAPI = async (data: CategoryFormData): Promise<string> => {
   return request.post("/category", data);
 };
 
@@ -103,7 +103,7 @@ export const saveCategory = async (data: CategoryFormData): Promise<string> => {
  * @param data 分类表单数据
  * @returns 操作结果
  */
-export const updateCategory = async (data: CategoryFormData): Promise<void> => {
+export const updateCategoryAPI = async (data: CategoryFormData): Promise<void> => {
   return request.put("/category", data);
 };
 
@@ -112,7 +112,7 @@ export const updateCategory = async (data: CategoryFormData): Promise<void> => {
  * @param categoryId 分类ID
  * @returns 操作结果
  */
-export const deleteCategory = async (categoryId: string): Promise<void> => {
+export const deleteCategoryAPI = async (categoryId: string): Promise<void> => {
   return request.delete(`/category?id=${categoryId}`);
 };
 

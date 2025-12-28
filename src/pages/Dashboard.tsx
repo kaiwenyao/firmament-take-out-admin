@@ -13,16 +13,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  getBusinessData,
-  getOrderOverView,
-  getDishOverView,
-  getSetmealOverView,
+  getBusinessDataAPI,
+  getOrderOverViewAPI,
+  getDishOverViewAPI,
+  getSetmealOverViewAPI,
   type BusinessDataVO,
   type OrderOverViewVO,
   type DishOverViewVO,
   type SetmealOverViewVO,
 } from "@/api/dashboard";
-import { getOrderList, getOrderStatistics, type Order, type OrderPageQuery, type OrderStatistics } from "@/api/order";
+import { getOrderListAPI, getOrderStatisticsAPI, type Order, type OrderPageQuery, type OrderStatistics } from "@/api/order";
 import { Link } from "react-router-dom";
 import { Plus, Eye, EyeOff, FileText, Truck, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
@@ -44,7 +44,7 @@ const Dashboard = () => {
   // 获取今日数据
   const fetchBusinessData = async () => {
     try {
-      const data = await getBusinessData();
+      const data = await getBusinessDataAPI();
       setBusinessData(data);
     } catch (error) {
       console.error("获取今日数据失败:", error);
@@ -54,7 +54,7 @@ const Dashboard = () => {
   // 获取订单概览
   const fetchOrderOverView = async () => {
     try {
-      const data = await getOrderOverView();
+      const data = await getOrderOverViewAPI();
       setOrderOverView(data);
     } catch (error) {
       console.error("获取订单概览失败:", error);
@@ -64,7 +64,7 @@ const Dashboard = () => {
   // 获取订单统计数据（待接单、待派送）
   const fetchOrderStatistics = async () => {
     try {
-      const data = await getOrderStatistics();
+      const data = await getOrderStatisticsAPI();
       setOrderStatistics(data);
     } catch (error) {
       console.error("获取订单统计数据失败:", error);
@@ -74,7 +74,7 @@ const Dashboard = () => {
   // 获取菜品总览
   const fetchDishOverView = async () => {
     try {
-      const data = await getDishOverView();
+      const data = await getDishOverViewAPI();
       setDishOverView(data);
     } catch (error) {
       console.error("获取菜品总览失败:", error);
@@ -84,7 +84,7 @@ const Dashboard = () => {
   // 获取套餐总览
   const fetchSetmealOverView = async () => {
     try {
-      const data = await getSetmealOverView();
+      const data = await getSetmealOverViewAPI();
       setSetmealOverView(data);
     } catch (error) {
       console.error("获取套餐总览失败:", error);
@@ -100,7 +100,7 @@ const Dashboard = () => {
         pageSize: 10,
         status: activeStatus,
       };
-      const res = await getOrderList(queryParams);
+      const res = await getOrderListAPI(queryParams);
       setOrderList(res.records);
     } catch (error) {
       console.error("获取订单列表失败:", error);

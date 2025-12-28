@@ -50,13 +50,13 @@ import {
 } from "@/components/ui/pagination";
 import { useEffect, useState, Fragment } from "react";
 import {
-  getOrderList,
-  getOrderStatistics,
-  confirmOrder,
-  rejectOrder,
-  cancelOrder,
-  deliveryOrder,
-  completeOrder,
+  getOrderListAPI,
+  getOrderStatisticsAPI,
+  confirmOrderAPI,
+  rejectOrderAPI,
+  cancelOrderAPI,
+  deliveryOrderAPI,
+  completeOrderAPI,
   type Order,
   type OrderPageQuery,
   type OrderStatistics,
@@ -182,7 +182,7 @@ export default function Order() {
   useEffect(() => {
     const fetchStatistics = async () => {
       try {
-        const stats = await getOrderStatistics();
+        const stats = await getOrderStatisticsAPI();
         setStatistics(stats);
       } catch (error) {
         console.error("获取订单统计失败:", error);
@@ -197,7 +197,7 @@ export default function Order() {
       setLoading(true);
       try {
         console.log("发起请求，参数:", reqData);
-        const res = await getOrderList({
+        const res = await getOrderListAPI({
           ...reqData,
           number: reqData.number || undefined,
           phone: reqData.phone || undefined,
@@ -323,7 +323,7 @@ export default function Order() {
     if (!currentOrder) return;
     setActionLoading(true);
     try {
-      await confirmOrder({
+      await confirmOrderAPI({
         id: currentOrder.id,
         status: 3, // 接单后状态变为3(已接单/待派送)
       });
@@ -357,7 +357,7 @@ export default function Order() {
     }
     setActionLoading(true);
     try {
-      await rejectOrder({
+      await rejectOrderAPI({
         id: currentOrder.id,
         rejectionReason: rejectionReason.trim(),
       });
@@ -428,7 +428,7 @@ export default function Order() {
     
     setActionLoading(true);
     try {
-      await cancelOrder({
+      await cancelOrderAPI({
         id: currentOrder.id,
         cancelReason: cancelReason.trim(),
       });
@@ -454,7 +454,7 @@ export default function Order() {
   const handleDeliveryOrder = async (order: Order) => {
     setActionLoading(true);
     try {
-      await deliveryOrder(order.id);
+      await deliveryOrderAPI(order.id);
       toast.success("派送订单成功");
       reloadData();
       // 刷新统计
@@ -472,7 +472,7 @@ export default function Order() {
   const handleCompleteOrder = async (order: Order) => {
     setActionLoading(true);
     try {
-      await completeOrder(order.id);
+      await completeOrderAPI(order.id);
       toast.success("完成订单成功");
       reloadData();
       // 刷新统计

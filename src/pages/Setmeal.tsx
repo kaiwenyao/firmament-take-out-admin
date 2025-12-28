@@ -46,18 +46,18 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import {
-  getSetmealList,
-  deleteSetmeal,
-  enableOrDisableSetmeal,
-  getSetmealById,
-  saveSetmeal,
-  updateSetmeal,
+  getSetmealListAPI,
+  deleteSetmealAPI,
+  enableOrDisableSetmealAPI,
+  getSetmealByIdAPI,
+  saveSetmealAPI,
+  updateSetmealAPI,
   uploadImage,
   type Setmeal,
   type SetmealFormData,
   type SetmealPageQuery,
 } from "@/api/setmeal";
-import { getCategoryListByType, type Category } from "@/api/category";
+import { getCategoryListByTypeAPI, type Category } from "@/api/category";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
@@ -132,7 +132,7 @@ export default function Setmeal() {
   useEffect(() => {
     const fetchCategoryList = async () => {
       try {
-        const categories = await getCategoryListByType({ type: 2 }); // 2: 套餐分类
+        const categories = await getCategoryListByTypeAPI({ type: 2 }); // 2: 套餐分类
         setCategoryList(categories);
       } catch (error) {
         console.error("获取分类列表失败:", error);
@@ -147,7 +147,7 @@ export default function Setmeal() {
       setLoading(true);
       try {
         console.log("发起请求，参数:", reqData);
-        const res = await getSetmealList({
+        const res = await getSetmealListAPI({
           ...reqData,
           name: reqData.name || undefined,
           categoryId: reqData.categoryId,
@@ -235,7 +235,7 @@ export default function Setmeal() {
     const action = newStatus === 1 ? "起售" : "停售";
 
     try {
-      await enableOrDisableSetmeal(newStatus, currentSetmeal.id);
+      await enableOrDisableSetmealAPI(newStatus, currentSetmeal.id);
       setConfirmDialogOpen(false);
       setCurrentSetmeal(null);
       toast.success(`${action}套餐成功`);
@@ -261,7 +261,7 @@ export default function Setmeal() {
     if (!currentSetmeal) return;
 
     try {
-      await deleteSetmeal([currentSetmeal.id]);
+      await deleteSetmealAPI([currentSetmeal.id]);
       setDeleteDialogOpen(false);
       setCurrentSetmeal(null);
       toast.success("删除套餐成功");
@@ -290,7 +290,7 @@ export default function Setmeal() {
   // 确认批量删除
   const handleConfirmBatchDelete = async () => {
     try {
-      await deleteSetmeal(selectedIds);
+      await deleteSetmealAPI(selectedIds);
       setBatchDeleteDialogOpen(false);
       setSelectedIds([]);
       toast.success(`批量删除${selectedIds.length}个套餐成功`);
@@ -374,7 +374,7 @@ export default function Setmeal() {
     setFormLoading(true); // ✅ 立即显示骨架屏/转圈
 
     try {
-      const setmealDetail = await getSetmealById(setmeal.id);
+      const setmealDetail = await getSetmealByIdAPI(setmeal.id);
       setFormData({
         id: setmealDetail.id,
         name: setmealDetail.name,
@@ -462,7 +462,7 @@ export default function Setmeal() {
     try {
       if (isEditMode) {
         // 修改套餐
-        await updateSetmeal({
+        await updateSetmealAPI({
           ...formData,
         });
         toast.success("修改套餐成功");
@@ -477,7 +477,7 @@ export default function Setmeal() {
           status: formData.status,
           setmealDishes: formData.setmealDishes || [],
         };
-        await saveSetmeal(newSetmealData);
+        await saveSetmealAPI(newSetmealData);
         toast.success("新增套餐成功");
       }
       setFormDialogOpen(false);

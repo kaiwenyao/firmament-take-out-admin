@@ -58,7 +58,7 @@ export interface DishFormData {
  * @param params 查询参数
  * @returns 分页数据
  */
-export const getDishList = async (
+export const getDishListAPI = async (
   params: DishPageQuery
 ): Promise<DishPageResponse> => {
   const queryParams = new URLSearchParams();
@@ -82,7 +82,7 @@ export const getDishList = async (
  * @param data 菜品表单数据
  * @returns 操作结果
  */
-export const saveDish = async (data: DishFormData): Promise<string> => {
+export const saveDishAPI = async (data: DishFormData): Promise<string> => {
   return request.post("/dish", data);
 };
 
@@ -91,7 +91,7 @@ export const saveDish = async (data: DishFormData): Promise<string> => {
  * @param data 菜品表单数据
  * @returns 操作结果
  */
-export const updateDish = async (data: DishFormData): Promise<void> => {
+export const updateDishAPI = async (data: DishFormData): Promise<void> => {
   return request.put("/dish", data);
 };
 
@@ -100,7 +100,7 @@ export const updateDish = async (data: DishFormData): Promise<void> => {
  * @param dishIds 菜品ID数组
  * @returns 操作结果
  */
-export const deleteDish = async (dishIds: string[]): Promise<void> => {
+export const deleteDishAPI = async (dishIds: string[]): Promise<void> => {
   return request.delete(`/dish?ids=${dishIds.join(",")}`);
 };
 
@@ -110,7 +110,7 @@ export const deleteDish = async (dishIds: string[]): Promise<void> => {
  * @param dishId 菜品ID
  * @returns 操作结果
  */
-export const enableOrDisableDish = async (
+export const enableOrDisableDishAPI = async (
   status: number,
   dishId: string
 ): Promise<void> => {
@@ -122,7 +122,7 @@ export const enableOrDisableDish = async (
  * @param id 菜品ID
  * @returns 菜品信息
  */
-export const getDishById = async (id: string): Promise<Dish> => {
+export const getDishByIdAPI = async (id: string): Promise<Dish> => {
   return request.get(`/dish/${id}`);
 };
 

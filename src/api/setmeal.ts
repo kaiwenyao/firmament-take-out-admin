@@ -60,7 +60,7 @@ export interface SetmealFormData {
  * @param params 查询参数
  * @returns 分页数据
  */
-export const getSetmealList = async (
+export const getSetmealListAPI = async (
   params: SetmealPageQuery
 ): Promise<SetmealPageResponse> => {
   const queryParams = new URLSearchParams();
@@ -84,7 +84,7 @@ export const getSetmealList = async (
  * @param data 套餐表单数据
  * @returns 操作结果
  */
-export const saveSetmeal = async (data: SetmealFormData): Promise<string> => {
+export const saveSetmealAPI = async (data: SetmealFormData): Promise<string> => {
   return request.post("/setmeal", data);
 };
 
@@ -93,7 +93,7 @@ export const saveSetmeal = async (data: SetmealFormData): Promise<string> => {
  * @param data 套餐表单数据
  * @returns 操作结果
  */
-export const updateSetmeal = async (data: SetmealFormData): Promise<void> => {
+export const updateSetmealAPI = async (data: SetmealFormData): Promise<void> => {
   return request.put("/setmeal", data);
 };
 
@@ -102,7 +102,7 @@ export const updateSetmeal = async (data: SetmealFormData): Promise<void> => {
  * @param setmealIds 套餐ID数组
  * @returns 操作结果
  */
-export const deleteSetmeal = async (setmealIds: string[]): Promise<void> => {
+export const deleteSetmealAPI = async (setmealIds: string[]): Promise<void> => {
   return request.delete(`/setmeal?ids=${setmealIds.join(",")}`);
 };
 
@@ -112,7 +112,7 @@ export const deleteSetmeal = async (setmealIds: string[]): Promise<void> => {
  * @param setmealId 套餐ID
  * @returns 操作结果
  */
-export const enableOrDisableSetmeal = async (
+export const enableOrDisableSetmealAPI = async (
   status: number,
   setmealId: string
 ): Promise<void> => {
@@ -124,7 +124,7 @@ export const enableOrDisableSetmeal = async (
  * @param id 套餐ID
  * @returns 套餐信息
  */
-export const getSetmealById = async (id: string): Promise<Setmeal> => {
+export const getSetmealByIdAPI = async (id: string): Promise<Setmeal> => {
   return request.get(`/setmeal/${id}`);
 };
 

@@ -19,7 +19,7 @@ export interface EmployeeLoginVO {
  * @param data 登录数据
  * @returns 登录响应数据
  */
-export const employeeLogin = async (
+export const employeeLoginAPI = async (
   data: EmployeeLoginDTO
 ): Promise<EmployeeLoginVO> => {
   return request.post("/employee/login", data);
@@ -28,7 +28,7 @@ export const employeeLogin = async (
 /**
  * 员工登出
  */
-export const employeeLogout = async (): Promise<void> => {
+export const employeeLogoutAPI = async (): Promise<void> => {
   try {
     // 调用后端登出接口
     await request.post("/employee/logout");

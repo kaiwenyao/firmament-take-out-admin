@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { User, Lock } from "lucide-react";
-import { employeeLogin, type EmployeeLoginDTO } from "@/api/auth";
+import { employeeLoginAPI, type EmployeeLoginDTO } from "@/api/auth";
 import { toast } from "sonner";
 import loginImage from "@/assets/imgs/login.png";
 
@@ -38,7 +38,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await employeeLogin(formData);
+      const response = await employeeLoginAPI(formData);
       
       // 保存 token 到 localStorage
       if (response.token) {

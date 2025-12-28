@@ -25,8 +25,8 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { employeeLogout } from "@/api/auth";
-import { getShopStatus, setShopStatus } from "@/api/shop";
+import { employeeLogoutAPI } from "@/api/auth";
+import { getShopStatusAPI, setShopStatusAPI } from "@/api/shop";
 import { updatePasswordAPI, type PasswordEditDTO } from "@/api/employee";
 import { toast } from "sonner";
 
@@ -52,28 +52,26 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
   const [passwordFormTouched, setPasswordFormTouched] = useState<Record<string, boolean>>({}); // 跟踪字段是否被触摸过
   const [passwordFormLoading, setPasswordFormLoading] = useState(false);
   
-  // 获取店铺营业状态
-  const fetchShopStatus = async () => {
-    setStatusLoading(true);
-    try {
-      const status = await getShopStatus();
-      setShopStatusState(status);
-    } catch (error) {
-      console.error("获取店铺营业状态失败:", error);
-      // 失败时默认为营业中
-      setShopStatusState(1);
-    } finally {
-      setStatusLoading(false);
-    }
-  };
-
-  // 组件挂载时获取状态
+  // 组件挂载时获取店铺营业状态
   useEffect(() => {
+    const fetchShopStatus = async () => {
+      setStatusLoading(true);
+      try {
+        const status = await getShopStatusAPI();
+        setShopStatusState(status);
+      } catch (error) {
+        console.error("获取店铺营业状态失败:", error);
+        // 失败时默认为营业中
+        setShopStatusState(1);
+      } finally {
+        setStatusLoading(false);
+      }
+    };
     fetchShopStatus();
   }, []);
 
   const handleLogout = async () => {
-    await employeeLogout();
+    await employeeLogoutAPI();
     toast.success("已退出登录");
     navigate("/login", { replace: true });
   };
@@ -82,7 +80,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
   const handleSetStatus = async (status: number) => {
     setLoading(true);
     try {
-      await setShopStatus(status);
+      await setShopStatusAPI(status);
       setShopStatusState(status);
       setStatusDialogOpen(false);
       toast.success(`已设置为${status === 1 ? "营业中" : "打烊中"}`);

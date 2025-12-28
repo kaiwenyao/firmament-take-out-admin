@@ -92,7 +92,7 @@ const formatDateTimeForBackend = (dateTimeLocal: string): string => {
  * @param params 查询参数
  * @returns 分页数据
  */
-export const conditionSearchOrder = async (
+export const conditionSearchOrderAPI = async (
   params: OrderPageQuery
 ): Promise<OrderPageResponse> => {
   const queryParams = new URLSearchParams();
@@ -127,18 +127,18 @@ export const conditionSearchOrder = async (
  * @param params 查询参数
  * @returns 分页数据
  */
-export const getOrderList = async (
+export const getOrderListAPI = async (
   params: OrderPageQuery
 ): Promise<OrderPageResponse> => {
   // 使用 conditionSearch 接口
-  return conditionSearchOrder(params);
+  return conditionSearchOrderAPI(params);
 };
 
 /**
  * 各个状态的订单数量统计
  * @returns 订单统计信息
  */
-export const getOrderStatistics = async (): Promise<OrderStatistics> => {
+export const getOrderStatisticsAPI = async (): Promise<OrderStatistics> => {
   return request.get("/order/statistics");
 };
 
@@ -147,7 +147,7 @@ export const getOrderStatistics = async (): Promise<OrderStatistics> => {
  * @param id 订单ID
  * @returns 订单详情
  */
-export const getOrderDetails = async (id: string): Promise<Order> => {
+export const getOrderDetailsAPI = async (id: string): Promise<Order> => {
   return request.get(`/order/details/${id}`);
 };
 
@@ -156,7 +156,7 @@ export const getOrderDetails = async (id: string): Promise<Order> => {
  * @param data 接单数据
  * @returns 操作结果
  */
-export const confirmOrder = async (data: OrderConfirmData): Promise<void> => {
+export const confirmOrderAPI = async (data: OrderConfirmData): Promise<void> => {
   return request.put("/order/confirm", data);
 };
 
@@ -165,7 +165,7 @@ export const confirmOrder = async (data: OrderConfirmData): Promise<void> => {
  * @param data 拒单数据
  * @returns 操作结果
  */
-export const rejectOrder = async (data: OrderRejectionData): Promise<void> => {
+export const rejectOrderAPI = async (data: OrderRejectionData): Promise<void> => {
   return request.put("/order/rejection", data);
 };
 
@@ -174,7 +174,7 @@ export const rejectOrder = async (data: OrderRejectionData): Promise<void> => {
  * @param data 取消订单数据
  * @returns 操作结果
  */
-export const cancelOrder = async (data: OrderCancelData): Promise<void> => {
+export const cancelOrderAPI = async (data: OrderCancelData): Promise<void> => {
   return request.put("/order/cancel", data);
 };
 
@@ -183,7 +183,7 @@ export const cancelOrder = async (data: OrderCancelData): Promise<void> => {
  * @param id 订单ID
  * @returns 操作结果
  */
-export const deliveryOrder = async (id: string): Promise<void> => {
+export const deliveryOrderAPI = async (id: string): Promise<void> => {
   return request.put(`/order/delivery/${id}`);
 };
 
@@ -192,7 +192,7 @@ export const deliveryOrder = async (id: string): Promise<void> => {
  * @param id 订单ID
  * @returns 操作结果
  */
-export const completeOrder = async (id: string): Promise<void> => {
+export const completeOrderAPI = async (id: string): Promise<void> => {
   return request.put(`/order/complete/${id}`);
 };
 

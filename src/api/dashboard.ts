@@ -34,7 +34,7 @@ export interface SetmealOverViewVO {
  * 获取今日数据概览
  * @returns 今日数据
  */
-export const getBusinessData = async (): Promise<BusinessDataVO> => {
+export const getBusinessDataAPI = async (): Promise<BusinessDataVO> => {
   return request.get("/workspace/businessData");
 };
 
@@ -42,7 +42,7 @@ export const getBusinessData = async (): Promise<BusinessDataVO> => {
  * 获取订单概览
  * @returns 订单概览数据
  */
-export const getOrderOverView = async (): Promise<OrderOverViewVO> => {
+export const getOrderOverViewAPI = async (): Promise<OrderOverViewVO> => {
   return request.get("/workspace/overviewOrders");
 };
 
@@ -50,7 +50,7 @@ export const getOrderOverView = async (): Promise<OrderOverViewVO> => {
  * 获取菜品总览
  * @returns 菜品总览数据
  */
-export const getDishOverView = async (): Promise<DishOverViewVO> => {
+export const getDishOverViewAPI = async (): Promise<DishOverViewVO> => {
   return request.get("/workspace/overviewDishes");
 };
 
@@ -58,7 +58,7 @@ export const getDishOverView = async (): Promise<DishOverViewVO> => {
  * 获取套餐总览
  * @returns 套餐总览数据
  */
-export const getSetmealOverView = async (): Promise<SetmealOverViewVO> => {
+export const getSetmealOverViewAPI = async (): Promise<SetmealOverViewVO> => {
   return request.get("/workspace/overviewSetmeals");
 };
 

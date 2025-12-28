@@ -47,11 +47,11 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import {
-  getCategoryList,
-  enableOrDisableCategory,
-  saveCategory,
-  updateCategory,
-  deleteCategory,
+  getCategoryListAPI,
+  enableOrDisableCategoryAPI,
+  saveCategoryAPI,
+  updateCategoryAPI,
+  deleteCategoryAPI,
   type Category,
   type CategoryFormData,
   type CategoryPageQuery,
@@ -136,7 +136,7 @@ export default function Category() {
       setLoading(true);
       try {
         console.log("发起请求，参数:", reqData);
-        const res = await getCategoryList({
+        const res = await getCategoryListAPI({
           ...reqData,
           name: reqData.name || undefined,
           type: reqData.type || undefined,
@@ -202,7 +202,7 @@ export default function Category() {
     const action = newStatus === 1 ? "启用" : "禁用";
 
     try {
-      await enableOrDisableCategory(newStatus, currentCategory.id);
+      await enableOrDisableCategoryAPI(newStatus, currentCategory.id);
       setConfirmDialogOpen(false);
       setCurrentCategory(null);
       toast.success(`${action}分类成功`);
@@ -312,7 +312,7 @@ export default function Category() {
     if (!currentCategory) return;
 
     try {
-      await deleteCategory(currentCategory.id);
+      await deleteCategoryAPI(currentCategory.id);
       setDeleteDialogOpen(false);
       setCurrentCategory(null);
       toast.success("删除分类成功");
@@ -349,7 +349,7 @@ export default function Category() {
     try {
       if (isEditMode) {
         // 修改分类
-        await updateCategory(formData);
+        await updateCategoryAPI(formData);
         toast.success("修改分类成功");
       } else {
         // 新增分类 - 不发送 id
@@ -358,7 +358,7 @@ export default function Category() {
           type: formData.type,
           sort: formData.sort,
         };
-        await saveCategory(newCategoryData);
+        await saveCategoryAPI(newCategoryData);
         toast.success("新增分类成功");
       }
       

@@ -36,7 +36,7 @@ export interface SalesTop10ReportVO {
  * @param end 结束日期 (yyyy-MM-dd)
  * @returns 营业额统计数据
  */
-export const getTurnoverStatistics = async (
+export const getTurnoverStatisticsAPI = async (
   begin: string,
   end: string
 ): Promise<TurnoverReportVO> => {
@@ -52,7 +52,7 @@ export const getTurnoverStatistics = async (
  * @param end 结束日期 (yyyy-MM-dd)
  * @returns 用户统计数据
  */
-export const getUserStatistics = async (
+export const getUserStatisticsAPI = async (
   begin: string,
   end: string
 ): Promise<UserReportVO> => {
@@ -68,7 +68,7 @@ export const getUserStatistics = async (
  * @param end 结束日期 (yyyy-MM-dd)
  * @returns 订单统计数据
  */
-export const getOrdersStatistics = async (
+export const getOrdersStatisticsAPI = async (
   begin: string,
   end: string
 ): Promise<OrderReportVO> => {
@@ -84,7 +84,7 @@ export const getOrdersStatistics = async (
  * @param end 结束日期 (yyyy-MM-dd)
  * @returns 销量TOP10数据
  */
-export const getSalesTop10 = async (
+export const getSalesTop10API = async (
   begin: string,
   end: string
 ): Promise<SalesTop10ReportVO> => {
@@ -97,7 +97,7 @@ export const getSalesTop10 = async (
 /**
  * 导出最近30天的数据报表
  */
-export const exportReport = async (): Promise<Blob> => {
+export const exportReportAPI = async (): Promise<Blob> => {
   // 使用 axios 直接请求，因为需要 blob 响应
   const token = localStorage.getItem("token");
   

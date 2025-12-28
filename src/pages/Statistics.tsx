@@ -4,11 +4,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import {
-  getTurnoverStatistics,
-  getUserStatistics,
-  getOrdersStatistics,
-  getSalesTop10,
-  exportReport,
+  getTurnoverStatisticsAPI,
+  getUserStatisticsAPI,
+  getOrdersStatisticsAPI,
+  getSalesTop10API,
+  exportReportAPI,
   type TurnoverReportVO,
   type UserReportVO,
   type OrderReportVO,
@@ -68,10 +68,10 @@ const Statistics = () => {
 
       // 并行请求所有数据
       const [turnover, user, order, sales] = await Promise.all([
-        getTurnoverStatistics(begin, end),
-        getUserStatistics(begin, end),
-        getOrdersStatistics(begin, end),
-        getSalesTop10(begin, end),
+        getTurnoverStatisticsAPI(begin, end),
+        getUserStatisticsAPI(begin, end),
+        getOrdersStatisticsAPI(begin, end),
+        getSalesTop10API(begin, end),
       ]);
 
       setTurnoverData(turnover);
@@ -150,10 +150,10 @@ const Statistics = () => {
       setLoading(true);
       try {
         const [turnover, user, order, sales] = await Promise.all([
-          getTurnoverStatistics(begin, end),
-          getUserStatistics(begin, end),
-          getOrdersStatistics(begin, end),
-          getSalesTop10(begin, end),
+          getTurnoverStatisticsAPI(begin, end),
+          getUserStatisticsAPI(begin, end),
+          getOrdersStatisticsAPI(begin, end),
+          getSalesTop10API(begin, end),
         ]);
 
         setTurnoverData(turnover);
@@ -181,7 +181,7 @@ const Statistics = () => {
   // 导出数据
   const handleExport = async () => {
     try {
-      const blob = await exportReport();
+      const blob = await exportReportAPI();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;

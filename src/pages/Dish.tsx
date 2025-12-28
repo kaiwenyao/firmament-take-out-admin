@@ -46,19 +46,19 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import {
-  getDishList,
-  deleteDish,
-  enableOrDisableDish,
-  getDishById,
-  saveDish,
-  updateDish,
+  getDishListAPI,
+  deleteDishAPI,
+  enableOrDisableDishAPI,
+  getDishByIdAPI,
+  saveDishAPI,
+  updateDishAPI,
   uploadImage,
   type Dish,
   type DishFormData,
   type DishFlavor,
   type DishPageQuery,
 } from "@/api/dish";
-import { getCategoryListByType, type Category } from "@/api/category";
+import { getCategoryListByTypeAPI, type Category } from "@/api/category";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -161,7 +161,7 @@ export default function Dish() {
   useEffect(() => {
     const fetchCategoryList = async () => {
       try {
-        const categories = await getCategoryListByType({ type: 1 }); // 1: 菜品分类
+        const categories = await getCategoryListByTypeAPI({ type: 1 }); // 1: 菜品分类
         setCategoryList(categories);
       } catch (error) {
         console.error("获取分类列表失败:", error);
@@ -176,7 +176,7 @@ export default function Dish() {
       setLoading(true);
       try {
         console.log("发起请求，参数:", reqData);
-        const res = await getDishList({
+        const res = await getDishListAPI({
           ...reqData,
           name: reqData.name || undefined,
           categoryId: reqData.categoryId,
@@ -264,7 +264,7 @@ export default function Dish() {
     const action = newStatus === 1 ? "起售" : "停售";
 
     try {
-      await enableOrDisableDish(newStatus, currentDish.id);
+      await enableOrDisableDishAPI(newStatus, currentDish.id);
       setConfirmDialogOpen(false);
       setCurrentDish(null);
       toast.success(`${action}菜品成功`);
@@ -290,7 +290,7 @@ export default function Dish() {
     if (!currentDish) return;
 
     try {
-      await deleteDish([currentDish.id]);
+      await deleteDishAPI([currentDish.id]);
       setDeleteDialogOpen(false);
       setCurrentDish(null);
       toast.success("删除菜品成功");
@@ -319,7 +319,7 @@ export default function Dish() {
   // 确认批量删除
   const handleConfirmBatchDelete = async () => {
     try {
-      await deleteDish(selectedIds);
+      await deleteDishAPI(selectedIds);
       setBatchDeleteDialogOpen(false);
       setSelectedIds([]);
       toast.success(`批量删除${selectedIds.length}个菜品成功`);
@@ -474,7 +474,7 @@ export default function Dish() {
     setFormLoading(true); // ✅ 立即显示骨架屏/转圈
 
     try {
-      const dishDetail = await getDishById(dish.id);
+      const dishDetail = await getDishByIdAPI(dish.id);
       const flavors = dishDetail.flavors || [];
       setFormData({
         id: dishDetail.id,
@@ -640,7 +640,7 @@ export default function Dish() {
       
       if (isEditMode) {
         // 修改菜品
-        await updateDish({
+        await updateDishAPI({
           ...formData,
           flavors,
         });
@@ -656,7 +656,7 @@ export default function Dish() {
           status: formData.status,
           flavors: flavors,
         };
-        await saveDish(newDishData);
+        await saveDishAPI(newDishData);
         toast.success("新增菜品成功");
       }
       setFormDialogOpen(false);
