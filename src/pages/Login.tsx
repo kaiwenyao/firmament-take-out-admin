@@ -6,6 +6,7 @@ import { User, Lock } from "lucide-react";
 import { employeeLoginAPI, type EmployeeLoginDTO } from "@/api/auth";
 import { toast } from "sonner";
 import loginImage from "@/assets/imgs/login.png";
+import logoImage from "@/assets/imgs/logo.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -81,15 +82,16 @@ export default function Login() {
 
         {/* 右侧登录表单 */}
         <div className="w-full md:w-1/2 flex flex-col justify-center p-12">
-          <div className="mb-8">
+          <div className="mb-8 text-center">
             {/* Logo */}
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">苍</span>
-              </div>
-              <h1 className="text-3xl font-bold text-gray-800">苍穹外卖</h1>
+            <div className="flex justify-center mb-2">
+              <img 
+                src={logoImage} 
+                alt="苍穹外卖" 
+                className="h-20"
+              />
             </div>
-            <p className="text-sm text-gray-500 ml-[52px]">THE SKY TAKE-OUT</p>
+            <p className="text-sm text-gray-500">Firmament take out</p>
           </div>
 
           {/* 登录表单 */}

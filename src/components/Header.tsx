@@ -29,6 +29,7 @@ import { employeeLogoutAPI } from "@/api/auth";
 import { getShopStatusAPI, setShopStatusAPI } from "@/api/shop";
 import { updatePasswordAPI, type PasswordEditDTO } from "@/api/employee";
 import { toast } from "sonner";
+import logoImage from "@/assets/imgs/logo.png";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -95,7 +96,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
   };
 
   // 获取当前登录用户名和ID
-  const userName = localStorage.getItem("userName") || "管理员";
+  const userName = localStorage.getItem("userName");
   const userId = localStorage.getItem("userId");
 
   // 校验密码字段
@@ -180,6 +181,12 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     // 检查是否有错误
     const hasErrors = Object.values(errors).some((error) => error !== "");
     if (hasErrors) {
+      // 如果有错误，将所有字段标记为已触摸，这样错误信息才会显示
+      setPasswordFormTouched({
+        oldPassword: true,
+        newPassword: true,
+        confirmPassword: true,
+      });
       toast.error("表单校验失败", {
         description: "请检查表单信息，确保所有字段填写正确",
       });
@@ -229,11 +236,11 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       <div className="flex items-center gap-4">
         {/* 1. Logo */}
         <div className="flex items-center gap-2 mr-4">
-            {/* 这里的 src 换成你实际的 logo 图片路径 */}
-            <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
-               苍
-            </div>
-            <span className="text-xl font-bold tracking-wide text-[#333]">苍穹外卖</span>
+            <img 
+                src={logoImage} 
+                alt="苍穹外卖" 
+                className="h-10"
+            />
         </div>
 
         {/* 2. 收起/展开 Sidebar 按钮 */}
@@ -376,13 +383,24 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 value={passwordFormData.newPassword}
                 autoFocus={false}
                 onChange={(e) => {
-                  setPasswordFormData({ ...passwordFormData, newPassword: e.target.value });
+                  const newPassValue = e.target.value;
+                  setPasswordFormData({ ...passwordFormData, newPassword: newPassValue });
                   if (passwordFormErrors.newPassword) {
                     setPasswordFormErrors((prev) => ({ ...prev, newPassword: "" }));
                   }
-                  // 如果确认密码已填写，重新校验确认密码
                   if (passwordFormData.confirmPassword) {
-                    handlePasswordFieldBlur("confirmPassword", passwordFormData.confirmPassword);
+                    // 假设我们需要稍微改写一下校验逻辑，或者手动在这里比对
+                    // 这里我们不仅要传确认密码，还要把【最新的新密码】传给校验逻辑
+                    
+                    // 方式 A：如果 validatePasswordField 支持传第三个参数作为对比值
+                    const error = validatePasswordField(
+                        "confirmPassword", 
+                        passwordFormData.confirmPassword, 
+                        newPassValue // 👈 传这个！不要传 state.newPassword
+                    );
+                    
+                    // 手动更新 confirmPassword 的错误信息
+                    setPasswordFormErrors(prev => ({...prev, confirmPassword: error}));
                   }
                 }}
                 onBlur={(e) => handlePasswordFieldBlur("newPassword", e.target.value)}

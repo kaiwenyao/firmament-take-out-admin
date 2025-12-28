@@ -983,14 +983,7 @@ export default function Setmeal() {
           <DialogHeader>
             <DialogTitle>{isEditMode ? "修改套餐" : "新建套餐"}</DialogTitle>
           </DialogHeader>
-          {formLoading ? (
-            <div className="grid gap-4 py-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ) : (
-            <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4">
             {/* 套餐名称 */}
             <div className="grid gap-2">
               <Label htmlFor="form-name" className="text-sm">
@@ -1093,8 +1086,16 @@ export default function Setmeal() {
               </Label>
               <div className="flex items-start gap-4">
                 <div
-                  className="border-2 border-dashed border-muted-foreground/25 rounded-md w-32 h-32 flex items-center justify-center cursor-pointer hover:border-primary transition-colors relative overflow-hidden"
-                  onClick={() => !imageUploading && fileInputRef.current?.click()}
+                  className={`border-2 border-dashed border-muted-foreground/25 rounded-md w-32 h-32 flex items-center justify-center relative overflow-hidden ${
+                    formLoading || imageUploading
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer hover:border-primary transition-colors"
+                  }`}
+                  onClick={() => {
+                    if (!formLoading && !imageUploading) {
+                      fileInputRef.current?.click();
+                    }
+                  }}
                 >
                   {imagePreview ? (
                     <img
@@ -1150,7 +1151,6 @@ export default function Setmeal() {
               />
             </div>
           </div>
-          )}
           <DialogFooter>
             <Button
               variant="outline"
@@ -1164,7 +1164,7 @@ export default function Setmeal() {
               disabled={formLoading || imageUploading}
               className="bg-gray-600 text-white hover:bg-gray-700"
             >
-              {formLoading ? "提交中..." : "确定"}
+              {formLoading ? "加载中..." : "确定"}
             </Button>
           </DialogFooter>
         </DialogContent>

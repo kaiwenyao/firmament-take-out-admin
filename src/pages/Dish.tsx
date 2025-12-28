@@ -110,6 +110,8 @@ const FLAVOR_OPTIONS: Record<FlavorType, string[]> = {
 
 // 扩展的口味数据类型（包含类型和已删除的选项）
 interface ExtendedFlavor {
+  id?: string; // 口味ID（编辑时使用）
+  dishId?: string; // 菜品ID（编辑时使用）
   type?: FlavorType; // 口味类型
   name: string; // 口味名称（用于后端，对应原来的name）
   value: string; // 口味值（用于后端，对应原来的value，存储剩余的选项）
@@ -398,7 +400,7 @@ export default function Dish() {
           // value 可能是 JSON 字符串，需要解析
           currentOptions = JSON.parse(flavor.value);
         }
-      } catch (e) {
+      } catch {
         // 如果解析失败，可能是旧格式（逗号分隔），尝试兼容
         currentOptions = flavor.value.split(",").filter(Boolean);
       }
@@ -416,7 +418,7 @@ export default function Dish() {
         name: flavor.name,
         value: flavor.value, // 保留原始 value（JSON 字符串）
         removedOptions,
-      };
+      } as ExtendedFlavor;
     }).filter((item): item is ExtendedFlavor => item !== null);
   };
 
@@ -1162,14 +1164,7 @@ export default function Dish() {
           <DialogHeader>
             <DialogTitle>{isEditMode ? "修改菜品" : "新建菜品"}</DialogTitle>
           </DialogHeader>
-          {formLoading ? (
-            <div className="grid gap-4 py-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ) : (
-            <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4">
             {/* 菜品名称 */}
             <div className="grid gap-2">
               <Label htmlFor="form-name" className="text-sm">
@@ -1361,10 +1356,16 @@ export default function Dish() {
                                 <Badge
                                   key={option}
                                   variant="secondary"
-                                  className="bg-[#ffc200]/20 text-foreground hover:bg-[#ffc200]/30 cursor-pointer px-3 py-1 flex items-center gap-1"
-                                  onClick={() =>
-                                    handleRemoveFlavorOption(index, option)
-                                  }
+                                  className={`bg-[#ffc200]/20 text-foreground px-3 py-1 flex items-center gap-1 ${
+                                    formLoading
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : "hover:bg-[#ffc200]/30 cursor-pointer"
+                                  }`}
+                                  onClick={() => {
+                                    if (!formLoading) {
+                                      handleRemoveFlavorOption(index, option);
+                                    }
+                                  }}
                                 >
                                   {option}
                                   <X className="h-3 w-3" />
@@ -1386,8 +1387,16 @@ export default function Dish() {
               </Label>
               <div className="flex items-start gap-4">
                 <div
-                  className="border-2 border-dashed border-muted-foreground/25 rounded-md w-32 h-32 flex items-center justify-center cursor-pointer hover:border-primary transition-colors relative overflow-hidden"
-                  onClick={() => !imageUploading && fileInputRef.current?.click()}
+                  className={`border-2 border-dashed border-muted-foreground/25 rounded-md w-32 h-32 flex items-center justify-center relative overflow-hidden ${
+                    formLoading || imageUploading
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer hover:border-primary transition-colors"
+                  }`}
+                  onClick={() => {
+                    if (!formLoading && !imageUploading) {
+                      fileInputRef.current?.click();
+                    }
+                  }}
                 >
                   {imagePreview ? (
                     <img
@@ -1443,7 +1452,6 @@ export default function Dish() {
               />
             </div>
           </div>
-          )}
           <DialogFooter>
             <Button
               variant="outline"
@@ -1457,7 +1465,7 @@ export default function Dish() {
               disabled={formLoading || imageUploading}
               className="bg-gray-600 text-white hover:bg-gray-700"
             >
-              {formLoading ? "提交中..." : "确定"}
+              {formLoading ? "加载中..." : "确定"}
             </Button>
           </DialogFooter>
         </DialogContent>
