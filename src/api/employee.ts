@@ -95,3 +95,19 @@ export const updateEmployeeAPI = async (data: EmployeeFormData): Promise<void> =
   return request.put("/employee", data);
 };
 
+// 修改密码请求参数
+export interface PasswordEditDTO {
+  empId: number;
+  oldPassword: string;
+  newPassword: string;
+}
+
+/**
+ * 修改密码
+ * @param data 密码修改数据
+ * @returns 操作结果
+ */
+export const updatePasswordAPI = async (data: PasswordEditDTO): Promise<void> => {
+  return request.put("/employee/editPassword", data);
+};
+

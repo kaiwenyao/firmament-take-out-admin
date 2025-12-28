@@ -54,6 +54,7 @@ import {
   deleteCategory,
   type Category,
   type CategoryFormData,
+  type CategoryPageQuery,
 } from "@/api/category";
 import { toast } from "sonner";
 
@@ -107,8 +108,6 @@ export default function Category() {
   const [list, setList] = useState<Category[]>([]);
   const [categoryName, setCategoryName] = useState(""); // 搜索框绑定的值
   const [categoryType, setCategoryType] = useState<string>(""); // 搜索类型（中文）
-  const [page, setPage] = useState(1); // 当前页码
-  const [pageSize, setPageSize] = useState(10); // 每页条数
   const [total, setTotal] = useState(0); // 总条数
   const [loading, setLoading] = useState(false); // 加载状态
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // 确认对话框状态（启用/禁用）
@@ -117,6 +116,12 @@ export default function Category() {
   const [formDialogOpen, setFormDialogOpen] = useState(false); // 表单对话框状态
   const [isEditMode, setIsEditMode] = useState(false); // 是否为编辑模式
   const [formType, setFormType] = useState<number>(1); // 表单类型：1-菜品分类，2-套餐分类
+  const [reqData, setReqData] = useState<CategoryPageQuery>({
+    page: 1,
+    pageSize: 10,
+    name: undefined,
+    type: undefined,
+  });
   const [formData, setFormData] = useState<CategoryFormData>({
     name: "",
     type: 1,
@@ -125,49 +130,62 @@ export default function Category() {
   const [formLoading, setFormLoading] = useState(false); // 表单提交加载状态
   const [formErrors, setFormErrors] = useState<Record<string, string>>({}); // 表单错误信息
 
-  // 获取数据的函数
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = await getCategoryList({
-        page,
-        pageSize,
-        name: categoryName || undefined,
-        type: getCategoryTypeNumber(categoryType) || undefined,
-      });
-      setList(res.records);
-      setTotal(Number(res.total));
-    } catch (error) {
-      console.error("获取分类列表失败:", error);
-      toast.error("获取分类列表失败", {
-        description: getErrorMessage(error) || "请稍后重试"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 页面加载时自动触发一次
   useEffect(() => {
+    // 定义在内部，无需 useCallback
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        console.log("发起请求，参数:", reqData);
+        const res = await getCategoryList({
+          ...reqData,
+          name: reqData.name || undefined,
+          type: reqData.type || undefined,
+        });
+        setList(res.records);
+        setTotal(Number(res.total));
+      } catch (error) {
+        console.error(error);
+        toast.error("获取分类列表失败", {
+          description: getErrorMessage(error) || "请稍后重试"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize]); // 当页码或每页条数变化时重新获取数据
+    // 🔥 核心魔法：只依赖 reqData
+  }, [reqData]);
+
+  const reloadData = () => {
+    // 复制一份自己，内容一样，但内存地址变了
+    setReqData((prev) => ({ ...prev }));
+  };
 
   // 搜索功能
   const handleSearch = () => {
-    setPage(1); // 搜索时重置到第一页
-    fetchData();
+    setReqData((prev) => ({
+      ...prev,
+      page: 1, // 搜索新词，回到第一页
+      name: categoryName || undefined,
+      type: getCategoryTypeNumber(categoryType) || undefined,
+    }));
   };
 
   // 分页处理
   const handlePageChange = (newPage: number) => {
-    setPage(newPage);
+    setReqData((prev) => ({
+      ...prev,
+      page: newPage,
+    }));
   };
 
   // 每页条数变化处理
   const handlePageSizeChange = (newPageSize: string) => {
-    setPageSize(Number(newPageSize));
-    setPage(1); // 重置到第一页
+    setReqData((prev) => ({
+      ...prev,
+      pageSize: Number(newPageSize),
+      page: 1, // 重置到第一页
+    }));
   };
 
   // 打开确认对话框
@@ -189,7 +207,7 @@ export default function Category() {
       setCurrentCategory(null);
       toast.success(`${action}分类成功`);
       // 操作成功后刷新列表
-      fetchData();
+      reloadData();
     } catch (error) {
       console.error(`${action}分类失败:`, error);
       setConfirmDialogOpen(false);
@@ -258,17 +276,29 @@ export default function Category() {
   };
 
   // 打开修改表单
-  const handleEdit = (category: Category) => {
+  const handleEdit = async (category: Category) => {
     setIsEditMode(true);
     setFormType(category.type);
-    setFormData({
-      id: category.id,
-      name: category.name,
-      type: category.type,
-      sort: category.sort,
-    });
     setFormErrors({});
-    setFormDialogOpen(true);
+    setFormDialogOpen(true); // ✅ 立即弹窗
+    setFormLoading(true); // ✅ 立即显示骨架屏/转圈
+
+    try {
+      // 直接使用传入的 category 数据，因为分类数据已经在列表中
+      setFormData({
+        id: category.id,
+        name: category.name,
+        type: category.type,
+        sort: category.sort,
+      });
+    } catch (error) {
+      console.error("获取分类详情失败:", error);
+      toast.error("获取分类详情失败");
+      setFormDialogOpen(false);
+    } finally {
+      // ✅ 放在这里！
+      setFormLoading(false);
+    }
   };
 
   // 打开删除确认对话框
@@ -287,7 +317,7 @@ export default function Category() {
       setCurrentCategory(null);
       toast.success("删除分类成功");
       // 操作成功后刷新列表
-      fetchData();
+      reloadData();
     } catch (error) {
       console.error("删除分类失败:", error);
       setDeleteDialogOpen(false);
@@ -341,12 +371,12 @@ export default function Category() {
         });
         setFormErrors({});
         // 刷新列表
-        fetchData();
+        reloadData();
       } else {
         // 普通保存：关闭对话框
         setFormDialogOpen(false);
         // 刷新列表
-        fetchData();
+        reloadData();
       }
     } catch (error) {
       console.error(`${isEditMode ? "修改" : "新增"}分类失败:`, error);
@@ -359,7 +389,7 @@ export default function Category() {
   };
 
   // 计算总页数
-  const totalPages = Math.ceil(total / pageSize);
+  const totalPages = Math.ceil(total / reqData.pageSize);
 
   return (
     <div className="h-full flex flex-col gap-3">
@@ -557,7 +587,7 @@ export default function Category() {
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
                     <div className="text-sm text-muted-foreground whitespace-nowrap">
-                      共 {total} 条记录，第 {page} / {totalPages} 页
+                      共 {total} 条记录，第 {reqData.page} / {totalPages} 页
                     </div>
                     <div className="flex items-center gap-2">
                       <Label htmlFor="page-size" className="text-sm whitespace-nowrap">
@@ -571,7 +601,7 @@ export default function Category() {
                             id="page-size"
                             className="w-[100px] justify-between"
                           >
-                            {pageSize}
+                            {reqData.pageSize}
                             <ChevronDown className="h-4 w-4 opacity-50" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -607,9 +637,14 @@ export default function Category() {
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            if (page > 1) handlePageChange(page - 1);
+                            if (reqData.page > 1)
+                              handlePageChange(reqData.page - 1);
                           }}
-                          className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                          className={
+                            reqData.page === 1
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
                         />
                       </PaginationItem>
                       {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -617,7 +652,7 @@ export default function Category() {
                           return (
                             p === 1 ||
                             p === totalPages ||
-                            (p >= page - 1 && p <= page + 1)
+                            (p >= reqData.page - 1 && p <= reqData.page + 1)
                           );
                         })
                         .map((p, index, array) => {
@@ -637,9 +672,9 @@ export default function Category() {
                                     e.preventDefault();
                                     handlePageChange(p);
                                   }}
-                                  isActive={p === page}
+                                  isActive={p === reqData.page}
                                   className={
-                                    p === page
+                                    p === reqData.page
                                       ? "bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
                                       : ""
                                   }
@@ -655,9 +690,14 @@ export default function Category() {
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            if (page < totalPages) handlePageChange(page + 1);
+                            if (reqData.page < totalPages)
+                              handlePageChange(reqData.page + 1);
                           }}
-                          className={page === totalPages ? "pointer-events-none opacity-50" : ""}
+                          className={
+                            reqData.page === totalPages
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
                         />
                       </PaginationItem>
                     </PaginationContent>
@@ -741,7 +781,13 @@ export default function Category() {
                 : "新增套餐分类"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          {formLoading ? (
+            <div className="grid gap-4 py-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="form-name" className="text-sm">
                 <span className="text-destructive">*</span> 分类名称：
@@ -794,6 +840,7 @@ export default function Category() {
               )}
             </div>
           </div>
+          )}
           <DialogFooter className="flex gap-2">
             <Button
               variant="outline"

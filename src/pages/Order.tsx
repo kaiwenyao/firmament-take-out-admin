@@ -147,10 +147,17 @@ export default function Order() {
   const [phone, setPhone] = useState(""); // 手机号
   const [beginTime, setBeginTime] = useState(""); // 开始时间
   const [endTime, setEndTime] = useState(""); // 结束时间
-  const [page, setPage] = useState(1); // 当前页码
-  const [pageSize, setPageSize] = useState(10); // 每页条数
   const [total, setTotal] = useState(0); // 总条数
   const [loading, setLoading] = useState(false); // 加载状态
+  const [reqData, setReqData] = useState<OrderPageQuery>({
+    page: 1,
+    pageSize: 10,
+    number: undefined,
+    phone: undefined,
+    status: undefined,
+    beginTime: undefined,
+    endTime: undefined,
+  });
   const [statistics, setStatistics] = useState<OrderStatistics | null>(null); // 订单统计
   const [currentOrder, setCurrentOrder] = useState<Order | null>(null); // 当前操作的订单
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // 接单确认对话框
@@ -171,78 +178,63 @@ export default function Order() {
     "自定义原因",
   ];
 
-  // 获取数据的函数
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const queryParams: OrderPageQuery = {
-        page,
-        pageSize,
-      };
-
-      // 添加状态筛选
-      const statusConfig = ORDER_STATUS_CONFIG[activeStatus];
-      if (statusConfig.status !== undefined) {
-        queryParams.status = statusConfig.status;
-      }
-
-      // 添加搜索条件
-      if (orderNumber) {
-        queryParams.number = orderNumber;
-      }
-      if (phone) {
-        queryParams.phone = phone;
-      }
-      if (beginTime) {
-        // 时间格式转换在 API 层统一处理
-        queryParams.beginTime = beginTime;
-      }
-      if (endTime) {
-        // 时间格式转换在 API 层统一处理
-        queryParams.endTime = endTime;
-      }
-
-      const res = await getOrderList(queryParams);
-      setList(res.records);
-      setTotal(Number(res.total));
-    } catch (error) {
-      console.error("获取订单列表失败:", error);
-      toast.error("获取订单列表失败，请稍后重试");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // 获取订单统计
-  const fetchStatistics = async () => {
-    try {
-      const stats = await getOrderStatistics();
-      setStatistics(stats);
-    } catch (error) {
-      console.error("获取订单统计失败:", error);
-    }
-  };
-
-  // 页面加载时自动触发一次
   useEffect(() => {
-    fetchData();
+    const fetchStatistics = async () => {
+      try {
+        const stats = await getOrderStatistics();
+        setStatistics(stats);
+      } catch (error) {
+        console.error("获取订单统计失败:", error);
+      }
+    };
     fetchStatistics();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, activeStatus]); // 当页码、每页条数或状态变化时重新获取数据
+  }, []);
 
-  // 当搜索条件变化时，如果不在第一页，需要重置到第一页
   useEffect(() => {
-    if (page !== 1 && (orderNumber || phone || beginTime || endTime)) {
-      // 搜索条件变化时，会在 handleSearch 中重置页码
-      // 这里不需要额外处理
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderNumber, phone, beginTime, endTime]);
+    // 定义在内部，无需 useCallback
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        console.log("发起请求，参数:", reqData);
+        const res = await getOrderList({
+          ...reqData,
+          number: reqData.number || undefined,
+          phone: reqData.phone || undefined,
+          status: reqData.status,
+          beginTime: reqData.beginTime || undefined,
+          endTime: reqData.endTime || undefined,
+        });
+        setList(res.records);
+        setTotal(Number(res.total));
+      } catch (error) {
+        console.error(error);
+        toast.error("获取订单列表失败，请稍后重试");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+    // 🔥 核心魔法：只依赖 reqData
+  }, [reqData]);
+
+  const reloadData = () => {
+    // 复制一份自己，内容一样，但内存地址变了
+    setReqData((prev) => ({ ...prev }));
+  };
 
   // 搜索功能
   const handleSearch = () => {
-    setPage(1); // 搜索时重置到第一页
-    fetchData();
+    const statusConfig = ORDER_STATUS_CONFIG[activeStatus];
+    setReqData((prev) => ({
+      ...prev,
+      page: 1, // 搜索新词，回到第一页
+      number: orderNumber || undefined,
+      phone: phone || undefined,
+      status: statusConfig.status,
+      beginTime: beginTime || undefined,
+      endTime: endTime || undefined,
+    }));
   };
 
   // 重置搜索
@@ -251,25 +243,44 @@ export default function Order() {
     setPhone("");
     setBeginTime("");
     setEndTime("");
-    setPage(1);
-    // 重置后会自动触发 fetchData（通过 useEffect）
+    const statusConfig = ORDER_STATUS_CONFIG[activeStatus];
+    setReqData({
+      page: 1,
+      pageSize: reqData.pageSize,
+      number: undefined,
+      phone: undefined,
+      status: statusConfig.status,
+      beginTime: undefined,
+      endTime: undefined,
+    });
   };
 
   // 分页处理
   const handlePageChange = (newPage: number) => {
-    setPage(newPage);
+    setReqData((prev) => ({
+      ...prev,
+      page: newPage,
+    }));
   };
 
   // 每页条数变化处理
   const handlePageSizeChange = (newPageSize: string) => {
-    setPageSize(Number(newPageSize));
-    setPage(1); // 重置到第一页
+    setReqData((prev) => ({
+      ...prev,
+      pageSize: Number(newPageSize),
+      page: 1, // 重置到第一页
+    }));
   };
 
   // 切换订单状态
   const handleStatusChange = (status: OrderStatus) => {
     setActiveStatus(status);
-    setPage(1); // 切换状态时重置到第一页
+    const statusConfig = ORDER_STATUS_CONFIG[status];
+    setReqData((prev) => ({
+      ...prev,
+      page: 1, // 切换状态时重置到第一页
+      status: statusConfig.status,
+    }));
   };
 
   // 将 OrderStatus 转换为字符串（用于 Tabs value）
@@ -319,8 +330,10 @@ export default function Order() {
       toast.success("接单成功");
       setConfirmDialogOpen(false);
       setCurrentOrder(null);
-      fetchData();
-      fetchStatistics();
+      reloadData();
+      // 刷新统计
+      const stats = await getOrderStatistics();
+      setStatistics(stats);
     } catch (error) {
       console.error("接单失败:", error);
       toast.error("接单失败，请稍后重试");
@@ -352,8 +365,10 @@ export default function Order() {
       setRejectDialogOpen(false);
       setCurrentOrder(null);
       setRejectionReason("");
-      fetchData();
-      fetchStatistics();
+      reloadData();
+      // 刷新统计
+      const stats = await getOrderStatistics();
+      setStatistics(stats);
     } catch (error) {
       console.error("拒单失败:", error);
       toast.error("拒单失败，请稍后重试");
@@ -423,8 +438,10 @@ export default function Order() {
       setCancelReason("");
       setSelectedCancelReason("");
       setCustomCancelReason("");
-      fetchData();
-      fetchStatistics();
+      reloadData();
+      // 刷新统计
+      const stats = await getOrderStatistics();
+      setStatistics(stats);
     } catch (error) {
       console.error("取消订单失败:", error);
       toast.error("取消订单失败，请稍后重试");
@@ -439,8 +456,10 @@ export default function Order() {
     try {
       await deliveryOrder(order.id);
       toast.success("派送订单成功");
-      fetchData();
-      fetchStatistics();
+      reloadData();
+      // 刷新统计
+      const stats = await getOrderStatistics();
+      setStatistics(stats);
     } catch (error) {
       console.error("派送订单失败:", error);
       toast.error("派送订单失败，请稍后重试");
@@ -455,8 +474,10 @@ export default function Order() {
     try {
       await completeOrder(order.id);
       toast.success("完成订单成功");
-      fetchData();
-      fetchStatistics();
+      reloadData();
+      // 刷新统计
+      const stats = await getOrderStatistics();
+      setStatistics(stats);
     } catch (error) {
       console.error("完成订单失败:", error);
       toast.error("完成订单失败，请稍后重试");
@@ -467,7 +488,7 @@ export default function Order() {
 
 
   // 计算总页数
-  const totalPages = Math.ceil(total / pageSize);
+  const totalPages = Math.ceil(total / reqData.pageSize);
 
   // 定义 tabs 的显示顺序（按照图片顺序）
   // 根据后端状态定义：全部订单、待接单(2)、待派送(3)、派送中(4)、已完成(5)、已取消(6)
@@ -739,7 +760,7 @@ export default function Order() {
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
                     <div className="text-sm text-muted-foreground whitespace-nowrap">
-                      共 {total} 条记录，第 {page} / {totalPages} 页
+                      共 {total} 条记录，第 {reqData.page} / {totalPages} 页
                     </div>
                     <div className="flex items-center gap-2">
                       <Label htmlFor="page-size" className="text-sm whitespace-nowrap">
@@ -753,7 +774,7 @@ export default function Order() {
                             id="page-size"
                             className="w-[100px] justify-between"
                           >
-                            {pageSize}
+                            {reqData.pageSize}
                             <ChevronDown className="h-4 w-4 opacity-50" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -789,9 +810,14 @@ export default function Order() {
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            if (page > 1) handlePageChange(page - 1);
+                            if (reqData.page > 1)
+                              handlePageChange(reqData.page - 1);
                           }}
-                          className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                          className={
+                            reqData.page === 1
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
                         />
                       </PaginationItem>
                       {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -799,7 +825,7 @@ export default function Order() {
                           return (
                             p === 1 ||
                             p === totalPages ||
-                            (p >= page - 1 && p <= page + 1)
+                            (p >= reqData.page - 1 && p <= reqData.page + 1)
                           );
                         })
                         .map((p, index, array) => {
@@ -819,9 +845,9 @@ export default function Order() {
                                     e.preventDefault();
                                     handlePageChange(p);
                                   }}
-                                  isActive={p === page}
+                                  isActive={p === reqData.page}
                                   className={
-                                    p === page
+                                    p === reqData.page
                                       ? "bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
                                       : ""
                                   }
@@ -837,9 +863,14 @@ export default function Order() {
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            if (page < totalPages) handlePageChange(page + 1);
+                            if (reqData.page < totalPages)
+                              handlePageChange(reqData.page + 1);
                           }}
-                          className={page === totalPages ? "pointer-events-none opacity-50" : ""}
+                          className={
+                            reqData.page === totalPages
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
                         />
                       </PaginationItem>
                     </PaginationContent>

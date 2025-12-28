@@ -20,11 +20,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { employeeLogout } from "@/api/auth";
 import { getShopStatus, setShopStatus } from "@/api/shop";
+import { updatePasswordAPI, type PasswordEditDTO } from "@/api/employee";
 import { toast } from "sonner";
 
 interface HeaderProps {
@@ -37,6 +40,17 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
   const [statusLoading, setStatusLoading] = useState(true); // 加载状态
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // 修改密码相关状态
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [passwordFormData, setPasswordFormData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordFormErrors, setPasswordFormErrors] = useState<Record<string, string>>({});
+  const [passwordFormTouched, setPasswordFormTouched] = useState<Record<string, boolean>>({}); // 跟踪字段是否被触摸过
+  const [passwordFormLoading, setPasswordFormLoading] = useState(false);
   
   // 获取店铺营业状态
   const fetchShopStatus = async () => {
@@ -82,8 +96,134 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     }
   };
 
-  // 获取当前登录用户名
+  // 获取当前登录用户名和ID
   const userName = localStorage.getItem("userName") || "管理员";
+  const userId = localStorage.getItem("userId");
+
+  // 校验密码字段
+  const validatePasswordField = (field: string, value: string, confirmValue?: string): string => {
+    switch (field) {
+      case "oldPassword":
+        if (!value.trim()) {
+          return "原始密码不能为空";
+        }
+        return "";
+      case "newPassword":
+        if (!value.trim()) {
+          return "新密码不能为空";
+        }
+        if (value.length < 6 || value.length > 20) {
+          return "密码长度必须在6-20位之间";
+        }
+        if (!/^[a-zA-Z0-9]+$/.test(value)) {
+          return "密码只能包含数字或字母";
+        }
+        return "";
+      case "confirmPassword":
+        if (!value.trim()) {
+          return "确认密码不能为空";
+        }
+        if (confirmValue && value !== confirmValue) {
+          return "两次输入的密码不一致";
+        }
+        return "";
+      default:
+        return "";
+    }
+  };
+
+  // 处理字段失焦校验
+  const handlePasswordFieldBlur = (field: string, value: string) => {
+    // 标记字段已被触摸
+    setPasswordFormTouched((prev) => ({
+      ...prev,
+      [field]: true,
+    }));
+    
+    // 进行校验
+    let error = "";
+    if (field === "confirmPassword") {
+      error = validatePasswordField(field, value, passwordFormData.newPassword);
+    } else {
+      error = validatePasswordField(field, value);
+    }
+    setPasswordFormErrors((prev) => ({
+      ...prev,
+      [field]: error,
+    }));
+  };
+
+  // 打开修改密码对话框
+  const handleOpenPasswordDialog = () => {
+    setPasswordDialogOpen(true);
+    setPasswordFormData({
+      oldPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setPasswordFormErrors({});
+    setPasswordFormTouched({}); // 重置触摸状态
+  };
+
+  // 提交修改密码
+  const handleSubmitPassword = async () => {
+    // 校验所有字段
+    const errors: Record<string, string> = {};
+    errors.oldPassword = validatePasswordField("oldPassword", passwordFormData.oldPassword);
+    errors.newPassword = validatePasswordField("newPassword", passwordFormData.newPassword);
+    errors.confirmPassword = validatePasswordField(
+      "confirmPassword",
+      passwordFormData.confirmPassword,
+      passwordFormData.newPassword
+    );
+
+    setPasswordFormErrors(errors);
+
+    // 检查是否有错误
+    const hasErrors = Object.values(errors).some((error) => error !== "");
+    if (hasErrors) {
+      toast.error("表单校验失败", {
+        description: "请检查表单信息，确保所有字段填写正确",
+      });
+      return;
+    }
+
+    setPasswordFormLoading(true);
+    try {
+      const passwordData: PasswordEditDTO = {
+        empId: Number(userId),
+        oldPassword: passwordFormData.oldPassword,
+        newPassword: passwordFormData.newPassword,
+      };
+      await updatePasswordAPI(passwordData);
+      toast.success("修改密码成功");
+      setPasswordDialogOpen(false);
+      setPasswordFormData({
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      setPasswordFormErrors({});
+      setPasswordFormTouched({}); // 重置触摸状态
+    } catch (error) {
+      console.error("修改密码失败:", error);
+      // 提取错误信息
+      let errorMessage = "修改密码失败，请稍后重试";
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response?: { data?: { msg?: string }; status?: number };
+        };
+        if (axiosError.response?.data?.msg) {
+          errorMessage = axiosError.response.data.msg;
+        }
+      }
+      toast.error("修改密码失败", {
+        description: errorMessage,
+      });
+    } finally {
+      setPasswordFormLoading(false);
+    }
+  };
 
   return (
     <header className="h-16 w-full bg-[#ffc200] px-6 flex items-center justify-between text-[#333] shadow-md z-50 relative">
@@ -140,7 +280,10 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={handleOpenPasswordDialog}
+            >
               <KeyRound className="mr-2 h-4 w-4" />
               <span>修改密码</span>
             </DropdownMenuItem>
@@ -191,6 +334,109 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
               disabled={loading}
             >
               取消
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 修改密码对话框 */}
+      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]" onOpenAutoFocus={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>修改密码</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="old-password">原始密码：</Label>
+              <Input
+                id="old-password"
+                type="password"
+                value={passwordFormData.oldPassword}
+                autoFocus={false}
+                onChange={(e) => {
+                  setPasswordFormData({ ...passwordFormData, oldPassword: e.target.value });
+                  if (passwordFormErrors.oldPassword) {
+                    setPasswordFormErrors((prev) => ({ ...prev, oldPassword: "" }));
+                  }
+                }}
+                onBlur={(e) => handlePasswordFieldBlur("oldPassword", e.target.value)}
+                placeholder="请输入"
+                disabled={passwordFormLoading}
+                className={passwordFormErrors.oldPassword && passwordFormTouched.oldPassword ? "border-destructive" : ""}
+              />
+              {passwordFormErrors.oldPassword && passwordFormTouched.oldPassword && (
+                <p className="text-sm text-destructive">
+                  {passwordFormErrors.oldPassword}
+                </p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="new-password">新密码：</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={passwordFormData.newPassword}
+                autoFocus={false}
+                onChange={(e) => {
+                  setPasswordFormData({ ...passwordFormData, newPassword: e.target.value });
+                  if (passwordFormErrors.newPassword) {
+                    setPasswordFormErrors((prev) => ({ ...prev, newPassword: "" }));
+                  }
+                  // 如果确认密码已填写，重新校验确认密码
+                  if (passwordFormData.confirmPassword) {
+                    handlePasswordFieldBlur("confirmPassword", passwordFormData.confirmPassword);
+                  }
+                }}
+                onBlur={(e) => handlePasswordFieldBlur("newPassword", e.target.value)}
+                placeholder="6 - 20位密码,数字或字母,区分大小写"
+                disabled={passwordFormLoading}
+                className={passwordFormErrors.newPassword && passwordFormTouched.newPassword ? "border-destructive" : ""}
+              />
+              {passwordFormErrors.newPassword && passwordFormTouched.newPassword && (
+                <p className="text-sm text-destructive">
+                  {passwordFormErrors.newPassword}
+                </p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="confirm-password">确认密码：</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={passwordFormData.confirmPassword}
+                autoFocus={false}
+                onChange={(e) => {
+                  setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value });
+                  if (passwordFormErrors.confirmPassword) {
+                    setPasswordFormErrors((prev) => ({ ...prev, confirmPassword: "" }));
+                  }
+                }}
+                onBlur={(e) => handlePasswordFieldBlur("confirmPassword", e.target.value)}
+                placeholder="请输入"
+                disabled={passwordFormLoading}
+                className={passwordFormErrors.confirmPassword && passwordFormTouched.confirmPassword ? "border-destructive" : ""}
+              />
+              {passwordFormErrors.confirmPassword && passwordFormTouched.confirmPassword && (
+                <p className="text-sm text-destructive">
+                  {passwordFormErrors.confirmPassword}
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPasswordDialogOpen(false)}
+              disabled={passwordFormLoading}
+            >
+              取消
+            </Button>
+            <Button
+              onClick={handleSubmitPassword}
+              disabled={passwordFormLoading}
+              className="bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
+            >
+              {passwordFormLoading ? "保存中..." : "保存"}
             </Button>
           </DialogFooter>
         </DialogContent>

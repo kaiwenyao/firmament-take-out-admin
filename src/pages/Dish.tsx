@@ -56,6 +56,7 @@ import {
   type Dish,
   type DishFormData,
   type DishFlavor,
+  type DishPageQuery,
 } from "@/api/dish";
 import { getCategoryListByType, type Category } from "@/api/category";
 import { Badge } from "@/components/ui/badge";
@@ -124,10 +125,15 @@ export default function Dish() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined); // 选中的分类ID
   const [selectedStatus, setSelectedStatus] = useState<number | undefined>(undefined); // 选中的状态
   const [selectedIds, setSelectedIds] = useState<string[]>([]); // 选中的菜品ID
-  const [page, setPage] = useState(1); // 当前页码
-  const [pageSize, setPageSize] = useState(10); // 每页条数
   const [total, setTotal] = useState(0); // 总条数
   const [loading, setLoading] = useState(false); // 加载状态
+  const [reqData, setReqData] = useState<DishPageQuery>({
+    page: 1,
+    pageSize: 10,
+    name: undefined,
+    categoryId: undefined,
+    status: undefined,
+  });
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // 确认对话框状态（启用/禁用）
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // 删除确认对话框状态
   const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false); // 批量删除确认对话框
@@ -150,63 +156,80 @@ export default function Dish() {
   const [imageUploading, setImageUploading] = useState(false); // 图片上传中
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+
   // 获取分类列表（用于下拉选择）
-  const fetchCategoryList = async () => {
-    try {
-      const categories = await getCategoryListByType({ type: 1 }); // 1: 菜品分类
-      setCategoryList(categories);
-    } catch (error) {
-      console.error("获取分类列表失败:", error);
-    }
-  };
-
-  // 获取数据的函数
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = await getDishList({
-        page,
-        pageSize,
-        name: dishName || undefined,
-        categoryId: selectedCategoryId,
-        status: selectedStatus,
-      });
-      setList(res.records);
-      setTotal(Number(res.total));
-      // 清空选中项
-      setSelectedIds([]);
-    } catch (error) {
-      console.error("获取菜品列表失败:", error);
-      toast.error("获取菜品列表失败", {
-        description: getErrorMessage(error) || "请稍后重试"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 页面加载时自动触发一次
   useEffect(() => {
+    const fetchCategoryList = async () => {
+      try {
+        const categories = await getCategoryListByType({ type: 1 }); // 1: 菜品分类
+        setCategoryList(categories);
+      } catch (error) {
+        console.error("获取分类列表失败:", error);
+      }
+    };
     fetchCategoryList();
+  }, []);
+
+  useEffect(() => {
+    // 定义在内部，无需 useCallback
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        console.log("发起请求，参数:", reqData);
+        const res = await getDishList({
+          ...reqData,
+          name: reqData.name || undefined,
+          categoryId: reqData.categoryId,
+          status: reqData.status,
+        });
+        setList(res.records);
+        setTotal(Number(res.total));
+        // 清空选中项
+        setSelectedIds([]);
+      } catch (error) {
+        console.error(error);
+        toast.error("获取菜品列表失败", {
+          description: getErrorMessage(error) || "请稍后重试"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize]); // 当页码或每页条数变化时重新获取数据
+    // 🔥 核心魔法：只依赖 reqData
+  }, [reqData]);
+
+  const reloadData = () => {
+    // 复制一份自己，内容一样，但内存地址变了
+    setReqData((prev) => ({ ...prev }));
+  };
 
   // 搜索功能
   const handleSearch = () => {
-    setPage(1); // 搜索时重置到第一页
-    fetchData();
+    setReqData((prev) => ({
+      ...prev,
+      page: 1, // 搜索新词，回到第一页
+      name: dishName || undefined,
+      categoryId: selectedCategoryId,
+      status: selectedStatus,
+    }));
   };
 
   // 分页处理
   const handlePageChange = (newPage: number) => {
-    setPage(newPage);
+    setReqData((prev) => ({
+      ...prev,
+      page: newPage,
+    }));
   };
 
   // 每页条数变化处理
   const handlePageSizeChange = (newPageSize: string) => {
-    setPageSize(Number(newPageSize));
-    setPage(1); // 重置到第一页
+    setReqData((prev) => ({
+      ...prev,
+      pageSize: Number(newPageSize),
+      page: 1, // 重置到第一页
+    }));
   };
 
   // 处理单个复选框选择
@@ -246,7 +269,7 @@ export default function Dish() {
       setCurrentDish(null);
       toast.success(`${action}菜品成功`);
       // 操作成功后刷新列表
-      fetchData();
+      reloadData();
     } catch (error) {
       console.error(`${action}菜品失败:`, error);
       setConfirmDialogOpen(false);
@@ -272,7 +295,7 @@ export default function Dish() {
       setCurrentDish(null);
       toast.success("删除菜品成功");
       // 操作成功后刷新列表
-      fetchData();
+      reloadData();
     } catch (error) {
       console.error("删除菜品失败:", error);
       setDeleteDialogOpen(false);
@@ -301,7 +324,7 @@ export default function Dish() {
       setSelectedIds([]);
       toast.success(`批量删除${selectedIds.length}个菜品成功`);
       // 操作成功后刷新列表
-      fetchData();
+      reloadData();
     } catch (error) {
       console.error("批量删除菜品失败:", error);
       setBatchDeleteDialogOpen(false);
@@ -446,7 +469,10 @@ export default function Dish() {
   // 打开修改表单
   const handleEdit = async (dish: Dish) => {
     setIsEditMode(true);
-    setFormLoading(true);
+    setFormErrors({});
+    setFormDialogOpen(true); // ✅ 立即弹窗
+    setFormLoading(true); // ✅ 立即显示骨架屏/转圈
+
     try {
       const dishDetail = await getDishById(dish.id);
       const flavors = dishDetail.flavors || [];
@@ -471,14 +497,14 @@ export default function Dish() {
       });
       setExtendedFlavors(extendedFlavors);
       setImagePreview(dishDetail.image || "");
-      setFormErrors({});
-      setFormDialogOpen(true);
     } catch (error) {
       console.error("获取菜品详情失败:", error);
       toast.error("获取菜品详情失败", {
         description: getErrorMessage(error) || "请稍后重试"
       });
+      setFormDialogOpen(false); // 失败了关掉弹窗是合理的
     } finally {
+      // ✅ 放在这里！
       setFormLoading(false);
     }
   };
@@ -635,7 +661,7 @@ export default function Dish() {
       }
       setFormDialogOpen(false);
       // 操作成功后刷新列表
-      fetchData();
+      reloadData();
     } catch (error) {
       console.error(`${isEditMode ? "修改" : "新增"}菜品失败:`, error);
       toast.error(`${isEditMode ? "修改" : "新增"}菜品失败`, {
@@ -647,7 +673,7 @@ export default function Dish() {
   };
 
   // 计算总页数
-  const totalPages = Math.ceil(total / pageSize);
+  const totalPages = Math.ceil(total / reqData.pageSize);
   const isAllSelected = list.length > 0 && selectedIds.length === list.length;
   const isIndeterminate = selectedIds.length > 0 && selectedIds.length < list.length;
 
@@ -924,7 +950,7 @@ export default function Dish() {
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
                     <div className="text-sm text-muted-foreground whitespace-nowrap">
-                      共 {total} 条记录，第 {page} / {totalPages} 页
+                      共 {total} 条记录，第 {reqData.page} / {totalPages} 页
                     </div>
                     <div className="flex items-center gap-2">
                       <Label htmlFor="page-size" className="text-sm whitespace-nowrap">
@@ -938,7 +964,7 @@ export default function Dish() {
                             id="page-size"
                             className="w-[100px] justify-between"
                           >
-                            {pageSize}
+                            {reqData.pageSize}
                             <ChevronDown className="h-4 w-4 opacity-50" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -974,9 +1000,14 @@ export default function Dish() {
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            if (page > 1) handlePageChange(page - 1);
+                            if (reqData.page > 1)
+                              handlePageChange(reqData.page - 1);
                           }}
-                          className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                          className={
+                            reqData.page === 1
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
                         />
                       </PaginationItem>
                       {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -984,7 +1015,7 @@ export default function Dish() {
                           return (
                             p === 1 ||
                             p === totalPages ||
-                            (p >= page - 1 && p <= page + 1)
+                            (p >= reqData.page - 1 && p <= reqData.page + 1)
                           );
                         })
                         .map((p, index, array) => {
@@ -1004,9 +1035,9 @@ export default function Dish() {
                                     e.preventDefault();
                                     handlePageChange(p);
                                   }}
-                                  isActive={p === page}
+                                  isActive={p === reqData.page}
                                   className={
-                                    p === page
+                                    p === reqData.page
                                       ? "bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
                                       : ""
                                   }
@@ -1022,9 +1053,14 @@ export default function Dish() {
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            if (page < totalPages) handlePageChange(page + 1);
+                            if (reqData.page < totalPages)
+                              handlePageChange(reqData.page + 1);
                           }}
-                          className={page === totalPages ? "pointer-events-none opacity-50" : ""}
+                          className={
+                            reqData.page === totalPages
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
                         />
                       </PaginationItem>
                     </PaginationContent>
@@ -1126,7 +1162,14 @@ export default function Dish() {
           <DialogHeader>
             <DialogTitle>{isEditMode ? "修改菜品" : "新建菜品"}</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          {formLoading ? (
+            <div className="grid gap-4 py-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <div className="grid gap-4 py-4">
             {/* 菜品名称 */}
             <div className="grid gap-2">
               <Label htmlFor="form-name" className="text-sm">
@@ -1400,6 +1443,7 @@ export default function Dish() {
               />
             </div>
           </div>
+          )}
           <DialogFooter>
             <Button
               variant="outline"
