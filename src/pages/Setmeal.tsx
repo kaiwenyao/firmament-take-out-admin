@@ -34,7 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Plus, ChevronDown, Upload } from "lucide-react";
+import { Search, Plus, ChevronDown, Upload, X } from "lucide-react";
 import { useEffect, useState, useRef, Fragment } from "react";
 import {
   Pagination,
@@ -58,10 +58,12 @@ import {
   type SetmealPageQuery,
 } from "@/api/setmeal";
 import { getCategoryListByTypeAPI, type Category } from "@/api/category";
+import { getDishListAPI, type Dish } from "@/api/dish";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import type { SetmealDish } from "@/api/setmeal";
 
 // 提取错误信息的辅助函数
 const getErrorMessage = (error: unknown): string => {
@@ -127,6 +129,15 @@ export default function Setmeal() {
   const [imagePreview, setImagePreview] = useState<string>(""); // 图片预览
   const [imageUploading, setImageUploading] = useState(false); // 图片上传中
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // 添加菜品对话框相关状态
+  const [dishDialogOpen, setDishDialogOpen] = useState(false); // 添加菜品对话框状态
+  const [dishCategories, setDishCategories] = useState<Category[]>([]); // 菜品分类列表
+  const [selectedDishCategoryId, setSelectedDishCategoryId] = useState<string | null>(null); // 选中的菜品分类ID
+  const [dishList, setDishList] = useState<Dish[]>([]); // 菜品列表（当前分类）
+  const [selectedDishIds, setSelectedDishIds] = useState<Set<string>>(new Set()); // 临时选中的菜品ID（用于对话框）
+  const [selectedDishesInfo, setSelectedDishesInfo] = useState<Map<string, Dish>>(new Map()); // 已选菜品的完整信息（用于右侧显示）
+  const [dishListLoading, setDishListLoading] = useState(false); // 菜品列表加载状态
 
   // 获取分类列表（用于下拉选择）
   useEffect(() => {
@@ -136,10 +147,61 @@ export default function Setmeal() {
         setCategoryList(categories);
       } catch (error) {
         console.error("获取分类列表失败:", error);
+        toast.error("获取分类列表失败", {
+          description: getErrorMessage(error) || "请稍后重试"
+        });
       }
     };
     fetchCategoryList();
   }, []);
+
+  // 获取菜品分类列表（用于添加菜品对话框）
+  useEffect(() => {
+    const fetchDishCategories = async () => {
+      try {
+        const categories = await getCategoryListByTypeAPI({ type: 1 }); // 1: 菜品分类
+        setDishCategories(categories);
+        // 默认选中第一个分类
+        if (categories.length > 0) {
+          setSelectedDishCategoryId(categories[0].id);
+        }
+      } catch (error) {
+        console.error("获取菜品分类列表失败:", error);
+        toast.error("获取菜品分类列表失败", {
+          description: getErrorMessage(error) || "请稍后重试"
+        });
+      }
+    };
+    if (dishDialogOpen) {
+      fetchDishCategories();
+    }
+  }, [dishDialogOpen]);
+
+  // 根据分类获取菜品列表
+  useEffect(() => {
+    const fetchDishList = async () => {
+      if (!selectedDishCategoryId || !dishDialogOpen) return;
+      
+      setDishListLoading(true);
+      try {
+        const res = await getDishListAPI({
+          categoryId: Number(selectedDishCategoryId),
+          status: 1, // 只查询起售的菜品
+          page: 1,
+          pageSize: 1000, // 获取所有菜品
+        });
+        setDishList(res.records);
+      } catch (error) {
+        console.error("获取菜品列表失败:", error);
+        toast.error("获取菜品列表失败", {
+          description: getErrorMessage(error) || "请稍后重试"
+        });
+      } finally {
+        setDishListLoading(false);
+      }
+    };
+    fetchDishList();
+  }, [selectedDishCategoryId, dishDialogOpen]);
 
   useEffect(() => {
     // 定义在内部，无需 useCallback
@@ -364,6 +426,138 @@ export default function Setmeal() {
     setImagePreview("");
     setFormErrors({});
     setFormDialogOpen(true);
+  };
+
+  // 打开添加菜品对话框
+  const handleOpenDishDialog = async () => {
+    // 初始化已选菜品ID（从formData.setmealDishes中获取）
+    const existingDishIds = new Set(
+      (formData.setmealDishes || []).map((dish) => dish.dishId)
+    );
+    setSelectedDishIds(existingDishIds);
+    setDishDialogOpen(true);
+    
+    // 如果有已选菜品，需要加载它们的完整信息到selectedDishesInfo中
+    if (existingDishIds.size > 0) {
+      try {
+        // 获取所有已选菜品的详细信息（不限制分类）
+        const allDishesRes = await getDishListAPI({
+          status: 1,
+          page: 1,
+          pageSize: 1000,
+        });
+        // 将已选菜品信息存储到Map中，用于右侧显示
+        const dishesMap = new Map<string, Dish>();
+        allDishesRes.records.forEach((dish) => {
+          if (existingDishIds.has(dish.id)) {
+            dishesMap.set(dish.id, dish);
+          }
+        });
+        setSelectedDishesInfo(dishesMap);
+      } catch (error) {
+        console.error("加载已选菜品信息失败:", error);
+        toast.error("加载已选菜品信息失败", {
+          description: getErrorMessage(error) || "请稍后重试"
+        });
+      }
+    } else {
+      // 如果没有已选菜品，清空Map
+      setSelectedDishesInfo(new Map());
+    }
+  };
+
+  // 处理菜品选择
+  const handleDishSelect = (dishId: string, checked: boolean) => {
+    const newSelectedIds = new Set(selectedDishIds);
+    if (checked) {
+      newSelectedIds.add(dishId);
+      // 将选中的菜品信息添加到selectedDishesInfo中
+      const dish = dishList.find((d) => d.id === dishId);
+      if (dish) {
+        setSelectedDishesInfo((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(dishId, dish);
+          return newMap;
+        });
+      }
+    } else {
+      newSelectedIds.delete(dishId);
+      // 从selectedDishesInfo中移除
+      setSelectedDishesInfo((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(dishId);
+        return newMap;
+      });
+    }
+    setSelectedDishIds(newSelectedIds);
+  };
+
+  // 确认添加菜品
+  const handleConfirmAddDishes = async () => {
+    // 获取已选中的菜品信息
+    const selectedDishes: SetmealDish[] = [];
+    
+    for (const dishId of selectedDishIds) {
+      // 检查是否已经存在于formData中
+      const existingDish = formData.setmealDishes?.find((d) => d.dishId === dishId);
+      if (existingDish) {
+        selectedDishes.push(existingDish); // 保留原有的份数等信息
+      } else {
+        // 从dishList中查找，如果找不到则从API获取
+        let dish = dishList.find((d) => d.id === dishId);
+        if (!dish) {
+          try {
+            // 如果不在当前列表中，尝试获取单个菜品信息
+            const allDishesRes = await getDishListAPI({
+              status: 1,
+              page: 1,
+              pageSize: 1000,
+            });
+            dish = allDishesRes.records.find((d) => d.id === dishId);
+          } catch (error) {
+            console.error("获取菜品信息失败:", error);
+          }
+        }
+        selectedDishes.push({
+          dishId,
+          name: dish?.name || "",
+          price: dish?.price || 0,
+          copies: 1, // 默认份数为1
+        });
+      }
+    }
+
+    // 更新formData
+    setFormData({
+      ...formData,
+      setmealDishes: selectedDishes,
+    });
+
+    setDishDialogOpen(false);
+    toast.success("添加菜品成功");
+  };
+
+  // 删除已选菜品
+  const handleRemoveDish = (dishId: string) => {
+    const newSetmealDishes = (formData.setmealDishes || []).filter(
+      (dish) => dish.dishId !== dishId
+    );
+    setFormData({
+      ...formData,
+      setmealDishes: newSetmealDishes,
+    });
+  };
+
+  // 更新菜品份数
+  const handleUpdateDishCopies = (dishId: string, copies: number) => {
+    if (copies < 1) return;
+    const newSetmealDishes = (formData.setmealDishes || []).map((dish) =>
+      dish.dishId === dishId ? { ...dish, copies } : dish
+    );
+    setFormData({
+      ...formData,
+      setmealDishes: newSetmealDishes,
+    });
   };
 
   // 打开修改表单
@@ -1134,6 +1328,68 @@ export default function Setmeal() {
               )}
             </div>
 
+            {/* 套餐菜品 */}
+            <div className="grid gap-2">
+              <Label className="text-sm">
+                <span className="text-destructive">*</span> 套餐菜品：
+              </Label>
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  onClick={handleOpenDishDialog}
+                  disabled={formLoading}
+                  className="bg-[#ffc200] text-black hover:bg-[#ffc200]/90 w-fit"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  添加菜品
+                </Button>
+                {/* 已选菜品列表 */}
+                {formData.setmealDishes && formData.setmealDishes.length > 0 && (
+                  <div className="border rounded-md p-3 space-y-2 max-h-[200px] overflow-y-auto">
+                    {formData.setmealDishes.map((dish) => (
+                      <div
+                        key={dish.dishId}
+                        className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
+                      >
+                        <div className="flex-1">
+                          <div className="font-medium">{dish.name || "未知菜品"}</div>
+                          <div className="text-sm text-muted-foreground">
+                            ¥{dish.price?.toFixed(2) || "0.00"}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Label className="text-sm whitespace-nowrap">份数：</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={dish.copies}
+                            onChange={(e) =>
+                              handleUpdateDishCopies(
+                                dish.dishId,
+                                parseInt(e.target.value) || 1
+                              )
+                            }
+                            disabled={formLoading}
+                            className="w-16 h-8"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveDish(dish.dishId)}
+                            disabled={formLoading}
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive/80"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* 套餐描述 */}
             <div className="grid gap-2">
               <Label htmlFor="form-description" className="text-sm">
@@ -1165,6 +1421,146 @@ export default function Setmeal() {
               className="bg-gray-600 text-white hover:bg-gray-700"
             >
               {formLoading ? "加载中..." : "确定"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 添加菜品对话框 */}
+      <Dialog open={dishDialogOpen} onOpenChange={setDishDialogOpen}>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>添加菜品</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden flex gap-4 min-h-[500px]">
+            {/* 左侧：分类列表 */}
+            <div className="w-48 border-r pr-4 overflow-y-auto">
+              <div className="space-y-1">
+                {dishCategories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedDishCategoryId(category.id)}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      selectedDishCategoryId === category.id
+                        ? "bg-[#ffc200] text-black font-medium"
+                        : "hover:bg-muted"
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 中间：菜品列表 */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {/* 菜品列表 */}
+              <div className="flex-1 overflow-y-auto space-y-2">
+                {dishListLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-muted-foreground">加载中...</div>
+                  </div>
+                ) : dishList.length === 0 ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-muted-foreground">暂无菜品</div>
+                  </div>
+                ) : (
+                  dishList.map((dish) => (
+                      <div
+                        key={dish.id}
+                        className="flex items-center gap-3 p-3 border rounded-md hover:bg-muted/50 transition-colors"
+                      >
+                        <Checkbox
+                          checked={selectedDishIds.has(dish.id)}
+                          onCheckedChange={(checked) =>
+                            handleDishSelect(dish.id, checked === true)
+                          }
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium">{dish.name}</div>
+                          <div className="text-sm text-muted-foreground flex items-center gap-2">
+                            <span>{dish.status === 1 ? "在售" : "停售"}</span>
+                            <Separator orientation="vertical" className="h-3" />
+                            <span>¥{dish.price?.toFixed(2) || "0.00"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
+            </div>
+
+            {/* 右侧：已选菜品 */}
+            <div className="w-64 border-l pl-4 flex flex-col overflow-hidden">
+              <div className="font-semibold mb-3">
+                已选菜品({selectedDishIds.size})
+              </div>
+              <div className="flex-1 overflow-y-auto space-y-2">
+                {Array.from(selectedDishIds).length === 0 ? (
+                  <div className="text-sm text-muted-foreground text-center py-8">
+                    暂无已选菜品
+                  </div>
+                ) : (
+                  Array.from(selectedDishIds).map((dishId) => {
+                    // 优先从selectedDishesInfo中获取完整信息
+                    let dish = selectedDishesInfo.get(dishId);
+                    
+                    // 如果selectedDishesInfo中没有，尝试从当前dishList中查找
+                    if (!dish) {
+                      dish = dishList.find((d) => d.id === dishId);
+                      // 如果找到了，更新到selectedDishesInfo中
+                      if (dish) {
+                        setSelectedDishesInfo((prev) => {
+                          const newMap = new Map(prev);
+                          newMap.set(dishId, dish!);
+                          return newMap;
+                        });
+                      }
+                    }
+                    
+                    // 如果还是找不到，从formData中查找（作为后备方案）
+                    if (!dish) {
+                      const existingDish = formData.setmealDishes?.find(
+                        (d) => d.dishId === dishId
+                      );
+                      if (existingDish) {
+                        dish = {
+                          id: dishId,
+                          name: existingDish.name || "",
+                          price: existingDish.price || 0,
+                        } as Dish;
+                      }
+                    }
+                    
+                    if (!dish) return null;
+                    return (
+                      <div
+                        key={dishId}
+                        className="p-2 border rounded-md bg-muted/30"
+                      >
+                        <div className="font-medium text-sm">{dish.name}</div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          ¥{dish.price?.toFixed(2) || "0.00"}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDishDialogOpen(false)}
+            >
+              取消
+            </Button>
+            <Button
+              onClick={handleConfirmAddDishes}
+              className="bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
+            >
+              添加
             </Button>
           </DialogFooter>
         </DialogContent>

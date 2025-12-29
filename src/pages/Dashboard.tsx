@@ -48,6 +48,7 @@ const Dashboard = () => {
       setBusinessData(data);
     } catch (error) {
       console.error("获取今日数据失败:", error);
+      toast.error("获取今日数据失败，请稍后重试");
     }
   };
 
@@ -58,6 +59,7 @@ const Dashboard = () => {
       setOrderOverView(data);
     } catch (error) {
       console.error("获取订单概览失败:", error);
+      toast.error("获取订单概览失败，请稍后重试");
     }
   };
 
@@ -68,6 +70,7 @@ const Dashboard = () => {
       setOrderStatistics(data);
     } catch (error) {
       console.error("获取订单统计数据失败:", error);
+      toast.error("获取订单统计数据失败，请稍后重试");
     }
   };
 
@@ -78,6 +81,7 @@ const Dashboard = () => {
       setDishOverView(data);
     } catch (error) {
       console.error("获取菜品总览失败:", error);
+      toast.error("获取菜品总览失败，请稍后重试");
     }
   };
 
@@ -88,6 +92,7 @@ const Dashboard = () => {
       setSetmealOverView(data);
     } catch (error) {
       console.error("获取套餐总览失败:", error);
+      toast.error("获取套餐总览失败，请稍后重试");
     }
   };
 

@@ -167,6 +167,9 @@ export default function Dish() {
         setCategoryList(categories);
       } catch (error) {
         console.error("获取分类列表失败:", error);
+        toast.error("获取分类列表失败", {
+          description: getErrorMessage(error) || "请稍后重试"
+        });
       }
     };
     fetchCategoryList();

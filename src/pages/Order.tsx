@@ -186,6 +186,7 @@ export default function Order() {
         setStatistics(stats);
       } catch (error) {
         console.error("获取订单统计失败:", error);
+        toast.error("获取订单统计失败，请稍后重试");
       }
     };
     fetchStatistics();
@@ -332,7 +333,7 @@ export default function Order() {
       setCurrentOrder(null);
       reloadData();
       // 刷新统计
-      const stats = await getOrderStatistics();
+      const stats = await getOrderStatisticsAPI();
       setStatistics(stats);
     } catch (error) {
       console.error("接单失败:", error);
@@ -367,7 +368,7 @@ export default function Order() {
       setRejectionReason("");
       reloadData();
       // 刷新统计
-      const stats = await getOrderStatistics();
+      const stats = await getOrderStatisticsAPI();
       setStatistics(stats);
     } catch (error) {
       console.error("拒单失败:", error);
@@ -440,7 +441,7 @@ export default function Order() {
       setCustomCancelReason("");
       reloadData();
       // 刷新统计
-      const stats = await getOrderStatistics();
+      const stats = await getOrderStatisticsAPI();
       setStatistics(stats);
     } catch (error) {
       console.error("取消订单失败:", error);
@@ -458,7 +459,7 @@ export default function Order() {
       toast.success("派送订单成功");
       reloadData();
       // 刷新统计
-      const stats = await getOrderStatistics();
+      const stats = await getOrderStatisticsAPI();
       setStatistics(stats);
     } catch (error) {
       console.error("派送订单失败:", error);
@@ -476,7 +477,7 @@ export default function Order() {
       toast.success("完成订单成功");
       reloadData();
       // 刷新统计
-      const stats = await getOrderStatistics();
+      const stats = await getOrderStatisticsAPI();
       setStatistics(stats);
     } catch (error) {
       console.error("完成订单失败:", error);
