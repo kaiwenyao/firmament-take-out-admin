@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 export enum WebSocketStatus {
   CONNECTING = 0,
   OPEN = 1,
-  CLOSING = 2, // 补充了标准状态
+  CLOSING = 2,
   CLOSED = 3,
 }
 
@@ -14,7 +14,6 @@ export interface WebSocketOptions {
   onClose?: () => void;
   onError?: (error: Event) => void;
   onMessage?: (message: string) => void;
-  /** 是否在组件挂载时自动连接，默认为 true */
   autoConnect?: boolean;
 }
 
@@ -26,95 +25,117 @@ export function useWebSocket(options: WebSocketOptions) {
     onClose,
     onError,
     onMessage,
-    autoConnect = true, // 新增配置
+    autoConnect = true,
   } = options;
 
   const [status, setStatus] = useState<WebSocketStatus>(WebSocketStatus.CLOSED);
   const ws = useRef<WebSocket | null>(null);
-  const retryCountRef = useRef<number>(0); // 重连次数
-  const maxRetries = 10; // 最大重连次数
-  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // 重连定时器
-  const connectRef = useRef<(() => void) | null>(null); // 存储 connect 函数引用
+  const retryCountRef = useRef<number>(0);
+  const maxRetries = 10;
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const connectRef = useRef<(() => void) | null>(null);
+  
+  // 1. 新增：追踪组件挂载状态，防止卸载后更新 State
+  const isUnmountedRef = useRef(false); 
 
-  // 保持回调最新
   const callbacksRef = useRef({ onOpen, onClose, onError, onMessage });
   useEffect(() => {
     callbacksRef.current = { onOpen, onClose, onError, onMessage };
   }, [onOpen, onClose, onError, onMessage]);
 
-  // --- 核心功能：断开连接 ---
   const disconnect = useCallback(() => {
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+    
     if (ws.current) {
       try {
-        // 避免重复关闭
         if (
           ws.current.readyState === WebSocket.OPEN ||
           ws.current.readyState === WebSocket.CONNECTING
         ) {
+          // 优化：如果是主动断开，其实可以移除 onclose 监听，
+          // 这样就不会触发 CLOSED 状态更新（如果你希望断开后保持 CLOSED 状态，这步可选）
+          // 但为了保持状态同步，这里保留 close 调用，但在 onclose 里做判断
           ws.current.close(1000, "前端主动关闭");
         }
       } catch (error) {
         console.warn("[WebSocket] 断开连接时出错:", error);
       }
     }
-    // 注意：不要在这里 setStatus，依赖 socket.onclose 回调来更新状态，保证单一数据源
   }, []);
 
-  // --- 核心功能：建立连接 ---
   const connect = useCallback(() => {
-    // 1. 基础校验
-    if (!sid) return;
+    if (!sid) {
+      // 修复：检查是否卸载
+      if (!isUnmountedRef.current) setStatus(WebSocketStatus.CLOSED);
+      return;
+    }
 
-    // 2. 如果已有连接，先关闭，确保“重连”是彻底的
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+
     if (ws.current) {
-      // 如果当前是连接或打开状态，不重复创建，除非你想强制重连
-      // 这里为了简单，如果已连接则直接返回，交给 reconnect 去处理强制重连
-      if (
-        ws.current.readyState === WebSocket.OPEN ||
-        ws.current.readyState === WebSocket.CONNECTING
-      ) {
-        return;
+      const oldSocket = ws.current;
+      oldSocket.onopen = null;
+      oldSocket.onmessage = null;
+      oldSocket.onerror = null;
+      oldSocket.onclose = null;
+      
+      try {
+        oldSocket.close(1000, "被新连接接管");
+      } catch {
+        // ignore
       }
-      // 或者是残留的 CLOSED 实例，清理掉
       ws.current = null;
     }
 
     const wsUrl = `${url}/ws/${sid}`;
 
     try {
-      setStatus(WebSocketStatus.CONNECTING);
+      // 修复：检查是否卸载
+      if (!isUnmountedRef.current) setStatus(WebSocketStatus.CONNECTING);
+      
       const socket = new WebSocket(wsUrl);
-      ws.current = socket; // 立即赋值
+      ws.current = socket;
 
       socket.onopen = () => {
-        // 双重校验：确保当前 socket 还是 ws.current (防止快速切换导致的竞态)
-        if (ws.current === socket) {
+        // 修复：增加 !isUnmountedRef.current 判断
+        if (ws.current === socket && !isUnmountedRef.current) {
           setStatus(WebSocketStatus.OPEN);
-          retryCountRef.current = 0; // 连接成功，重置重连次数
+          retryCountRef.current = 0;
           callbacksRef.current.onOpen?.();
         }
       };
 
       socket.onmessage = (event) => {
-        if (ws.current === socket) {
+        if (ws.current === socket && !isUnmountedRef.current) {
           callbacksRef.current.onMessage?.(event.data);
         }
       };
 
       socket.onclose = (event) => {
+        // 关键点：即使 socket 匹配，如果组件卸载了，也绝对不能 setStatus
         if (ws.current === socket) {
-          setStatus(WebSocketStatus.CLOSED);
-          callbacksRef.current.onClose?.();
-          ws.current = null; // 清理引用
+          ws.current = null;
           
-          // 如果不是主动关闭（code 1000），且未达到最大重连次数，则尝试重连
-          if (event.code !== 1000 && retryCountRef.current < maxRetries) {
-            // 使用指数退避策略
+          if (!isUnmountedRef.current) {
+            setStatus(WebSocketStatus.CLOSED);
+            callbacksRef.current.onClose?.();
+          }
+
+          if (event.code !== 1000 && retryCountRef.current < maxRetries && !isUnmountedRef.current) {
             const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 30000);
             retryCountRef.current += 1;
             
+            if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+            
             reconnectTimerRef.current = setTimeout(() => {
-              if (retryCountRef.current <= maxRetries && connectRef.current) {
+              // 再次检查卸载状态
+              if (!isUnmountedRef.current && connectRef.current) {
                 connectRef.current();
               }
             }, delay);
@@ -123,89 +144,81 @@ export function useWebSocket(options: WebSocketOptions) {
       };
 
       socket.onerror = (error) => {
-        if (ws.current === socket) {
-          // onerror 后通常紧接着 onclose，所以这里只回调不改状态，状态由 onclose 处理
+        if (ws.current === socket && !isUnmountedRef.current) {
           callbacksRef.current.onError?.(error);
         }
       };
     } catch (error) {
       console.error("[WebSocket] 创建连接失败:", error);
-      setStatus(WebSocketStatus.CLOSED);
+      if (!isUnmountedRef.current) setStatus(WebSocketStatus.CLOSED);
       ws.current = null;
     }
-  }, [url, sid]); // 依赖项仅 url 和 sid
+  }, [url, sid]);
 
-  // 更新 connect 函数引用
   useEffect(() => {
     connectRef.current = connect;
   }, [connect]);
 
-  // --- 核心功能：发送消息 ---
   const send = useCallback((message: string) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(message);
       return true;
     }
-    console.warn("[WebSocket] 发送失败，连接未就绪");
     return false;
   }, []);
 
-  // --- 核心功能：强制重连 ---
-  // 先断开，再连接
   const reconnect = useCallback(() => {
-    // 清除可能存在的重连定时器
     if (reconnectTimerRef.current) {
       clearTimeout(reconnectTimerRef.current);
       reconnectTimerRef.current = null;
     }
-    
-    // 重置重连次数
     retryCountRef.current = 0;
-    
-    disconnect();
-    // 由于 disconnect 是异步的（close 事件），为了确保断开后再连，
-    // 使用一个短暂的延时
-    reconnectTimerRef.current = setTimeout(() => {
-      connect();
-    }, 300);
-  }, [disconnect, connect]);
+    connect();
+  }, [connect]);
 
   // --- 生命周期管理 ---
   useEffect(() => {
+    // 每次副作用执行，重置卸载标记（应对 React 18 Strict Mode 的多次挂载）
+    isUnmountedRef.current = false; 
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let isMounted = true;
 
     if (autoConnect) {
-      // 关键修改：使用 setTimeout 将连接操作推迟到下一个事件循环
-      // 这样就避免了 "Synchronous setState" 报错
+      // 这里的 setTimeout 0 其实在 useEffect 里不是必须的，
+      // 因为 useEffect 本身就在渲染提交后执行。不过留着也没坏处。
       timer = setTimeout(() => {
-        if (isMounted) {
+        if (!isUnmountedRef.current) {
           connect();
         }
       }, 0);
     }
 
-    // 组件卸载时的清理函数
     return () => {
-      isMounted = false;
-      if (timer !== undefined) {
-        clearTimeout(timer); // 防止组件快速卸载时尝试连接
-      }
-      // 清除重连定时器
+      // 2. 标记组件已卸载
+      isUnmountedRef.current = true;
+      
+      if (timer !== undefined) clearTimeout(timer);
+      
       if (reconnectTimerRef.current) {
         clearTimeout(reconnectTimerRef.current);
         reconnectTimerRef.current = null;
       }
-      // 确保 disconnect 函数存在且 ws.current 存在时才调用
-      try {
-        if (ws.current) {
-          disconnect();
+      
+      retryCountRef.current = maxRetries + 1;
+
+      // 3. 安全清理
+      if (ws.current) {
+        // 在这里，我们其实可以直接暴力 close，因为 isUnmountedRef 已经是 true 了，
+        // 就算触发 onclose，上面的逻辑也会拦截 setStatus
+        try {
+            ws.current.close(1000, "组件卸载");
+        } catch {
+          // ignore
         }
-      } catch (error) {
-        console.warn("[WebSocket] 清理时出错:", error);
+        // 不必调用 disconnect()，因为 disconnect 内部逻辑比较多，
+        // 直接 close 加上 isUnmountedRef=true 的拦截机制最安全
       }
     };
-  }, [connect, disconnect, autoConnect]);
+  }, [connect, autoConnect]); // 移除 disconnect 依赖，cleanup 里直接写逻辑更清晰
 
   return {
     status,
@@ -213,6 +226,6 @@ export function useWebSocket(options: WebSocketOptions) {
     send,
     disconnect,
     reconnect,
-    connect, // 暴露 connect 以便手动触发
+    connect,
   };
 }
