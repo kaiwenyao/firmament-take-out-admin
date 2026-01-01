@@ -201,8 +201,9 @@ instance.interceptors.response.use(
     }
 
     // 处理其他错误
+    const errorData = error.response?.data as { msg?: string } | undefined;
     const errorMessage =
-      error.response?.data?.msg || error.message || "网络异常";
+      errorData?.msg || error.message || "网络异常";
     toast.error(errorMessage); // 统一显示错误提示给用户
     return Promise.reject(new Error(errorMessage));
   }

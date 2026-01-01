@@ -57,9 +57,11 @@ import {
   cancelOrderAPI,
   deliveryOrderAPI,
   completeOrderAPI,
+  getOrderDetailsAPI,
   type Order,
   type OrderPageQuery,
   type OrderStatistics,
+  type OrderDetail,
 } from "@/api/order";
 import { toast } from "sonner";
 import { DateTimePicker } from "@/components/DateTimePicker";
@@ -168,6 +170,9 @@ export default function Order() {
   const [selectedCancelReason, setSelectedCancelReason] = useState<string>(""); // 选中的取消原因类型
   const [customCancelReason, setCustomCancelReason] = useState(""); // 自定义取消原因
   const [actionLoading, setActionLoading] = useState(false); // 操作加载状态
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false); // 订单详情对话框
+  const [orderDetail, setOrderDetail] = useState<Order | null>(null); // 订单详情数据
+  const [detailLoading, setDetailLoading] = useState(false); // 详情加载状态
 
   // 取消原因选项列表
   const CANCEL_REASON_OPTIONS = [
@@ -487,6 +492,23 @@ export default function Order() {
     }
   };
 
+  // 打开订单详情对话框
+  const handleOpenDetailDialog = async (order: Order) => {
+    setDetailDialogOpen(true);
+    setDetailLoading(true);
+    setOrderDetail(null);
+    try {
+      const detail = await getOrderDetailsAPI(order.id);
+      setOrderDetail(detail);
+    } catch (error) {
+      console.error("获取订单详情失败:", error);
+      toast.error("获取订单详情失败，请稍后重试");
+      setDetailDialogOpen(false);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
 
   // 计算总页数
   const totalPages = Math.ceil(total / reqData.pageSize);
@@ -696,10 +718,18 @@ export default function Order() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
+                              {/* 查看详情按钮 - 所有状态都显示 */}
+                              <button
+                                onClick={() => handleOpenDetailDialog(item)}
+                                className="text-primary hover:text-primary/80 hover:underline text-sm font-medium cursor-pointer transition-colors"
+                              >
+                                查看详情
+                              </button>
                               {/* 根据订单状态显示不同的操作按钮 */}
                               {/* 状态2: 待接单 - 可以接单或拒单 */}
                               {item.status === 2 && (
                                 <>
+                                  <Separator orientation="vertical" className="h-4" />
                                   <button
                                     onClick={() => handleOpenConfirmDialog(item)}
                                     disabled={actionLoading}
@@ -720,6 +750,7 @@ export default function Order() {
                               {/* 状态3: 已接单(待派送) - 可以派送或取消 */}
                               {item.status === 3 && (
                                 <>
+                                  <Separator orientation="vertical" className="h-4" />
                                   <button
                                     onClick={() => handleDeliveryOrder(item)}
                                     disabled={actionLoading}
@@ -739,13 +770,16 @@ export default function Order() {
                               )}
                               {/* 状态4: 派送中 - 可以完成 */}
                               {item.status === 4 && (
-                                <button
-                                  onClick={() => handleCompleteOrder(item)}
-                                  disabled={actionLoading}
-                                  className="text-primary hover:text-primary/80 hover:underline text-sm font-medium cursor-pointer transition-colors disabled:opacity-50"
-                                >
-                                  完成
-                                </button>
+                                <>
+                                  <Separator orientation="vertical" className="h-4" />
+                                  <button
+                                    onClick={() => handleCompleteOrder(item)}
+                                    disabled={actionLoading}
+                                    className="text-primary hover:text-primary/80 hover:underline text-sm font-medium cursor-pointer transition-colors disabled:opacity-50"
+                                  >
+                                    完成
+                                  </button>
+                                </>
                               )}
                             </div>
                           </TableCell>
@@ -1028,6 +1062,149 @@ export default function Order() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {actionLoading ? "处理中..." : "确认"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 订单详情对话框 */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>订单详情</DialogTitle>
+          </DialogHeader>
+          {detailLoading ? (
+            <div className="py-8">
+              <Skeleton className="h-10 w-full mb-4" />
+              <Skeleton className="h-10 w-full mb-4" />
+              <Skeleton className="h-10 w-full mb-4" />
+            </div>
+          ) : orderDetail ? (
+            <div className="space-y-6 py-4">
+              {/* 用户信息 */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold border-b pb-2">用户信息</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-muted-foreground">用户名</Label>
+                    <div className="text-base font-medium">{orderDetail.userName || "-"}</div>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">手机号</Label>
+                    <div className="text-base font-medium">{orderDetail.phone || "-"}</div>
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-sm text-muted-foreground">收货人</Label>
+                    <div className="text-base font-medium">{orderDetail.consignee || "-"}</div>
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-sm text-muted-foreground">收货地址</Label>
+                    <div className="text-base font-medium">{orderDetail.address || "-"}</div>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* 订单信息 */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold border-b pb-2">订单信息</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-muted-foreground">订单号</Label>
+                    <div className="text-base font-medium">{orderDetail.number || "-"}</div>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">订单状态</Label>
+                    <div>
+                      <Badge className={getOrderStatusColor(orderDetail.status)}>
+                        {getOrderStatusText(orderDetail.status)}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">下单时间</Label>
+                    <div className="text-base font-medium">{orderDetail.orderTime || "-"}</div>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">结账时间</Label>
+                    <div className="text-base font-medium">{orderDetail.checkoutTime || "-"}</div>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">支付方式</Label>
+                    <div className="text-base font-medium">{getPayMethodText(orderDetail.payMethod)}</div>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">实收金额</Label>
+                    <div className="text-base font-semibold text-primary">
+                      ¥{orderDetail.amount?.toFixed(2) || "0.00"}
+                    </div>
+                  </div>
+                  {orderDetail.remark && (
+                    <div className="col-span-2">
+                      <Label className="text-sm text-muted-foreground">备注</Label>
+                      <div className="text-base font-medium">{orderDetail.remark}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* 菜品信息 */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold border-b pb-2">菜品信息</h3>
+                {orderDetail.orderDetailList && orderDetail.orderDetailList.length > 0 ? (
+                  <div className="space-y-3">
+                    {orderDetail.orderDetailList.map((detail: OrderDetail, index: number) => (
+                      <div
+                        key={detail.id || index}
+                        className="flex items-start gap-4 p-3 border rounded-lg hover:bg-muted/30 transition-colors"
+                      >
+                        {detail.image && (
+                          <img
+                            src={detail.image}
+                            alt={detail.name || "菜品"}
+                            className="w-20 h-20 object-cover rounded-md"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <div className="font-medium text-base mb-1">
+                            {detail.name || "未知菜品"}
+                          </div>
+                          {detail.dishFlavor && (
+                            <div className="text-sm text-muted-foreground mb-2">
+                              口味：{detail.dishFlavor}
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm text-muted-foreground">
+                              数量：{detail.number} × ¥{detail.amount?.toFixed(2) || "0.00"}
+                            </div>
+                            <div className="font-semibold text-primary">
+                              ¥{((detail.number || 0) * (detail.amount || 0)).toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">暂无菜品信息</div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="py-8 text-center text-muted-foreground">
+              加载失败，请重试
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDetailDialogOpen(false)}
+            >
+              关闭
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
-export enum WebSocketStatus {
-  CONNECTING = 0,
-  OPEN = 1,
-  CLOSING = 2,
-  CLOSED = 3,
-}
+export const WebSocketStatus = {
+  CONNECTING: 0,
+  OPEN: 1,
+  CLOSING: 2,
+  CLOSED: 3,
+} as const;
+
+export type WebSocketStatus = typeof WebSocketStatus[keyof typeof WebSocketStatus];
 
 export interface WebSocketOptions {
   url?: string;
@@ -17,9 +19,20 @@ export interface WebSocketOptions {
   autoConnect?: boolean;
 }
 
+
+// 获取当前协议 (如果是 https 就是 wss，如果是 http 就是 ws)
+const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+
+// 获取当前域名 (firmament-admin.kaiwen.dev)
+const domain = window.location.host;
+
+// 拼装地址 -> wss://firmament-admin.kaiwen.dev/api/ws
+export const WS_URL = `${protocol}${domain}/api`;
+
 export function useWebSocket(options: WebSocketOptions) {
   const {
-    url = "ws://localhost:8080",
+    url = WS_URL,
+    // url = "ws://localhost:8080",
     sid,
     onOpen,
     onClose,
