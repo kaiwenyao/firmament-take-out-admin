@@ -11,17 +11,19 @@
 - **React Router DOM** ^7.11.0 - 用于单页应用的路由管理
 
 ### UI 组件库
-- **Radix UI** - 无样式、可访问的 UI 组件基础库
-  - @radix-ui/react-alert-dialog ^1.1.15
-  - @radix-ui/react-checkbox ^1.3.3
-  - @radix-ui/react-dialog ^1.1.15
-  - @radix-ui/react-dropdown-menu ^2.1.16
-  - @radix-ui/react-label ^2.1.8
-  - @radix-ui/react-popover ^1.1.15
-  - @radix-ui/react-radio-group ^1.3.8
-  - @radix-ui/react-separator ^1.1.8
-  - @radix-ui/react-slot ^1.2.4
-  - @radix-ui/react-tabs ^1.1.13
+- **shadcn/ui** - 基于 Radix UI 和 Tailwind CSS 的可复用组件系统
+  - 使用的组件：Alert Dialog, Badge, Button, Calendar, Card, Checkbox, Dialog, Dropdown Menu, Input, Label, Pagination, Popover, Radio Group, Separator, Skeleton, Sonner, Table, Tabs, Textarea
+  - 基于 **Radix UI** 无样式、可访问的 UI 组件库
+    - @radix-ui/react-alert-dialog ^1.1.15 - 警告对话框组件
+    - @radix-ui/react-checkbox ^1.3.3 - 复选框组件
+    - @radix-ui/react-dialog ^1.1.15 - 对话框组件
+    - @radix-ui/react-dropdown-menu ^2.1.16 - 下拉菜单组件
+    - @radix-ui/react-label ^2.1.8 - 标签组件
+    - @radix-ui/react-popover ^1.1.15 - 弹出框组件
+    - @radix-ui/react-radio-group ^1.3.8 - 单选按钮组组件
+    - @radix-ui/react-separator ^1.1.8 - 分隔线组件
+    - @radix-ui/react-slot ^1.2.4 - 插槽组件
+    - @radix-ui/react-tabs ^1.1.13 - 标签页组件
 - **Tailwind CSS** ^4.1.18 - 实用优先的 CSS 框架
 - **@tailwindcss/vite** ^4.1.18 - Tailwind CSS Vite 插件
 - **lucide-react** ^0.562.0 - 图标库
