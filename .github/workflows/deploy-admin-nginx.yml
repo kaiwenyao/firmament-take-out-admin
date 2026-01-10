@@ -49,7 +49,6 @@ jobs:
               --name "${{ env.CONTAINER_NAME }}" \
               --restart unless-stopped \
               --network firmament_app-network \
-              -e NGINX_SERVER_NAME="${{ secrets.NGINX_SERVER_NAME }}" \
               -e FIRMAMENT_SERVER_HOST="${{ secrets.FIRMAMENT_SERVER_HOST }}" \
               -e FIRMAMENT_SERVER_PORT="${{ secrets.FIRMAMENT_SERVER_PORT }}" \
               "${{ env.IMAGE_NAME }}:latest"

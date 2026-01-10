@@ -1,6 +1,6 @@
 server {
     listen 80;
-    server_name ${NGINX_SERVER_NAME};
+    server_name localhost;
 
     # 1. 静态资源
     location / {
