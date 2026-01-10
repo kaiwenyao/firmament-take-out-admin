@@ -52,3 +52,31 @@ admin-front-react/
 ├── public/           # 公共静态文件
 └── package.json      # 项目依赖配置
 ```
+
+## 前置要求
+
+在开始之前，请确保你的本地环境已安装以下依赖：
+
+- **Node.js** >= 18.0.0（推荐使用 Node.js 24.x LTS 版本）
+- **npm** >= 9.0.0（通常随 Node.js 一起安装）
+
+你可以通过以下命令检查版本：
+
+```bash
+node --version
+npm --version
+```
+
+## 本地调试
+
+按照以下步骤在本地运行项目：
+
+```bash
+# 1. 安装依赖
+npm install
+
+# 2. 启动开发服务器
+npm run dev
+```
+
+启动成功后，在浏览器中访问 `http://localhost:5173` 即可查看应用。
