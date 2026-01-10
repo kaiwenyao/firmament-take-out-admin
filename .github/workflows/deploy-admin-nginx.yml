@@ -6,8 +6,8 @@ on:
       - main
 
 env:
-  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/firmament-admin-nginx
-  CONTAINER_NAME: firmament-admin-nginx
+  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/firmament-admin
+  CONTAINER_NAME: firmament-admin
   HOST_PORT: 80
 
 jobs:
