@@ -80,3 +80,36 @@ npm run dev
 ```
 
 启动成功后，在浏览器中访问 `http://localhost:5173` 即可查看应用。
+
+## Github Actions
+
+项目使用 Docker 容器化部署，通过 GitHub Actions 实现自动化 CI/CD。
+
+### 自动化部署
+
+当代码推送到 `main` 分支时，GitHub Actions 会自动：
+1. 构建 Docker 镜像并推送到 Docker Hub
+2. 通过 SSH 部署到服务器并启动容器
+
+### 部署文件
+
+- **Dockerfile**：多阶段构建，使用 nginx 提供静态文件服务
+- **deploy/nginx/admin.conf.tpl**：nginx 配置模板，支持环境变量配置后端地址
+- **deploy/nginx/docker-entrypoint.d/99-envsubst.sh**：容器启动时替换环境变量
+- **.github/workflows/deploy-admin-nginx.yml**：GitHub Actions 工作流配置
+
+### 手动部署
+
+```bash
+# 构建镜像
+docker build -t firmament-admin:latest .
+
+# 运行容器
+docker run -d \
+  --name firmament-admin \
+  --restart unless-stopped \
+  -p 80:80 \
+  -e FIRMAMENT_SERVER_HOST=your-backend-host \
+  -e FIRMAMENT_SERVER_PORT=your-backend-port \
+  firmament-admin:latest
+```
