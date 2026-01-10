@@ -53,3 +53,4 @@ jobs:
               -e FIRMAMENT_SERVER_HOST="${{ secrets.FIRMAMENT_SERVER_HOST }}" \
               -e FIRMAMENT_SERVER_PORT="${{ secrets.FIRMAMENT_SERVER_PORT }}" \
               "${{ env.IMAGE_NAME }}:latest"
+            docker network connect nginx-proxy-manager_default "${{ env.CONTAINER_NAME }}" || true
