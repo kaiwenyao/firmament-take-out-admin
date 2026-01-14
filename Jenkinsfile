@@ -1,6 +1,10 @@
 pipeline {
     agent any
     
+    tools {
+        nodejs 'nodejs-24.11.1' // 使用 Jenkins 中配置的 Node.js 工具
+    }
+    
     environment {
         // 从 Jenkins Credentials 中读取
         DOCKER_USERNAME = credentials('docker-username')
