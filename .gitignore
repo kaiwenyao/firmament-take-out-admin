@@ -26,3 +26,6 @@ dist-ssr
 
 back_material/
 back-springboot/
+
+# GitHub Actions (使用 Jenkins 替代)
+.github

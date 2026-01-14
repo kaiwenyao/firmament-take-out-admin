@@ -83,7 +83,8 @@ npm run dev
 
 ## Github Actions
 
-项目使用 Docker 容器化部署，通过 GitHub Actions 实现自动化 CI/CD。
+项目使用 Docker 容器化部署，通过 GitHub Actions 实现自动化 CI/CD
+
 
 ### 自动化部署
 
