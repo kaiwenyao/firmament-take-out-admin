@@ -25,11 +25,6 @@ spec:
         - "9999999"
       tty: true
       workingDir: /home/jenkins/agent
-      volumeMounts:
-        # 挂载 Node.js 缓存
-        - mountPath: /root/.npm
-          name: jenkins-npm-cache
-          readOnly: false
 
     # -------------------------------------------------------
     # 2. Docker 容器配置 (用于构建和推送镜像)
@@ -51,11 +46,6 @@ spec:
   # 3. 卷定义
   # -------------------------------------------------------
   volumes:
-    # PVC: Node.js npm 缓存持久化存储
-    - name: jenkins-npm-cache
-      persistentVolumeClaim:
-        claimName: jenkins-npm-cache
-        
     # HostPath: 挂载宿主机 Docker Socket
     - name: docker-sock
       hostPath:
