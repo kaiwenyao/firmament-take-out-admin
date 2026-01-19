@@ -166,6 +166,9 @@ spec:
                         
                         // 执行传输和运行
                         sh """
+                            # 安装 SSH 客户端工具（Alpine Linux）
+                            apk add --no-cache openssh-client
+                            
                             mkdir -p ~/.ssh
                             cp "${SSH_KEY}" ~/.ssh/deploy_key
                             chmod 600 ~/.ssh/deploy_key
