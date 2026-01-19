@@ -1,8 +1,67 @@
 pipeline {
-    agent any
-    
-    tools {
-        nodejs 'nodejs-24.11.1' // 使用 Jenkins 中配置的 Node.js 工具
+    agent {
+        kubernetes {
+            // 指向你在 Jenkins 系统管理里配置的云名称，通常默认为 "kubernetes"
+            cloud 'kubernetes' 
+            
+            // Pod Template 配置
+            yaml '''
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    # 对应 Jenkins 中配置的标签列表
+    jenkins/label: firmament-build
+spec:
+  containers:
+    # -------------------------------------------------------
+    # 1. Node.js 容器配置 (用于前端构建)
+    # -------------------------------------------------------
+    - name: nodejs
+      image: node:24-alpine
+      command:
+        - sleep
+      args:
+        - "9999999"
+      tty: true
+      workingDir: /home/jenkins/agent
+      volumeMounts:
+        # 挂载 Node.js 缓存
+        - mountPath: /root/.npm
+          name: jenkins-npm-cache
+          readOnly: false
+
+    # -------------------------------------------------------
+    # 2. Docker 容器配置 (用于构建和推送镜像)
+    # -------------------------------------------------------
+    - name: docker
+      image: docker:latest
+      command:
+        - sleep
+      args:
+        - "9999999"
+      tty: true
+      workingDir: /home/jenkins/agent
+      volumeMounts:
+        # 挂载宿主机 Docker Socket
+        - mountPath: /var/run/docker.sock
+          name: docker-sock
+          
+  # -------------------------------------------------------
+  # 3. 卷定义
+  # -------------------------------------------------------
+  volumes:
+    # PVC: Node.js npm 缓存持久化存储
+    - name: jenkins-npm-cache
+      persistentVolumeClaim:
+        claimName: jenkins-npm-cache
+        
+    # HostPath: 挂载宿主机 Docker Socket
+    - name: docker-sock
+      hostPath:
+        path: /var/run/docker.sock
+'''
+        }
     }
     
     environment {
@@ -22,16 +81,20 @@ pipeline {
         
         stage('2. 代码检查') {
             steps {
-                echo '正在运行代码检查...'
-                sh 'npm ci'
-                sh 'npm run lint'
+                container('nodejs') {
+                    echo '正在运行代码检查...'
+                    sh 'npm ci'
+                    sh 'npm run lint'
+                }
             }
         }
         
         stage('3. 构建项目') {
             steps {
-                echo '构建前端项目...'
-                sh 'npm run build'
+                container('nodejs') {
+                    echo '构建前端项目...'
+                    sh 'npm run build'
+                }
             }
         }
         
@@ -41,13 +104,15 @@ pipeline {
                 not { changeRequest() }
             }
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh '''
-                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                            docker build -t ${DOCKER_USER}/firmament-admin:latest -f Dockerfile .
-                            docker push ${DOCKER_USER}/firmament-admin:latest
-                        '''
+                container('docker') {
+                    script {
+                        withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                            sh '''
+                                echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                                docker build -t ${DOCKER_USER}/firmament-admin:latest -f Dockerfile .
+                                docker push ${DOCKER_USER}/firmament-admin:latest
+                            '''
+                        }
                     }
                 }
             }
@@ -62,8 +127,9 @@ pipeline {
                 }
             }
             steps {
-                echo '🚀 生产环境部署启动...'
-                script {
+                container('nodejs') {
+                    echo '🚀 生产环境部署启动...'
+                    script {
                     withCredentials([
                         sshUserPrivateKey(
                             credentialsId: 'server-ssh-key',
