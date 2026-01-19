@@ -189,6 +189,7 @@ spec:
                             rm -f ~/.ssh/deploy_key deploy.sh
                         """
                     }
+                    }
                 }
             }
         }
