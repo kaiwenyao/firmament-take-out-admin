@@ -29,3 +29,5 @@ back-springboot/
 
 # GitHub Actions (使用 Jenkins 替代)
 .github
+
+sonar-project.properties
