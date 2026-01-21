@@ -31,3 +31,6 @@ back-springboot/
 .github
 
 sonar-project.properties
+# SonarQube 扫描产生的临时文件夹
+.scannerwork/
+.sonar/
