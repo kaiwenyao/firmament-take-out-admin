@@ -1,111 +1,116 @@
-# 苍穹外卖 - 管理端
+# Firmament Takeaway — Admin Console
 
-## 演示网站
+**[中文](./README.zh.md)** — Switch to Chinese
 
-**访问地址：** https://firmament-admin.kaiwen.dev
+Web admin for the Firmament Takeaway (苍穹外卖) platform: dashboards, orders, dishes, set meals, categories, employees, and real-time order notifications.
 
-### 登录信息
+## Demo
 
-- **账号：** admin
-- **密码：** 123456
+**URL:** https://firmament-admin.kaiwen.dev
 
-## 技术栈
+### Demo credentials
 
-### 核心框架
-- **React** ^19.2.0 - 用于构建用户界面的 JavaScript 库
-- **TypeScript** ~5.9.3 - JavaScript 的超集，提供类型安全
-- **Vite** ^7.2.4 - 下一代前端构建工具，提供快速的开发体验
+- **Username:** `admin`
+- **Password:** `123456`
 
-### 路由管理
-- **React Router DOM** ^7.11.0 - 用于单页应用的路由管理
+## Tech stack
 
-### UI 组件库
-- **shadcn/ui** - 基于 Radix UI 和 Tailwind CSS 的可复用组件系统
-- **Tailwind CSS** ^4.1.18 - 实用优先的 CSS 框架
-- **lucide-react** ^0.562.0 - 图标库
+### Core
 
-### 数据可视化
-- **ECharts** ^6.0.0 - 强大的数据可视化图表库
-- **echarts-for-react** ^3.0.5 - ECharts 的 React 封装
+- **React** ^19.2.0 — UI library
+- **TypeScript** ~5.9.3 — static typing
+- **Vite** ^7.2.4 — dev server and production build
 
-### HTTP 请求
-- **Axios** ^1.13.2 - 基于 Promise 的 HTTP 客户端
+### Routing
 
-### 开发工具
-- **ESLint** ^9.39.1 - JavaScript/TypeScript 代码检查工具
-- **TypeScript ESLint** ^8.46.4 - TypeScript 的 ESLint 插件
-- **@vitejs/plugin-react-swc** ^4.2.2 - Vite 的 React SWC 插件
-- **tw-animate-css** ^1.4.0 - Tailwind CSS 动画工具
+- **React Router DOM** ^7.11.0 — SPA routing
 
-## 项目结构
+### UI
+
+- **shadcn/ui** — composable components on Radix UI and Tailwind CSS
+- **Tailwind CSS** ^4.1.18 — utility-first styling
+- **lucide-react** ^0.562.0 — icons
+
+### Data visualization
+
+- **ECharts** ^6.0.0 — charts
+- **echarts-for-react** ^3.0.5 — React bindings for ECharts
+
+### HTTP
+
+- **Axios** ^1.13.2 — HTTP client (shared instance and interceptors in `src/api/request.ts`)
+
+### Tooling
+
+- **ESLint** ^9.39.1 — linting
+- **TypeScript ESLint** ^8.46.4 — TypeScript rules for ESLint
+- **@vitejs/plugin-react-swc** ^4.2.2 — fast React refresh with SWC
+- **tw-animate-css** ^1.4.0 — Tailwind animation utilities
+
+## Project layout
 
 ```
-admin-front-react/
-├── src/
-│   ├── api/          # API 接口定义
-│   ├── assets/       # 静态资源
-│   ├── components/   # 公共组件
-│   ├── hooks/        # 自定义 Hooks
-│   ├── pages/        # 页面组件
-│   ├── router.tsx    # 路由配置
-│   └── utils/        # 工具函数
-├── public/           # 公共静态文件
-└── package.json      # 项目依赖配置
+src/
+├── api/          # API modules (axios wrappers per domain)
+├── assets/       # Images, audio, etc.
+├── components/   # Shared UI (layout, shadcn/ui)
+├── hooks/        # Custom hooks (e.g. WebSocket)
+├── pages/        # Route-level pages
+├── router.tsx    # Route definitions
+└── utils/        # Helpers (navigation, upload, …)
+public/           # Static files served as-is
 ```
 
-## 前置要求
+## Prerequisites
 
-在开始之前，请确保你的本地环境已安装以下依赖：
+- **Node.js** >= 18 (Node.js 24.x LTS recommended)
+- **npm** >= 9 (usually bundled with Node.js)
 
-- **Node.js** >= 18.0.0（推荐使用 Node.js 24.x LTS 版本）
-- **npm** >= 9.0.0（通常随 Node.js 一起安装）
-
-你可以通过以下命令检查版本：
+Check versions:
 
 ```bash
 node --version
 npm --version
 ```
 
-## 本地调试
-
-按照以下步骤在本地运行项目：
+## Local development
 
 ```bash
-# 1. 安装依赖
 npm install
-
-# 2. 启动开发服务器
 npm run dev
 ```
 
-启动成功后，在浏览器中访问 `http://localhost:5173` 即可查看应用。
+Open **http://localhost:5173**. API calls use `/api` and are proxied in `vite.config.ts` to your backend (see that file for paths and rewrites).
 
-## Github Actions
+Other scripts:
 
-项目使用 Docker 容器化部署，通过 GitHub Actions 实现自动化 CI/CD
+- `npm run build` — typecheck and production build
+- `npm run preview` — preview the production build locally
+- `npm run lint` — run ESLint
 
+## GitHub Actions and Docker
 
-### 自动化部署
+The app is built as static assets and served with nginx inside Docker; CI/CD is automated with GitHub Actions.
 
-当代码推送到 `main` 分支时，GitHub Actions 会自动：
-1. 构建 Docker 镜像并推送到 Docker Hub
-2. 通过 SSH 部署到服务器并启动容器
+### Automated deploy
 
-### 部署文件
+On push to `main`, the workflow typically:
 
-- **Dockerfile**：多阶段构建，使用 nginx 提供静态文件服务
-- **deploy/nginx/admin.conf.tpl**：nginx 配置模板，支持环境变量配置后端地址
-- **deploy/nginx/docker-entrypoint.d/99-envsubst.sh**：容器启动时替换环境变量
-- **.github/workflows/deploy-admin-nginx.yml**：GitHub Actions 工作流配置
+1. Builds the Docker image and pushes it to Docker Hub
+2. Deploys over SSH and starts the container on the server
 
-### 手动部署
+### Deploy-related files
+
+- **Dockerfile** — multi-stage build; nginx serves the built frontend
+- **deploy/nginx/admin.conf.tpl** — nginx template (backend host/port via env)
+- **deploy/nginx/docker-entrypoint.d/99-envsubst.sh** — env substitution at container start
+- **.github/workflows/deploy-admin-nginx.yml** — workflow definition
+
+### Manual Docker run
 
 ```bash
-# 构建镜像
 docker build -t firmament-admin:latest .
 
-# 运行容器
 docker run -d \
   --name firmament-admin \
   --restart unless-stopped \
@@ -114,3 +119,5 @@ docker run -d \
   -e FIRMAMENT_SERVER_PORT=your-backend-port \
   firmament-admin:latest
 ```
+
+Adjust `FIRMAMENT_SERVER_*` to match your backend service.
