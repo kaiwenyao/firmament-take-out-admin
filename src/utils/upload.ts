@@ -14,13 +14,13 @@ export const uploadImage = async (
   // 验证文件类型
   const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
   if (!allowedTypes.includes(file.type)) {
-    throw new Error("不支持的文件类型，请上传图片文件（JPG、PNG、GIF、WEBP）");
+    throw new Error("Unsupported file type. Please upload an image (JPG, PNG, GIF, or WEBP).");
   }
 
   // 验证文件大小（限制为 10MB）
   const maxSize = 10 * 1024 * 1024; // 10MB
   if (file.size > maxSize) {
-    throw new Error("文件大小不能超过 10MB");
+    throw new Error("File size must not exceed 10MB.");
   }
 
   const formData = new FormData();
@@ -41,13 +41,13 @@ export const uploadImage = async (
     if (res.code === 1) {
       return res.data;
     } else {
-      throw new Error(res.msg || "上传失败");
+      throw new Error(res.msg || "Upload failed");
     }
   } catch (error) {
     if (error instanceof Error) {
       throw error;
     }
-    throw new Error("上传失败，请稍后重试");
+    throw new Error("Upload failed. Please try again.");
   }
 };
 

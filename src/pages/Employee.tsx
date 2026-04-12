@@ -78,7 +78,7 @@ const getErrorMessage = (error: unknown): string => {
     }
     // HTTP 状态码错误
     if (axiosError.response?.status) {
-      return `请求失败 (${axiosError.response.status})`;
+      return `Request failed (${axiosError.response.status})`;
     }
   }
 
@@ -90,8 +90,7 @@ const getErrorMessage = (error: unknown): string => {
     }
   }
 
-  // 默认错误信息
-  return "操作失败，请稍后重试";
+  return "Something went wrong. Please try again.";
 };
 
 export default function Employee() {
@@ -135,7 +134,7 @@ export default function Employee() {
         setTotal(Number(res.total));
       } catch (error) {
         console.error(error);
-        toast.error("获取员工列表失败");
+        toast.error("Failed to load employees");
       } finally {
         setLoading(false);
       }
@@ -187,20 +186,20 @@ export default function Employee() {
     if (!currentEmployee) return;
 
     const newStatus = currentEmployee.status === 1 ? 0 : 1;
-    const action = newStatus === 1 ? "启用" : "禁用";
+    const action = newStatus === 1 ? "Enabled" : "Disabled";
 
     try {
       await enableOrDisableEmployeeAPI(newStatus, currentEmployee.id);
       setConfirmDialogOpen(false);
       setCurrentEmployee(null);
-      toast.success(`${action}员工账号成功`);
+      toast.success(`Account ${action.toLowerCase()}`);
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error(`${action}员工账号失败:`, error);
       setConfirmDialogOpen(false);
-      toast.error(`${action}员工账号失败`, {
-        description: getErrorMessage(error) || "请稍后重试",
+      toast.error("Failed to update account", {
+        description: getErrorMessage(error) || "Please try again",
       });
     }
   };
@@ -248,7 +247,7 @@ export default function Employee() {
       // ❌ 这里不用写 setFormLoading(false) 了
     } catch (error) {
       console.error("获取员工详情失败:", error);
-      toast.error("获取员工详情失败");
+      toast.error("Failed to load employee");
       setFormDialogOpen(false); // 失败了关掉弹窗是合理的
 
       // ❌ 这里也不用写 setFormLoading(false) 了
@@ -264,35 +263,35 @@ export default function Employee() {
     switch (field) {
       case "username":
         if (!value.trim()) {
-          return "账号不能为空";
+          return "Username is required";
         }
         if (value.trim().length < 3) {
-          return "账号长度不能少于3个字符";
+          return "Username must be at least 3 characters";
         }
         return "";
       case "name":
         if (!value.trim()) {
-          return "员工姓名不能为空";
+          return "Name is required";
         }
         return "";
       case "phone":
         if (!value.trim()) {
-          return "手机号不能为空";
+          return "Phone number is required";
         }
         if (!/^1[3-9]\d{9}$/.test(value.trim())) {
-          return "请输入正确的手机号";
+          return "Enter a valid mobile number";
         }
         return "";
       case "idNumber":
         if (!value.trim()) {
-          return "身份证号不能为空";
+          return "ID number is required";
         }
         if (
           !/^[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]$/.test(
             value.trim()
           )
         ) {
-          return "请输入正确的身份证号";
+          return "Enter a valid Chinese ID number";
         }
         return "";
       default:
@@ -323,8 +322,8 @@ export default function Employee() {
     // 检查是否有错误
     const hasErrors = Object.values(errors).some((error) => error !== "");
     if (hasErrors) {
-      toast.error("表单校验失败", {
-        description: "请检查表单信息，确保所有字段填写正确",
+      toast.error("Validation failed", {
+        description: "Please check all required fields",
       });
       return;
     }
@@ -334,19 +333,19 @@ export default function Employee() {
       if (isEditMode) {
         // 修改员工
         await updateEmployeeAPI(formData);
-        toast.success("修改员工成功");
+        toast.success("Employee updated");
       } else {
         // 添加员工
         await saveEmployeeAPI(formData);
-        toast.success("添加员工成功");
+        toast.success("Employee added");
       }
       setFormDialogOpen(false);
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error(`${isEditMode ? "修改" : "添加"}员工失败:`, error);
-      toast.error(`${isEditMode ? "修改" : "添加"}员工失败`, {
-        description: getErrorMessage(error) || "请稍后重试",
+      toast.error(`${isEditMode ? "Failed to update" : "Failed to add"} employee`, {
+        description: getErrorMessage(error) || "Please try again",
       });
     } finally {
       setFormLoading(false);
@@ -366,7 +365,7 @@ export default function Employee() {
               htmlFor="employee-name"
               className="whitespace-nowrap text-sm"
             >
-              员工姓名：
+              Name:
             </Label>
             <Input
               id="employee-name"
@@ -377,7 +376,7 @@ export default function Employee() {
                   handleSearch();
                 }
               }}
-              placeholder="请输入员工姓名"
+              placeholder="Employee name"
               className="w-[200px] h-8"
             />
           </div>
@@ -387,14 +386,14 @@ export default function Employee() {
             className="bg-[#ffc200] text-black hover:bg-[#ffc200]/90 h-8"
           >
             <Search className="h-4 w-4" />
-            查询
+            Search
           </Button>
         </div>
 
         {/* 右侧：添加按钮 */}
         <Button size="sm" className="h-8" onClick={handleOpenAddForm}>
           <Plus className="h-4 w-4" />
-          添加员工
+          Add employee
         </Button>
       </div>
 
@@ -416,21 +415,21 @@ export default function Employee() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/50 hover:bg-muted/50">
-                      <TableHead className="font-semibold">员工姓名</TableHead>
-                      <TableHead className="font-semibold">账号</TableHead>
-                      <TableHead className="font-semibold">手机号</TableHead>
-                      <TableHead className="font-semibold">账号状态</TableHead>
+                      <TableHead className="font-semibold">Name</TableHead>
+                      <TableHead className="font-semibold">Username</TableHead>
+                      <TableHead className="font-semibold">Phone</TableHead>
+                      <TableHead className="font-semibold">Status</TableHead>
                       <TableHead className="font-semibold">
-                        最后操作时间
+                        Last updated
                       </TableHead>
-                      <TableHead className="font-semibold">操作</TableHead>
+                      <TableHead className="font-semibold">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {list.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-12">
-                          <div className="text-muted-foreground">暂无数据</div>
+                          <div className="text-muted-foreground">No data</div>
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -456,7 +455,7 @@ export default function Employee() {
                                 }`}
                               />
                               <span className="text-sm font-medium">
-                                {item.status === 1 ? "启用" : "禁用"}
+                                {item.status === 1 ? "Active" : "Inactive"}
                               </span>
                             </div>
                           </TableCell>
@@ -469,7 +468,7 @@ export default function Employee() {
                                 onClick={() => handleOpenEditForm(item)}
                                 className="text-primary hover:text-primary/80 hover:underline text-sm font-medium cursor-pointer transition-colors"
                               >
-                                修改
+                                Edit
                               </button>
                               <Separator
                                 orientation="vertical"
@@ -483,7 +482,7 @@ export default function Employee() {
                                     : "text-green-600 hover:text-green-700"
                                 } hover:underline text-sm font-medium cursor-pointer transition-colors`}
                               >
-                                {item.status === 1 ? "禁用" : "启用"}
+                                {item.status === 1 ? "Deactivate" : "Activate"}
                               </button>
                             </div>
                           </TableCell>
@@ -499,14 +498,14 @@ export default function Employee() {
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
                     <div className="text-sm text-muted-foreground whitespace-nowrap">
-                      共 {total} 条记录，第 {reqData.page} / {totalPages} 页
+                      {total} total · Page {reqData.page} / {totalPages}
                     </div>
                     <div className="flex items-center gap-2">
                       <Label
                         htmlFor="page-size"
                         className="text-sm whitespace-nowrap"
                       >
-                        每页显示：
+                        Per page:
                       </Label>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -628,25 +627,21 @@ export default function Employee() {
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认操作</AlertDialogTitle>
+            <AlertDialogTitle>Confirm</AlertDialogTitle>
             <AlertDialogDescription>
               {currentEmployee && (
                 <>
-                  确定要
                   {currentEmployee.status === 1 ? (
-                    <span className="text-destructive font-semibold">禁用</span>
+                    <>Deactivate account for <span className="font-semibold">{currentEmployee.name}</span>?</>
                   ) : (
-                    <span className="text-green-600 font-semibold">启用</span>
+                    <>Activate account for <span className="font-semibold">{currentEmployee.name}</span>?</>
                   )}
-                  员工"
-                  <span className="font-semibold">{currentEmployee.name}</span>
-                  "的账号吗？
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmToggleStatus}
               className={
@@ -655,7 +650,7 @@ export default function Employee() {
                   : "bg-green-600 text-white hover:bg-green-700"
               }
             >
-              确认
+              Confirm
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -665,14 +660,14 @@ export default function Employee() {
       <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{isEditMode ? "修改员工" : "添加员工"}</DialogTitle>
+            <DialogTitle>{isEditMode ? "Edit employee" : "Add employee"}</DialogTitle>
             <DialogDescription>
-              填写员工信息，所有字段均为必填
+              All fields are required.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="form-username">账号</Label>
+              <Label htmlFor="form-username">Username</Label>
               <Input
                 id="form-username"
                 value={formData.username}
@@ -684,7 +679,7 @@ export default function Employee() {
                   }
                 }}
                 onBlur={(e) => handleFieldBlur("username", e.target.value)}
-                placeholder="请输入账号"
+                placeholder="Username"
                 disabled={formLoading}
                 className={formErrors.username ? "border-destructive" : ""}
               />
@@ -695,7 +690,7 @@ export default function Employee() {
               )}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="form-name">员工姓名</Label>
+              <Label htmlFor="form-name">Name</Label>
               <Input
                 id="form-name"
                 value={formData.name}
@@ -706,7 +701,7 @@ export default function Employee() {
                   }
                 }}
                 onBlur={(e) => handleFieldBlur("name", e.target.value)}
-                placeholder="请输入员工姓名"
+                placeholder="Full name"
                 disabled={formLoading}
                 className={formErrors.name ? "border-destructive" : ""}
               />
@@ -715,7 +710,7 @@ export default function Employee() {
               )}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="form-phone">手机号</Label>
+              <Label htmlFor="form-phone">Phone</Label>
               <Input
                 id="form-phone"
                 value={formData.phone}
@@ -726,7 +721,7 @@ export default function Employee() {
                   }
                 }}
                 onBlur={(e) => handleFieldBlur("phone", e.target.value)}
-                placeholder="请输入手机号"
+                placeholder="Mobile number"
                 disabled={formLoading}
                 className={formErrors.phone ? "border-destructive" : ""}
               />
@@ -735,7 +730,7 @@ export default function Employee() {
               )}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="form-sex">性别</Label>
+              <Label htmlFor="form-sex">Gender</Label>
               <RadioGroup
                 value={formData.sex}
                 onValueChange={(value) =>
@@ -747,19 +742,19 @@ export default function Employee() {
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="1" id="sex-male" />
                   <Label htmlFor="sex-male" className="cursor-pointer">
-                    男
+                    Male
                   </Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="0" id="sex-female" />
                   <Label htmlFor="sex-female" className="cursor-pointer">
-                    女
+                    Female
                   </Label>
                 </div>
               </RadioGroup>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="form-idNumber">身份证号</Label>
+              <Label htmlFor="form-idNumber">National ID</Label>
               <Input
                 id="form-idNumber"
                 value={formData.idNumber}
@@ -770,7 +765,7 @@ export default function Employee() {
                   }
                 }}
                 onBlur={(e) => handleFieldBlur("idNumber", e.target.value)}
-                placeholder="请输入身份证号"
+                placeholder="ID card number"
                 disabled={formLoading}
                 className={formErrors.idNumber ? "border-destructive" : ""}
               />
@@ -787,10 +782,10 @@ export default function Employee() {
               onClick={() => setFormDialogOpen(false)}
               disabled={formLoading}
             >
-              取消
+              Cancel
             </Button>
             <Button onClick={handleSubmitForm} disabled={formLoading}>
-              {formLoading ? "加载中..." : "确定"}
+              {formLoading ? "Loading…" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

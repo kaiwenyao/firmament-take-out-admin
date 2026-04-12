@@ -26,7 +26,7 @@ interface DateTimePickerProps {
 export function DateTimePicker({
   value,
   onChange,
-  placeholder = "选择日期和时间",
+  placeholder = "Select date and time",
   disabled = false,
   className,
 }: DateTimePickerProps) {
@@ -117,7 +117,7 @@ export function DateTimePicker({
             initialFocus
           />
           <div className="border-t p-3 space-y-2">
-            <Label className="text-sm">时间</Label>
+            <Label className="text-sm">Time</Label>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
               <Input

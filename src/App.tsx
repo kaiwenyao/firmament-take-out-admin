@@ -82,10 +82,10 @@ function App() {
       // ✅ 这里修改 currentTime 不会报错，因为 ref 里的对象允许修改
       audio.currentTime = 0;
       await audio.play();
-      console.log(`播放 ${type} 音频成功`);
+      console.log(`Audio played: ${type}`);
     } catch (err) {
-      console.warn("音频播放失败:", err);
-      toast.error("提示音播放失败，请点击页面任意位置以启用音频");
+      console.warn("Audio playback failed:", err);
+      toast.error("Could not play notification sound. Click anywhere on the page to enable audio.");
     }
   }, []);
 
@@ -94,17 +94,17 @@ function App() {
     (message: string) => {
       try {
         const data = JSON.parse(message);
-        console.log("WebSocket收到消息:", data);
+        console.log("WebSocket message:", data);
 
         if (data.type === 1) {
-          toast.success("您有新的外卖订单，请及时处理");
+          toast.success("You have a new takeaway order");
           playAudio("preview");
         } else if (data.type === 2) {
-          toast.warning("客户催单，请尽快处理!" + (data.content || ""));
+          toast.warning("Customer is requesting a faster order!" + (data.content || ""));
           playAudio("reminder");
         }
       } catch (e) {
-        console.error("JSON解析失败", e);
+        console.error("Failed to parse WebSocket JSON", e);
       }
     },
     [playAudio]

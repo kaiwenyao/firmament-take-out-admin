@@ -58,15 +58,13 @@ import {
 } from "@/api/category";
 import { toast } from "sonner";
 
-// 类型转换：数字转中文
 const getCategoryTypeText = (type: number): string => {
-  return type === 1 ? "菜品分类" : "套餐分类";
+  return type === 1 ? "Dish category" : "Set meal category";
 };
 
-// 类型转换：中文转数字
 const getCategoryTypeNumber = (type: string): number | undefined => {
-  if (type === "菜品分类") return 1;
-  if (type === "套餐分类") return 2;
+  if (type === "Dish category") return 1;
+  if (type === "Set meal category") return 2;
   return undefined;
 };
 
@@ -86,7 +84,7 @@ const getErrorMessage = (error: unknown): string => {
     }
     // HTTP 状态码错误
     if (axiosError.response?.status) {
-      return `请求失败 (${axiosError.response.status})`;
+      return `Request failed (${axiosError.response.status})`;
     }
   }
   
@@ -99,7 +97,7 @@ const getErrorMessage = (error: unknown): string => {
   }
   
   // 默认错误信息
-  return "操作失败，请稍后重试";
+  return "Something went wrong. Please try again.";
 };
 
 export default function Category() {
@@ -145,8 +143,8 @@ export default function Category() {
         setTotal(Number(res.total));
       } catch (error) {
         console.error(error);
-        toast.error("获取分类列表失败", {
-          description: getErrorMessage(error) || "请稍后重试"
+        toast.error("Failed to load categories", {
+          description: getErrorMessage(error) || "Please try again"
         });
       } finally {
         setLoading(false);
@@ -199,20 +197,20 @@ export default function Category() {
     if (!currentCategory) return;
 
     const newStatus = currentCategory.status === 1 ? 0 : 1;
-    const action = newStatus === 1 ? "启用" : "禁用";
+    const action = newStatus === 1 ? "Enabled" : "Disabled";
 
     try {
       await enableOrDisableCategoryAPI(newStatus, currentCategory.id);
       setConfirmDialogOpen(false);
       setCurrentCategory(null);
-      toast.success(`${action}分类成功`);
+      toast.success(`Category ${action.toLowerCase()}`);
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error(`${action}分类失败:`, error);
       setConfirmDialogOpen(false);
-      toast.error(`${action}分类失败`, {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error(`Failed to update category`, {
+        description: getErrorMessage(error) || "Please try again"
       });
     }
   };
@@ -222,16 +220,16 @@ export default function Category() {
     switch (field) {
       case "name":
         if (!value || (typeof value === "string" && !value.trim())) {
-          return "分类名称不能为空";
+          return "Category name is required";
         }
         return "";
       case "sort": {
         if (value === undefined || value === null || value === "") {
-          return "排序不能为空";
+          return "Sort order is required";
         }
         const sortNum = Number(value);
         if (isNaN(sortNum) || sortNum < 0) {
-          return "排序必须为非负整数";
+          return "Sort must be a non-negative integer";
         }
         return "";
       }
@@ -293,7 +291,7 @@ export default function Category() {
       });
     } catch (error) {
       console.error("获取分类详情失败:", error);
-      toast.error("获取分类详情失败");
+      toast.error("Failed to load category");
       setFormDialogOpen(false);
     } finally {
       // ✅ 放在这里！
@@ -315,14 +313,14 @@ export default function Category() {
       await deleteCategoryAPI(currentCategory.id);
       setDeleteDialogOpen(false);
       setCurrentCategory(null);
-      toast.success("删除分类成功");
+      toast.success("Category deleted");
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error("删除分类失败:", error);
       setDeleteDialogOpen(false);
-      toast.error("删除分类失败", {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error("Failed to delete category", {
+        description: getErrorMessage(error) || "Please try again"
       });
     }
   };
@@ -339,8 +337,8 @@ export default function Category() {
     // 检查是否有错误
     const hasErrors = Object.values(errors).some((error) => error !== "");
     if (hasErrors) {
-      toast.error("表单校验失败", {
-        description: "请检查表单信息，确保所有字段填写正确"
+      toast.error("Validation failed", {
+        description: "Please check the form and try again"
       });
       return;
     }
@@ -350,7 +348,7 @@ export default function Category() {
       if (isEditMode) {
         // 修改分类
         await updateCategoryAPI(formData);
-        toast.success("修改分类成功");
+        toast.success("Category updated");
       } else {
         // 新增分类 - 不发送 id
         const newCategoryData: Omit<CategoryFormData, "id"> = {
@@ -359,7 +357,7 @@ export default function Category() {
           sort: formData.sort,
         };
         await saveCategoryAPI(newCategoryData);
-        toast.success("新增分类成功");
+        toast.success("Category created");
       }
       
       if (continueAdd) {
@@ -380,8 +378,8 @@ export default function Category() {
       }
     } catch (error) {
       console.error(`${isEditMode ? "修改" : "新增"}分类失败:`, error);
-      toast.error(`${isEditMode ? "修改" : "新增"}分类失败`, {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error(`${isEditMode ? "Failed to update" : "Failed to create"} category`, {
+        description: getErrorMessage(error) || "Please try again"
       });
     } finally {
       setFormLoading(false);
@@ -399,7 +397,7 @@ export default function Category() {
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Label htmlFor="category-name" className="whitespace-nowrap text-sm">
-              分类名称：
+              Name:
             </Label>
             <Input
               id="category-name"
@@ -410,13 +408,13 @@ export default function Category() {
                   handleSearch();
                 }
               }}
-              placeholder="请填写分类名称"
+              placeholder="Category name"
               className="w-[200px] h-8"
             />
           </div>
           <div className="flex items-center gap-2">
             <Label htmlFor="category-type" className="whitespace-nowrap text-sm">
-              分类类型：
+              Type:
             </Label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -426,31 +424,31 @@ export default function Category() {
                   id="category-type"
                   className="w-[150px] justify-between h-8"
                 >
-                  {categoryType || "请选择"}
+                  {categoryType || "Select"}
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuItem
                   onClick={() => {
-                    setCategoryType("菜品分类");
+                    setCategoryType("Dish category");
                   }}
                 >
-                  菜品分类
+                  Dish category
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
-                    setCategoryType("套餐分类");
+                    setCategoryType("Set meal category");
                   }}
                 >
-                  套餐分类
+                  Set meal category
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
                     setCategoryType("");
                   }}
                 >
-                  全部
+                  All
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -461,7 +459,7 @@ export default function Category() {
             className="bg-gray-600 text-white hover:bg-gray-700 h-8"
           >
             <Search className="h-4 w-4" />
-            查询
+            Search
           </Button>
         </div>
 
@@ -473,7 +471,7 @@ export default function Category() {
             onClick={handleAddDishCategory}
           >
             <Plus className="h-4 w-4" />
-            新增菜品分类
+            New dish category
           </Button>
           <Button
             size="sm"
@@ -481,7 +479,7 @@ export default function Category() {
             onClick={handleAddComboCategory}
           >
             <Plus className="h-4 w-4" />
-            新增套餐分类
+            New set meal category
           </Button>
         </div>
       </div>
@@ -504,19 +502,19 @@ export default function Category() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/50 hover:bg-muted/50">
-                      <TableHead className="font-semibold">分类名称</TableHead>
-                      <TableHead className="font-semibold">分类类型</TableHead>
-                      <TableHead className="font-semibold">排序</TableHead>
-                      <TableHead className="font-semibold">状态</TableHead>
-                      <TableHead className="font-semibold">操作时间</TableHead>
-                      <TableHead className="font-semibold">操作</TableHead>
+                      <TableHead className="font-semibold">Name</TableHead>
+                      <TableHead className="font-semibold">Type</TableHead>
+                      <TableHead className="font-semibold">Sort</TableHead>
+                      <TableHead className="font-semibold">Status</TableHead>
+                      <TableHead className="font-semibold">Last updated</TableHead>
+                      <TableHead className="font-semibold">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {list.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-12">
-                          <div className="text-muted-foreground">暂无数据</div>
+                          <div className="text-muted-foreground">No data</div>
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -540,7 +538,7 @@ export default function Category() {
                                 }`}
                               />
                               <span className="text-sm font-medium">
-                                {item.status === 1 ? "启用" : "禁用"}
+                                {item.status === 1 ? "Active" : "Inactive"}
                               </span>
                             </div>
                           </TableCell>
@@ -553,14 +551,14 @@ export default function Category() {
                                 onClick={() => handleEdit(item)}
                                 className="text-primary hover:text-primary/80 hover:underline text-sm font-medium cursor-pointer transition-colors"
                               >
-                                修改
+                                Edit
                               </button>
                               <Separator orientation="vertical" className="h-4" />
                               <button
                                 onClick={() => handleDelete(item)}
                                 className="text-destructive hover:text-destructive/80 hover:underline text-sm font-medium cursor-pointer transition-colors"
                               >
-                                删除
+                                Delete
                               </button>
                               <Separator orientation="vertical" className="h-4" />
                               <button
@@ -571,7 +569,7 @@ export default function Category() {
                                     : "text-green-600 hover:text-green-700"
                                 } hover:underline text-sm font-medium cursor-pointer transition-colors`}
                               >
-                                {item.status === 1 ? "禁用" : "启用"}
+                                {item.status === 1 ? "Deactivate" : "Activate"}
                               </button>
                             </div>
                           </TableCell>
@@ -587,11 +585,11 @@ export default function Category() {
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
                     <div className="text-sm text-muted-foreground whitespace-nowrap">
-                      共 {total} 条记录，第 {reqData.page} / {totalPages} 页
+                      {total} total · Page {reqData.page} / {totalPages}
                     </div>
                     <div className="flex items-center gap-2">
                       <Label htmlFor="page-size" className="text-sm whitespace-nowrap">
-                        每页显示：
+                        Per page:
                       </Label>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -713,23 +711,21 @@ export default function Category() {
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认操作</AlertDialogTitle>
+            <AlertDialogTitle>Confirm</AlertDialogTitle>
             <AlertDialogDescription>
               {currentCategory && (
                 <>
-                  确定要
                   {currentCategory.status === 1 ? (
-                    <span className="text-destructive font-semibold">禁用</span>
+                    <>Deactivate category <span className="font-semibold">{currentCategory.name}</span>?</>
                   ) : (
-                    <span className="text-green-600 font-semibold">启用</span>
+                    <>Activate category <span className="font-semibold">{currentCategory.name}</span>?</>
                   )}
-                  分类"<span className="font-semibold">{currentCategory.name}</span>"吗？
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmToggleStatus}
               className={
@@ -738,7 +734,7 @@ export default function Category() {
                   : "bg-green-600 text-white hover:bg-green-700"
               }
             >
-              确认
+              Confirm
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -748,22 +744,22 @@ export default function Category() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogTitle>Delete category</AlertDialogTitle>
             <AlertDialogDescription>
               {currentCategory && (
                 <>
-                  确定要删除分类"<span className="font-semibold">{currentCategory.name}</span>"吗？
+                  Delete category <span className="font-semibold">{currentCategory.name}</span>? This cannot be undone.
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              确认
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -775,10 +771,10 @@ export default function Category() {
           <DialogHeader>
             <DialogTitle>
               {isEditMode
-                ? "修改分类"
+                ? "Edit category"
                 : formType === 1
-                ? "新增菜品分类"
-                : "新增套餐分类"}
+                ? "New dish category"
+                : "New set meal category"}
             </DialogTitle>
           </DialogHeader>
           {formLoading ? (
@@ -790,7 +786,7 @@ export default function Category() {
             <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="form-name" className="text-sm">
-                <span className="text-destructive">*</span> 分类名称：
+                <span className="text-destructive">*</span> Name:
               </Label>
               <Input
                 id="form-name"
@@ -803,7 +799,7 @@ export default function Category() {
                   }
                 }}
                 onBlur={(e) => handleFieldBlur("name", e.target.value)}
-                placeholder="请输入分类名称"
+                placeholder="Enter category name"
                 disabled={formLoading}
                 className={formErrors.name ? "border-destructive" : ""}
               />
@@ -813,7 +809,7 @@ export default function Category() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="form-sort" className="text-sm">
-                <span className="text-destructive">*</span> 排序：
+                <span className="text-destructive">*</span> Sort:
               </Label>
               <Input
                 id="form-sort"
@@ -831,7 +827,7 @@ export default function Category() {
                   const value = e.target.value === "" ? 0 : Number(e.target.value);
                   handleFieldBlur("sort", value);
                 }}
-                placeholder="请输入排序"
+                placeholder="Sort order"
                 disabled={formLoading}
                 className={formErrors.sort ? "border-destructive" : ""}
               />
@@ -847,14 +843,14 @@ export default function Category() {
               onClick={() => setFormDialogOpen(false)}
               disabled={formLoading}
             >
-              取消
+              Cancel
             </Button>
             <Button
               onClick={() => handleSubmitForm(false)}
               disabled={formLoading}
               className="bg-gray-600 text-white hover:bg-gray-700"
             >
-              {formLoading ? "提交中..." : "确定"}
+              {formLoading ? "Saving…" : "Save"}
             </Button>
             {!isEditMode && (
               <Button
@@ -862,7 +858,7 @@ export default function Category() {
                 disabled={formLoading}
                 className="bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
               >
-                {formLoading ? "提交中..." : "保存并继续添加"}
+                {formLoading ? "Saving…" : "Save and add another"}
               </Button>
             )}
           </DialogFooter>
