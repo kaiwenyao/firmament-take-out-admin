@@ -2,6 +2,8 @@
 
 **[English](./README.md)** — 切换至英文
 
+苍穹外卖平台的 Web 管理后台，涵盖数据看板、订单、菜品、套餐、分类、员工管理及实时订单通知。
+
 ## 演示网站
 
 **访问地址：** https://firmament-admin.kaiwen.dev
@@ -42,27 +44,24 @@
 ## 项目结构
 
 ```
-admin-front-react/
-├── src/
-│   ├── api/          # API 接口定义
-│   ├── assets/       # 静态资源
-│   ├── components/   # 公共组件
-│   ├── hooks/        # 自定义 Hooks
-│   ├── pages/        # 页面组件
-│   ├── router.tsx    # 路由配置
-│   └── utils/        # 工具函数
-├── public/           # 公共静态文件
-└── package.json      # 项目依赖配置
+src/
+├── api/          # API 接口定义
+├── assets/       # 静态资源
+├── components/   # 公共组件
+├── hooks/        # 自定义 Hooks
+├── lib/          # 内部工具（cn 辅助函数等）
+├── pages/        # 页面组件
+├── router.tsx    # 路由配置
+└── utils/        # 工具函数
+public/           # 公共静态文件
 ```
 
 ## 前置要求
 
-在开始之前，请确保你的本地环境已安装以下依赖：
+- **Node.js** ^20.19.0 或 >=22.12.0（推荐 Node.js 24.x LTS）
+- **npm** >= 9（通常随 Node.js 一起安装）
 
-- **Node.js** >= 18.0.0（推荐使用 Node.js 24.x LTS 版本）
-- **npm** >= 9.0.0（通常随 Node.js 一起安装）
-
-你可以通过以下命令检查版本：
+检查版本：
 
 ```bash
 node --version
@@ -71,43 +70,49 @@ npm --version
 
 ## 本地调试
 
-按照以下步骤在本地运行项目：
-
 ```bash
-# 1. 安装依赖
 npm install
-
-# 2. 启动开发服务器
 npm run dev
 ```
 
-启动成功后，在浏览器中访问 `http://localhost:5173` 即可查看应用。
+在浏览器中访问 **http://localhost:5173**。
 
-## Github Actions
+`vite.config.ts` 中的开发代理默认将 `/api` 路径（REST 和 WebSocket）转发到 `http://localhost:8080`。如果后端运行在其他地址或端口，启动开发服务器前请先修改 `vite.config.ts` 中的 `target`。
 
-项目使用 Docker 容器化部署，通过 GitHub Actions 实现自动化 CI/CD
+其他脚本：
 
+- `npm run build` — 类型检查并构建生产版本
+- `npm run preview` — 本地预览生产构建
+- `npm run lint` — 运行 ESLint
+- `npm run dev-host` — 启动开发服务器并暴露到局域网
+- `npm run sonar` — 运行 SonarQube 分析
+
+## Jenkins 与 Docker
+
+项目使用 Docker 容器化部署，通过 Jenkins 实现自动化 CI/CD。
 
 ### 自动化部署
 
-当代码推送到 `main` 分支时，GitHub Actions 会自动：
-1. 构建 Docker 镜像并推送到 Docker Hub
-2. 通过 SSH 部署到服务器并启动容器
+每次推送代码都会触发 Jenkins 流水线（`Jenkinsfile`），各阶段执行条件如下：
+
+1. 拉取代码 — 始终执行
+2. 代码检查（`npm run lint`）— 始终执行
+3. 构建项目（`npm run build`）— 始终执行
+4. 构建 Docker 镜像并推送到 Docker Hub — PR 构建跳过
+5. 通过 SSH 部署到服务器 — 仅限 main 分支且非 PR
 
 ### 部署文件
 
 - **Dockerfile**：多阶段构建，使用 nginx 提供静态文件服务
 - **deploy/nginx/admin.conf.tpl**：nginx 配置模板，支持环境变量配置后端地址
 - **deploy/nginx/docker-entrypoint.d/99-envsubst.sh**：容器启动时替换环境变量
-- **.github/workflows/deploy-admin-nginx.yml**：GitHub Actions 工作流配置
+- **Jenkinsfile**：Jenkins 流水线定义（Kubernetes agent，Node 24 + Docker）
 
 ### 手动部署
 
 ```bash
-# 构建镜像
 docker build -t firmament-admin:latest .
 
-# 运行容器
 docker run -d \
   --name firmament-admin \
   --restart unless-stopped \
@@ -116,3 +121,5 @@ docker run -d \
   -e FIRMAMENT_SERVER_PORT=your-backend-port \
   firmament-admin:latest
 ```
+
+根据实际后端服务调整 `FIRMAMENT_SERVER_*`。

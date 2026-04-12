@@ -55,6 +55,7 @@ src/
 ├── assets/       # Images, audio, etc.
 ├── components/   # Shared UI (layout, shadcn/ui)
 ├── hooks/        # Custom hooks (e.g. WebSocket)
+├── lib/          # Internal utilities (cn helper, etc.)
 ├── pages/        # Route-level pages
 ├── router.tsx    # Route definitions
 └── utils/        # Helpers (navigation, upload, …)
@@ -63,7 +64,7 @@ public/           # Static files served as-is
 
 ## Prerequisites
 
-- **Node.js** >= 18 (Node.js 24.x LTS recommended)
+- **Node.js** ^20.19.0 or >=22.12.0 (Node.js 24.x LTS recommended)
 - **npm** >= 9 (usually bundled with Node.js)
 
 Check versions:
@@ -80,31 +81,36 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:5173**. API calls use `/api` and are proxied in `vite.config.ts` to your backend (see that file for paths and rewrites).
+Open **http://localhost:5173**. API calls under `/api` are proxied in `vite.config.ts` to `http://localhost:8080` (both REST and WebSocket). If your backend runs on a different host or port, update the `target` values in `vite.config.ts` before starting the dev server.
 
 Other scripts:
 
 - `npm run build` — typecheck and production build
 - `npm run preview` — preview the production build locally
 - `npm run lint` — run ESLint
+- `npm run dev-host` — start dev server exposed on the local network
+- `npm run sonar` — run SonarQube analysis
 
-## GitHub Actions and Docker
+## Jenkins and Docker
 
-The app is built as static assets and served with nginx inside Docker; CI/CD is automated with GitHub Actions.
+The app is built as static assets and served with nginx inside Docker; CI/CD is automated with Jenkins.
 
 ### Automated deploy
 
-On push to `main`, the workflow typically:
+The Jenkins pipeline (`Jenkinsfile`) runs on every push. Stage behaviour varies by context:
 
-1. Builds the Docker image and pushes it to Docker Hub
-2. Deploys over SSH and starts the container on the server
+1. Pull code — always
+2. Lint (`npm run lint`) — always
+3. Build (`npm run build`) — always
+4. Build Docker image and push to Docker Hub — skipped for PR builds
+5. Deploy over SSH to the server — main branch only, non-PR
 
 ### Deploy-related files
 
 - **Dockerfile** — multi-stage build; nginx serves the built frontend
 - **deploy/nginx/admin.conf.tpl** — nginx template (backend host/port via env)
 - **deploy/nginx/docker-entrypoint.d/99-envsubst.sh** — env substitution at container start
-- **.github/workflows/deploy-admin-nginx.yml** — workflow definition
+- **Jenkinsfile** — Jenkins pipeline definition (Kubernetes agent, Node 24 + Docker)
 
 ### Manual Docker run
 
