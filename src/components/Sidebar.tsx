@@ -16,13 +16,13 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed }: SidebarProps) {
   const menuItems = [
-    { path: "/dashboard", label: "工作台", icon: LayoutDashboard },
-    { path: "/statistics", label: "数据统计", icon: BarChart3 },
-    { path: "/order", label: "订单管理", icon: ShoppingCart },
-    { path: "/setmeal", label: "套餐管理", icon: Package },
-    { path: "/dish", label: "菜品管理", icon: UtensilsCrossed },
-    { path: "/category", label: "分类管理", icon: FolderTree },
-    { path: "/employee", label: "员工管理", icon: Users },
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/statistics", label: "Statistics", icon: BarChart3 },
+    { path: "/order", label: "Orders", icon: ShoppingCart },
+    { path: "/setmeal", label: "Set meals", icon: Package },
+    { path: "/dish", label: "Dishes", icon: UtensilsCrossed },
+    { path: "/category", label: "Categories", icon: FolderTree },
+    { path: "/employee", label: "Staff", icon: Users },
   ];
 
   return (
@@ -63,4 +63,3 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
     </aside>
   );
 }
-

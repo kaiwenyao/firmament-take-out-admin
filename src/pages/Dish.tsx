@@ -81,7 +81,7 @@ const getErrorMessage = (error: unknown): string => {
     }
     // HTTP 状态码错误
     if (axiosError.response?.status) {
-      return `请求失败 (${axiosError.response.status})`;
+      return `Request failed (${axiosError.response.status})`;
     }
   }
   
@@ -94,18 +94,18 @@ const getErrorMessage = (error: unknown): string => {
   }
   
   // 默认错误信息
-  return "操作失败，请稍后重试";
+  return "Something went wrong. Please try again.";
 };
 
-// 口味类型定义
-type FlavorType = "温度" | "甜味" | "忌口" | "辣度";
+// Flavor type definition
+type FlavorType = "Temperature" | "Sweetness" | "Dietary Notes" | "Spice Level";
 
-// 口味类型选项映射
+// Flavor type options mapping
 const FLAVOR_OPTIONS: Record<FlavorType, string[]> = {
-  温度: ["热饮", "常温", "去冰", "少冰", "多冰"],
-  甜味: ["无糖", "少糖", "半糖", "多糖", "全糖"],
-  忌口: ["不要葱", "不要蒜", "不要香菜", "不要辣"],
-  辣度: ["不辣", "微辣", "中辣", "重辣"],
+  Temperature: ["Hot", "Room Temp", "No Ice", "Less Ice", "Extra Ice"],
+  Sweetness: ["No Sugar", "Less Sugar", "Half Sugar", "More Sugar", "Full Sugar"],
+  "Dietary Notes": ["No Scallions", "No Garlic", "No Cilantro", "No Spice"],
+  "Spice Level": ["Not Spicy", "Mild", "Medium", "Extra Spicy"],
 };
 
 // 扩展的口味数据类型（包含类型和已删除的选项）
@@ -167,8 +167,8 @@ export default function Dish() {
         setCategoryList(categories);
       } catch (error) {
         console.error("获取分类列表失败:", error);
-        toast.error("获取分类列表失败", {
-          description: getErrorMessage(error) || "请稍后重试"
+        toast.error("Failed to load categories", {
+          description: getErrorMessage(error) || "Please try again"
         });
       }
     };
@@ -193,8 +193,8 @@ export default function Dish() {
         setSelectedIds([]);
       } catch (error) {
         console.error(error);
-        toast.error("获取菜品列表失败", {
-          description: getErrorMessage(error) || "请稍后重试"
+        toast.error("Failed to load dishes", {
+          description: getErrorMessage(error) || "Please try again"
         });
       } finally {
         setLoading(false);
@@ -266,20 +266,20 @@ export default function Dish() {
     if (!currentDish) return;
 
     const newStatus = currentDish.status === 1 ? 0 : 1;
-    const action = newStatus === 1 ? "起售" : "停售";
+    const action = newStatus === 1 ? "listed" : "delisted";
 
     try {
       await enableOrDisableDishAPI(newStatus, currentDish.id);
       setConfirmDialogOpen(false);
       setCurrentDish(null);
-      toast.success(`${action}菜品成功`);
+      toast.success(`Dish ${action}`);
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error(`${action}菜品失败:`, error);
       setConfirmDialogOpen(false);
-      toast.error(`${action}菜品失败`, {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error("Failed to update dish status", {
+        description: getErrorMessage(error) || "Please try again"
       });
     }
   };
@@ -298,14 +298,14 @@ export default function Dish() {
       await deleteDishAPI([currentDish.id]);
       setDeleteDialogOpen(false);
       setCurrentDish(null);
-      toast.success("删除菜品成功");
+      toast.success("Dish deleted");
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error("删除菜品失败:", error);
       setDeleteDialogOpen(false);
-      toast.error("删除菜品失败", {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error("Failed to delete dish", {
+        description: getErrorMessage(error) || "Please try again"
       });
     }
   };
@@ -313,8 +313,8 @@ export default function Dish() {
   // 打开批量删除确认对话框
   const handleBatchDelete = () => {
     if (selectedIds.length === 0) {
-      toast.error("批量删除失败", {
-        description: "请至少选择一个菜品"
+      toast.error("Nothing selected", {
+        description: "Select at least one dish"
       });
       return;
     }
@@ -327,14 +327,14 @@ export default function Dish() {
       await deleteDishAPI(selectedIds);
       setBatchDeleteDialogOpen(false);
       setSelectedIds([]);
-      toast.success(`批量删除${selectedIds.length}个菜品成功`);
+      toast.success(`Deleted ${selectedIds.length} dish(es)`);
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error("批量删除菜品失败:", error);
       setBatchDeleteDialogOpen(false);
-      toast.error("批量删除菜品失败", {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error("Batch delete failed", {
+        description: getErrorMessage(error) || "Please try again"
       });
     }
   };
@@ -344,28 +344,28 @@ export default function Dish() {
     switch (field) {
       case "name":
         if (!value || (typeof value === "string" && !value.trim())) {
-          return "菜品名称不能为空";
+          return "Dish name is required";
         }
         return "";
       case "categoryId": {
         if (!value || value === 0) {
-          return "菜品分类不能为空";
+          return "Category is required";
         }
         return "";
       }
       case "price": {
         if (value === undefined || value === null || value === "") {
-          return "菜品价格不能为空";
+          return "Price is required";
         }
         const priceNum = Number(value);
         if (isNaN(priceNum) || priceNum <= 0) {
-          return "菜品价格必须大于0";
+          return "Price must be greater than 0";
         }
         return "";
       }
       case "image": {
         if (!value || (typeof value === "string" && !value.trim())) {
-          return "菜品图片不能为空";
+          return "Image is required";
         }
         return "";
       }
@@ -504,8 +504,8 @@ export default function Dish() {
       setImagePreview(dishDetail.image || "");
     } catch (error) {
       console.error("获取菜品详情失败:", error);
-      toast.error("获取菜品详情失败", {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error("Failed to load dish", {
+        description: getErrorMessage(error) || "Please try again"
       });
       setFormDialogOpen(false); // 失败了关掉弹窗是合理的
     } finally {
@@ -522,16 +522,16 @@ export default function Dish() {
     // 验证文件类型
     const validTypes = ["image/png", "image/jpeg", "image/jpg"];
     if (!validTypes.includes(file.type)) {
-      toast.error("图片格式错误", {
-        description: "仅能上传PNG、JPEG、JPG类型图片"
+      toast.error("Invalid image type", {
+        description: "Only PNG, JPEG, or JPG images are allowed"
       });
       return;
     }
 
     // 验证文件大小（10MB）
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("图片大小超限", {
-        description: "图片大小不超过10M"
+      toast.error("File too large", {
+        description: "Image must be 10MB or smaller"
       });
       return;
     }
@@ -546,8 +546,8 @@ export default function Dish() {
       }
     } catch (error) {
       console.error("图片上传失败:", error);
-      toast.error("图片上传失败", {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error("Upload failed", {
+        description: getErrorMessage(error) || "Please try again"
       });
     } finally {
       setImageUploading(false);
@@ -557,8 +557,8 @@ export default function Dish() {
   // 添加口味
   const handleAddFlavor = () => {
     if (extendedFlavors.length >= 4) {
-      toast.error("口味数量超限", {
-        description: "最多只能添加4个口味"
+      toast.error("Too many flavor groups", {
+        description: "You can add up to 4 flavor groups"
       });
       return;
     }
@@ -632,8 +632,8 @@ export default function Dish() {
     // 检查是否有错误
     const hasErrors = Object.values(errors).some((error) => error !== "");
     if (hasErrors) {
-      toast.error("表单校验失败", {
-        description: "请检查表单信息，确保所有必填字段填写正确"
+      toast.error("Validation failed", {
+        description: "Please fill in all required fields"
       });
       return;
     }
@@ -649,7 +649,7 @@ export default function Dish() {
           ...formData,
           flavors,
         });
-        toast.success("修改菜品成功");
+        toast.success("Dish updated");
       } else {
         // 新增菜品 - 不发送 id
         const newDishData: Omit<DishFormData, "id"> = {
@@ -662,15 +662,15 @@ export default function Dish() {
           flavors: flavors,
         };
         await saveDishAPI(newDishData);
-        toast.success("新增菜品成功");
+        toast.success("Dish created");
       }
       setFormDialogOpen(false);
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error(`${isEditMode ? "修改" : "新增"}菜品失败:`, error);
-      toast.error(`${isEditMode ? "修改" : "新增"}菜品失败`, {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error(`${isEditMode ? "Failed to update" : "Failed to create"} dish`, {
+        description: getErrorMessage(error) || "Please try again"
       });
     } finally {
       setFormLoading(false);
@@ -690,7 +690,7 @@ export default function Dish() {
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Label htmlFor="dish-name" className="whitespace-nowrap text-sm">
-              菜品名称：
+              Name:
             </Label>
             <Input
               id="dish-name"
@@ -701,13 +701,13 @@ export default function Dish() {
                   handleSearch();
                 }
               }}
-              placeholder="请填写菜品名称"
+              placeholder="Dish name"
               className="w-[200px] h-8"
             />
           </div>
           <div className="flex items-center gap-2">
             <Label htmlFor="dish-category" className="whitespace-nowrap text-sm">
-              菜品分类：
+              Category:
             </Label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -718,8 +718,8 @@ export default function Dish() {
                   className="w-[150px] justify-between h-8"
                 >
                   {selectedCategoryId
-                    ? categoryList.find((c) => c.id === selectedCategoryId.toString())?.name || "请选择"
-                    : "请选择"}
+                    ? categoryList.find((c) => c.id === selectedCategoryId.toString())?.name || "Select"
+                    : "Select"}
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
@@ -729,7 +729,7 @@ export default function Dish() {
                     setSelectedCategoryId(undefined);
                   }}
                 >
-                  全部
+                  All
                 </DropdownMenuItem>
                 {categoryList.map((category) => (
                   <DropdownMenuItem
@@ -746,7 +746,7 @@ export default function Dish() {
           </div>
           <div className="flex items-center gap-2">
             <Label htmlFor="dish-status" className="whitespace-nowrap text-sm">
-              售卖状态：
+              Sale status:
             </Label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -757,10 +757,10 @@ export default function Dish() {
                   className="w-[150px] justify-between h-8"
                 >
                   {selectedStatus === undefined
-                    ? "请选择"
+                    ? "Select"
                     : selectedStatus === 1
-                    ? "起售"
-                    : "停售"}
+                    ? "On sale"
+                    : "Off sale"}
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
@@ -770,21 +770,21 @@ export default function Dish() {
                     setSelectedStatus(undefined);
                   }}
                 >
-                  全部
+                  All
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
                     setSelectedStatus(1);
                   }}
                 >
-                  起售
+                  On sale
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
                     setSelectedStatus(0);
                   }}
                 >
-                  停售
+                  Off sale
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -795,7 +795,7 @@ export default function Dish() {
             className="bg-gray-600 text-white hover:bg-gray-700 h-8"
           >
             <Search className="h-4 w-4" />
-            查询
+            Search
           </Button>
         </div>
 
@@ -807,7 +807,7 @@ export default function Dish() {
             className="text-destructive hover:text-destructive/80 h-8"
             onClick={handleBatchDelete}
           >
-            批量删除
+            Batch delete
           </Button>
           <Button
             size="sm"
@@ -815,7 +815,7 @@ export default function Dish() {
             onClick={handleAddDish}
           >
             <Plus className="h-4 w-4" />
-            新建菜品
+            New dish
           </Button>
         </div>
       </div>
@@ -849,20 +849,20 @@ export default function Dish() {
                           className="h-4 w-4 cursor-pointer"
                         />
                       </TableHead>
-                      <TableHead className="font-semibold">菜品名称</TableHead>
-                      <TableHead className="font-semibold">图片</TableHead>
-                      <TableHead className="font-semibold">菜品分类</TableHead>
-                      <TableHead className="font-semibold">售价</TableHead>
-                      <TableHead className="font-semibold">售卖状态</TableHead>
-                      <TableHead className="font-semibold">最后操作时间</TableHead>
-                      <TableHead className="font-semibold">操作</TableHead>
+                      <TableHead className="font-semibold">Name</TableHead>
+                      <TableHead className="font-semibold">Image</TableHead>
+                      <TableHead className="font-semibold">Category</TableHead>
+                      <TableHead className="font-semibold">Price</TableHead>
+                      <TableHead className="font-semibold">Sale status</TableHead>
+                      <TableHead className="font-semibold">Last updated</TableHead>
+                      <TableHead className="font-semibold">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {list.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={8} className="text-center py-12">
-                          <div className="text-muted-foreground">暂无数据</div>
+                          <div className="text-muted-foreground">No data</div>
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -892,7 +892,7 @@ export default function Dish() {
                               />
                             ) : (
                               <div className="h-12 w-12 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
-                                无图片
+                                No image
                               </div>
                             )}
                           </TableCell>
@@ -908,7 +908,7 @@ export default function Dish() {
                                 }`}
                               />
                               <span className="text-sm font-medium">
-                                {item.status === 1 ? "起售" : "停售"}
+                                {item.status === 1 ? "On sale" : "Off sale"}
                               </span>
                             </div>
                           </TableCell>
@@ -921,14 +921,14 @@ export default function Dish() {
                                 onClick={() => handleEdit(item)}
                                 className="text-primary hover:text-primary/80 hover:underline text-sm font-medium cursor-pointer transition-colors"
                               >
-                                修改
+                                Edit
                               </button>
                               <Separator orientation="vertical" className="h-4" />
                               <button
                                 onClick={() => handleDelete(item)}
                                 className="text-destructive hover:text-destructive/80 hover:underline text-sm font-medium cursor-pointer transition-colors"
                               >
-                                删除
+                                Delete
                               </button>
                               <Separator orientation="vertical" className="h-4" />
                               <button
@@ -939,7 +939,7 @@ export default function Dish() {
                                     : "text-green-600 hover:text-green-700"
                                 } hover:underline text-sm font-medium cursor-pointer transition-colors`}
                               >
-                                {item.status === 1 ? "停售" : "起售"}
+                                {item.status === 1 ? "Delist" : "List"}
                               </button>
                             </div>
                           </TableCell>
@@ -955,11 +955,11 @@ export default function Dish() {
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
                     <div className="text-sm text-muted-foreground whitespace-nowrap">
-                      共 {total} 条记录，第 {reqData.page} / {totalPages} 页
+                      {total} total · Page {reqData.page} / {totalPages}
                     </div>
                     <div className="flex items-center gap-2">
                       <Label htmlFor="page-size" className="text-sm whitespace-nowrap">
-                        每页显示：
+                        Per page:
                       </Label>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -1081,23 +1081,21 @@ export default function Dish() {
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认操作</AlertDialogTitle>
+            <AlertDialogTitle>Confirm</AlertDialogTitle>
             <AlertDialogDescription>
               {currentDish && (
                 <>
-                  确定要
                   {currentDish.status === 1 ? (
-                    <span className="text-destructive font-semibold">停售</span>
+                    <>Delist <span className="font-semibold">{currentDish.name}</span>?</>
                   ) : (
-                    <span className="text-green-600 font-semibold">起售</span>
+                    <>List <span className="font-semibold">{currentDish.name}</span> for sale?</>
                   )}
-                  菜品"<span className="font-semibold">{currentDish.name}</span>"吗？
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmToggleStatus}
               className={
@@ -1106,7 +1104,7 @@ export default function Dish() {
                   : "bg-green-600 text-white hover:bg-green-700"
               }
             >
-              确认
+              Confirm
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1116,22 +1114,22 @@ export default function Dish() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogTitle>Delete dish</AlertDialogTitle>
             <AlertDialogDescription>
               {currentDish && (
                 <>
-                  确定要删除菜品"<span className="font-semibold">{currentDish.name}</span>"吗？
+                  Delete <span className="font-semibold">{currentDish.name}</span>? This cannot be undone.
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              确认
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1144,18 +1142,18 @@ export default function Dish() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认批量删除</AlertDialogTitle>
+            <AlertDialogTitle>Batch delete</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除选中的 {selectedIds.length} 个菜品吗？
+              Delete {selectedIds.length} selected dish(es)? This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmBatchDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              确认
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1165,13 +1163,13 @@ export default function Dish() {
       <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{isEditMode ? "修改菜品" : "新建菜品"}</DialogTitle>
+            <DialogTitle>{isEditMode ? "Edit dish" : "New dish"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {/* 菜品名称 */}
             <div className="grid gap-2">
               <Label htmlFor="form-name" className="text-sm">
-                <span className="text-destructive">*</span> 菜品名称：
+                <span className="text-destructive">*</span> Name:
               </Label>
               <Input
                 id="form-name"
@@ -1183,7 +1181,7 @@ export default function Dish() {
                   }
                 }}
                 onBlur={(e) => handleFieldBlur("name", e.target.value)}
-                placeholder="请输入菜品名称"
+                placeholder="Dish name"
                 disabled={formLoading}
                 className={formErrors.name ? "border-destructive" : ""}
               />
@@ -1195,7 +1193,7 @@ export default function Dish() {
             {/* 菜品分类 */}
             <div className="grid gap-2">
               <Label htmlFor="form-category" className="text-sm">
-                <span className="text-destructive">*</span> 菜品分类：
+                <span className="text-destructive">*</span> Category:
               </Label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -1206,8 +1204,8 @@ export default function Dish() {
                     disabled={formLoading}
                   >
                     {formData.categoryId
-                      ? categoryList.find((c) => c.id === formData.categoryId.toString())?.name || "请选择"
-                      : "请选择"}
+                      ? categoryList.find((c) => c.id === formData.categoryId.toString())?.name || "Select"
+                      : "Select"}
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -1235,7 +1233,7 @@ export default function Dish() {
             {/* 菜品价格 */}
             <div className="grid gap-2">
               <Label htmlFor="form-price" className="text-sm">
-                <span className="text-destructive">*</span> 菜品价格：
+                <span className="text-destructive">*</span> Price:
               </Label>
               <Input
                 id="form-price"
@@ -1254,7 +1252,7 @@ export default function Dish() {
                   const value = e.target.value === "" ? 0 : Number(e.target.value);
                   handleFieldBlur("price", value);
                 }}
-                placeholder="请输入菜品价格"
+                placeholder="Price"
                 disabled={formLoading}
                 className={formErrors.price ? "border-destructive" : ""}
               />
@@ -1265,7 +1263,7 @@ export default function Dish() {
 
             {/* 口味做法配置 */}
             <div className="grid gap-2">
-              <Label className="text-sm">口味做法配置：</Label>
+              <Label className="text-sm">Flavors & options</Label>
               <Button
                 type="button"
                 onClick={handleAddFlavor}
@@ -1273,7 +1271,7 @@ export default function Dish() {
                 className="bg-[#ffc200] text-black hover:bg-[#ffc200]/90 w-fit"
               >
                 <Plus className="h-4 w-4" />
-                添加口味
+                Add flavor group
               </Button>
               {extendedFlavors.length > 0 && (
                 <div className="space-y-4 mt-2">
@@ -1293,7 +1291,7 @@ export default function Dish() {
                         {/* 口味类型选择 */}
                         <div className="flex items-center gap-2">
                           <Label className="text-sm whitespace-nowrap">
-                            口味名：
+                            Type:
                           </Label>
                           {flavor.type ? (
                             <Badge variant="outline" className="px-3 py-1">
@@ -1308,7 +1306,7 @@ export default function Dish() {
                                   disabled={formLoading || availableTypes.length === 0}
                                   className="w-[150px] justify-between"
                                 >
-                                  请选择口味
+                                  Select type
                                   <ChevronDown className="h-4 w-4 opacity-50" />
                                 </Button>
                               </DropdownMenuTrigger>
@@ -1329,7 +1327,7 @@ export default function Dish() {
                                   ))
                                 ) : (
                                   <DropdownMenuItem disabled>
-                                    无可用类型
+                                    No types left
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
@@ -1343,7 +1341,7 @@ export default function Dish() {
                             disabled={formLoading}
                             className="text-destructive hover:text-destructive/80 ml-auto"
                           >
-                            删除
+                            Remove
                           </Button>
                         </div>
 
@@ -1386,7 +1384,7 @@ export default function Dish() {
             {/* 菜品图片 */}
             <div className="grid gap-2">
               <Label className="text-sm">
-                <span className="text-destructive">*</span> 菜品图片：
+                <span className="text-destructive">*</span> Image:
               </Label>
               <div className="flex items-start gap-4">
                 <div
@@ -1404,18 +1402,18 @@ export default function Dish() {
                   {imagePreview ? (
                     <img
                       src={imagePreview}
-                      alt="菜品图片"
+                      alt="Dish"
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="text-center text-muted-foreground">
                       <Upload className="h-8 w-8 mx-auto mb-2" />
-                      <span className="text-xs">点击上传</span>
+                      <span className="text-xs">Click to upload</span>
                     </div>
                   )}
                   {imageUploading && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <span className="text-white text-sm">上传中...</span>
+                      <span className="text-white text-sm">Uploading…</span>
                     </div>
                   )}
                 </div>
@@ -1428,9 +1426,9 @@ export default function Dish() {
                   disabled={formLoading || imageUploading}
                 />
                 <div className="flex-1 text-sm text-muted-foreground space-y-1">
-                  <p>图片大小不超过10M</p>
-                  <p>仅能上传PNG JPEG JPG类型图片</p>
-                  <p>建议上传方形图片</p>
+                  <p>Max file size 10MB</p>
+                  <p>PNG, JPEG, or JPG only</p>
+                  <p>Square images work best</p>
                 </div>
               </div>
               {formErrors.image && (
@@ -1441,7 +1439,7 @@ export default function Dish() {
             {/* 菜品描述 */}
             <div className="grid gap-2">
               <Label htmlFor="form-description" className="text-sm">
-                菜品描述：
+                Description:
               </Label>
               <Textarea
                 id="form-description"
@@ -1449,7 +1447,7 @@ export default function Dish() {
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="请输入菜品描述"
+                placeholder="Optional description"
                 disabled={formLoading}
                 className="min-h-[100px]"
               />
@@ -1461,14 +1459,14 @@ export default function Dish() {
               onClick={() => setFormDialogOpen(false)}
               disabled={formLoading || imageUploading}
             >
-              取消
+              Cancel
             </Button>
             <Button
               onClick={handleSubmitForm}
               disabled={formLoading || imageUploading}
               className="bg-gray-600 text-white hover:bg-gray-700"
             >
-              {formLoading ? "加载中..." : "确定"}
+              {formLoading ? "Loading…" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

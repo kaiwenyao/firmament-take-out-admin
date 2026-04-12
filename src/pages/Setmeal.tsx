@@ -77,7 +77,7 @@ const getErrorMessage = (error: unknown): string => {
       return axiosError.response.data.msg;
     }
     if (axiosError.response?.status) {
-      return `请求失败 (${axiosError.response.status})`;
+      return `Request failed (${axiosError.response.status})`;
     }
   }
   
@@ -88,7 +88,7 @@ const getErrorMessage = (error: unknown): string => {
     }
   }
   
-  return "操作失败，请稍后重试";
+  return "Something went wrong. Please try again.";
 };
 
 export default function Setmeal() {
@@ -147,8 +147,8 @@ export default function Setmeal() {
         setCategoryList(categories);
       } catch (error) {
         console.error("获取分类列表失败:", error);
-        toast.error("获取分类列表失败", {
-          description: getErrorMessage(error) || "请稍后重试"
+        toast.error("Failed to load categories", {
+          description: getErrorMessage(error) || "Please try again"
         });
       }
     };
@@ -167,8 +167,8 @@ export default function Setmeal() {
         }
       } catch (error) {
         console.error("获取菜品分类列表失败:", error);
-        toast.error("获取菜品分类列表失败", {
-          description: getErrorMessage(error) || "请稍后重试"
+        toast.error("Failed to load dish categories", {
+          description: getErrorMessage(error) || "Please try again"
         });
       }
     };
@@ -193,8 +193,8 @@ export default function Setmeal() {
         setDishList(res.records);
       } catch (error) {
         console.error("获取菜品列表失败:", error);
-        toast.error("获取菜品列表失败", {
-          description: getErrorMessage(error) || "请稍后重试"
+        toast.error("Failed to load dishes", {
+          description: getErrorMessage(error) || "Please try again"
         });
       } finally {
         setDishListLoading(false);
@@ -221,8 +221,8 @@ export default function Setmeal() {
         setSelectedIds([]);
       } catch (error) {
         console.error(error);
-        toast.error("获取套餐列表失败", {
-          description: getErrorMessage(error) || "请稍后重试"
+        toast.error("Failed to load set meals", {
+          description: getErrorMessage(error) || "Please try again"
         });
       } finally {
         setLoading(false);
@@ -294,20 +294,20 @@ export default function Setmeal() {
     if (!currentSetmeal) return;
 
     const newStatus = currentSetmeal.status === 1 ? 0 : 1;
-    const action = newStatus === 1 ? "起售" : "停售";
+    const action = newStatus === 1 ? "listed" : "delisted";
 
     try {
       await enableOrDisableSetmealAPI(newStatus, currentSetmeal.id);
       setConfirmDialogOpen(false);
       setCurrentSetmeal(null);
-      toast.success(`${action}套餐成功`);
+      toast.success(`Set meal ${action}`);
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error(`${action}套餐失败:`, error);
       setConfirmDialogOpen(false);
-      toast.error(`${action}套餐失败`, {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error("Failed to update set meal status", {
+        description: getErrorMessage(error) || "Please try again"
       });
     }
   };
@@ -326,14 +326,14 @@ export default function Setmeal() {
       await deleteSetmealAPI([currentSetmeal.id]);
       setDeleteDialogOpen(false);
       setCurrentSetmeal(null);
-      toast.success("删除套餐成功");
+      toast.success("Set meal deleted");
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error("删除套餐失败:", error);
       setDeleteDialogOpen(false);
-      toast.error("删除套餐失败", {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error("Failed to delete set meal", {
+        description: getErrorMessage(error) || "Please try again"
       });
     }
   };
@@ -341,8 +341,8 @@ export default function Setmeal() {
   // 打开批量删除确认对话框
   const handleBatchDelete = () => {
     if (selectedIds.length === 0) {
-      toast.error("批量删除失败", {
-        description: "请至少选择一个套餐"
+      toast.error("Nothing selected", {
+        description: "Select at least one set meal"
       });
       return;
     }
@@ -355,14 +355,14 @@ export default function Setmeal() {
       await deleteSetmealAPI(selectedIds);
       setBatchDeleteDialogOpen(false);
       setSelectedIds([]);
-      toast.success(`批量删除${selectedIds.length}个套餐成功`);
+      toast.success(`Deleted ${selectedIds.length} set meal(s)`);
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error("批量删除套餐失败:", error);
       setBatchDeleteDialogOpen(false);
-      toast.error("批量删除套餐失败", {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error("Batch delete failed", {
+        description: getErrorMessage(error) || "Please try again"
       });
     }
   };
@@ -372,28 +372,28 @@ export default function Setmeal() {
     switch (field) {
       case "name":
         if (!value || (typeof value === "string" && !value.trim())) {
-          return "套餐名称不能为空";
+          return "Set meal name is required";
         }
         return "";
       case "categoryId": {
         if (!value || value === 0) {
-          return "套餐分类不能为空";
+          return "Category is required";
         }
         return "";
       }
       case "price": {
         if (value === undefined || value === null || value === "") {
-          return "套餐价格不能为空";
+          return "Price is required";
         }
         const priceNum = Number(value);
         if (isNaN(priceNum) || priceNum <= 0) {
-          return "套餐价格必须大于0";
+          return "Price must be greater than 0";
         }
         return "";
       }
       case "image": {
         if (!value || (typeof value === "string" && !value.trim())) {
-          return "套餐图片不能为空";
+          return "Image is required";
         }
         return "";
       }
@@ -456,8 +456,8 @@ export default function Setmeal() {
         setSelectedDishesInfo(dishesMap);
       } catch (error) {
         console.error("加载已选菜品信息失败:", error);
-        toast.error("加载已选菜品信息失败", {
-          description: getErrorMessage(error) || "请稍后重试"
+        toast.error("Failed to load selected dishes", {
+          description: getErrorMessage(error) || "Please try again"
         });
       }
     } else {
@@ -534,7 +534,7 @@ export default function Setmeal() {
     });
 
     setDishDialogOpen(false);
-    toast.success("添加菜品成功");
+    toast.success("Dishes updated");
   };
 
   // 删除已选菜品
@@ -582,8 +582,8 @@ export default function Setmeal() {
       setImagePreview(setmealDetail.image || "");
     } catch (error) {
       console.error("获取套餐详情失败:", error);
-      toast.error("获取套餐详情失败", {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error("Failed to load set meal", {
+        description: getErrorMessage(error) || "Please try again"
       });
       setFormDialogOpen(false); // 失败了关掉弹窗是合理的
     } finally {
@@ -600,16 +600,16 @@ export default function Setmeal() {
     // 验证文件类型
     const validTypes = ["image/png", "image/jpeg", "image/jpg"];
     if (!validTypes.includes(file.type)) {
-      toast.error("图片格式错误", {
-        description: "仅能上传PNG、JPEG、JPG类型图片"
+      toast.error("Invalid image type", {
+        description: "Only PNG, JPEG, or JPG images are allowed"
       });
       return;
     }
 
     // 验证文件大小（10MB）
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("图片大小超限", {
-        description: "图片大小不超过10M"
+      toast.error("File too large", {
+        description: "Image must be 10MB or smaller"
       });
       return;
     }
@@ -624,8 +624,8 @@ export default function Setmeal() {
       }
     } catch (error) {
       console.error("图片上传失败:", error);
-      toast.error("图片上传失败", {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error("Upload failed", {
+        description: getErrorMessage(error) || "Please try again"
       });
     } finally {
       setImageUploading(false);
@@ -646,8 +646,8 @@ export default function Setmeal() {
     // 检查是否有错误
     const hasErrors = Object.values(errors).some((error) => error !== "");
     if (hasErrors) {
-      toast.error("表单校验失败", {
-        description: "请检查表单信息，确保所有必填字段填写正确"
+      toast.error("Validation failed", {
+        description: "Please fill in all required fields"
       });
       return;
     }
@@ -659,7 +659,7 @@ export default function Setmeal() {
         await updateSetmealAPI({
           ...formData,
         });
-        toast.success("修改套餐成功");
+        toast.success("Set meal updated");
       } else {
         // 新增套餐 - 不发送 id
         const newSetmealData: Omit<SetmealFormData, "id"> = {
@@ -672,15 +672,15 @@ export default function Setmeal() {
           setmealDishes: formData.setmealDishes || [],
         };
         await saveSetmealAPI(newSetmealData);
-        toast.success("新增套餐成功");
+        toast.success("Set meal created");
       }
       setFormDialogOpen(false);
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error(`${isEditMode ? "修改" : "新增"}套餐失败:`, error);
-      toast.error(`${isEditMode ? "修改" : "新增"}套餐失败`, {
-        description: getErrorMessage(error) || "请稍后重试"
+      toast.error(`${isEditMode ? "Failed to update" : "Failed to create"} set meal`, {
+        description: getErrorMessage(error) || "Please try again"
       });
     } finally {
       setFormLoading(false);
@@ -700,7 +700,7 @@ export default function Setmeal() {
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Label htmlFor="setmeal-name" className="whitespace-nowrap text-sm">
-              套餐名称：
+              Name:
             </Label>
             <Input
               id="setmeal-name"
@@ -711,13 +711,13 @@ export default function Setmeal() {
                   handleSearch();
                 }
               }}
-              placeholder="请填写套餐名称"
+              placeholder="Set meal name"
               className="w-[200px] h-8"
             />
           </div>
           <div className="flex items-center gap-2">
             <Label htmlFor="setmeal-category" className="whitespace-nowrap text-sm">
-              套餐分类：
+              Category:
             </Label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -728,8 +728,8 @@ export default function Setmeal() {
                   className="w-[150px] justify-between h-8"
                 >
                   {selectedCategoryId
-                    ? categoryList.find((c) => c.id === selectedCategoryId.toString())?.name || "请选择"
-                    : "请选择"}
+                    ? categoryList.find((c) => c.id === selectedCategoryId.toString())?.name || "Select"
+                    : "Select"}
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
@@ -739,7 +739,7 @@ export default function Setmeal() {
                     setSelectedCategoryId(undefined);
                   }}
                 >
-                  全部
+                  All
                 </DropdownMenuItem>
                 {categoryList.map((category) => (
                   <DropdownMenuItem
@@ -756,7 +756,7 @@ export default function Setmeal() {
           </div>
           <div className="flex items-center gap-2">
             <Label htmlFor="setmeal-status" className="whitespace-nowrap text-sm">
-              售卖状态：
+              Sale status:
             </Label>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -767,10 +767,10 @@ export default function Setmeal() {
                   className="w-[150px] justify-between h-8"
                 >
                   {selectedStatus === undefined
-                    ? "请选择"
+                    ? "Select"
                     : selectedStatus === 1
-                    ? "起售"
-                    : "停售"}
+                    ? "On sale"
+                    : "Off sale"}
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
@@ -780,21 +780,21 @@ export default function Setmeal() {
                     setSelectedStatus(undefined);
                   }}
                 >
-                  全部
+                  All
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
                     setSelectedStatus(1);
                   }}
                 >
-                  起售
+                  On sale
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
                     setSelectedStatus(0);
                   }}
                 >
-                  停售
+                  Off sale
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -805,7 +805,7 @@ export default function Setmeal() {
             className="bg-gray-600 text-white hover:bg-gray-700 h-8"
           >
             <Search className="h-4 w-4" />
-            查询
+            Search
           </Button>
         </div>
 
@@ -817,7 +817,7 @@ export default function Setmeal() {
             className="text-destructive hover:text-destructive/80 h-8"
             onClick={handleBatchDelete}
           >
-            批量删除
+            Batch delete
           </Button>
           <Button
             size="sm"
@@ -825,7 +825,7 @@ export default function Setmeal() {
             onClick={handleAddSetmeal}
           >
             <Plus className="h-4 w-4" />
-            新建套餐
+            New set meal
           </Button>
         </div>
       </div>
@@ -859,20 +859,20 @@ export default function Setmeal() {
                           className="h-4 w-4 cursor-pointer"
                         />
                       </TableHead>
-                      <TableHead className="font-semibold">套餐名称</TableHead>
-                      <TableHead className="font-semibold">图片</TableHead>
-                      <TableHead className="font-semibold">套餐分类</TableHead>
-                      <TableHead className="font-semibold">套餐价</TableHead>
-                      <TableHead className="font-semibold">售卖状态</TableHead>
-                      <TableHead className="font-semibold">最后操作时间</TableHead>
-                      <TableHead className="font-semibold">操作</TableHead>
+                      <TableHead className="font-semibold">Name</TableHead>
+                      <TableHead className="font-semibold">Image</TableHead>
+                      <TableHead className="font-semibold">Category</TableHead>
+                      <TableHead className="font-semibold">Price</TableHead>
+                      <TableHead className="font-semibold">Sale status</TableHead>
+                      <TableHead className="font-semibold">Last updated</TableHead>
+                      <TableHead className="font-semibold">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {list.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={8} className="text-center py-12">
-                          <div className="text-muted-foreground">暂无数据</div>
+                          <div className="text-muted-foreground">No data</div>
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -902,7 +902,7 @@ export default function Setmeal() {
                               />
                             ) : (
                               <div className="h-12 w-12 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
-                                无图片
+                                No image
                               </div>
                             )}
                           </TableCell>
@@ -918,7 +918,7 @@ export default function Setmeal() {
                                 }`}
                               />
                               <span className="text-sm font-medium">
-                                {item.status === 1 ? "起售" : "停售"}
+                                {item.status === 1 ? "On sale" : "Off sale"}
                               </span>
                             </div>
                           </TableCell>
@@ -931,14 +931,14 @@ export default function Setmeal() {
                                 onClick={() => handleEdit(item)}
                                 className="text-primary hover:text-primary/80 hover:underline text-sm font-medium cursor-pointer transition-colors"
                               >
-                                修改
+                                Edit
                               </button>
                               <Separator orientation="vertical" className="h-4" />
                               <button
                                 onClick={() => handleDelete(item)}
                                 className="text-destructive hover:text-destructive/80 hover:underline text-sm font-medium cursor-pointer transition-colors"
                               >
-                                删除
+                                Delete
                               </button>
                               <Separator orientation="vertical" className="h-4" />
                               <button
@@ -949,7 +949,7 @@ export default function Setmeal() {
                                     : "text-green-600 hover:text-green-700"
                                 } hover:underline text-sm font-medium cursor-pointer transition-colors`}
                               >
-                                {item.status === 1 ? "停售" : "起售"}
+                                {item.status === 1 ? "Delist" : "List"}
                               </button>
                             </div>
                           </TableCell>
@@ -965,11 +965,11 @@ export default function Setmeal() {
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
                     <div className="text-sm text-muted-foreground whitespace-nowrap">
-                      共 {total} 条记录，第 {reqData.page} / {totalPages} 页
+                      {total} total · Page {reqData.page} / {totalPages}
                     </div>
                     <div className="flex items-center gap-2">
                       <Label htmlFor="page-size" className="text-sm whitespace-nowrap">
-                        每页显示：
+                        Per page:
                       </Label>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -1091,23 +1091,21 @@ export default function Setmeal() {
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认操作</AlertDialogTitle>
+            <AlertDialogTitle>Confirm</AlertDialogTitle>
             <AlertDialogDescription>
               {currentSetmeal && (
                 <>
-                  确定要
                   {currentSetmeal.status === 1 ? (
-                    <span className="text-destructive font-semibold">停售</span>
+                    <>Delist <span className="font-semibold">{currentSetmeal.name}</span>?</>
                   ) : (
-                    <span className="text-green-600 font-semibold">起售</span>
+                    <>List <span className="font-semibold">{currentSetmeal.name}</span> for sale?</>
                   )}
-                  套餐"<span className="font-semibold">{currentSetmeal.name}</span>"吗？
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmToggleStatus}
               className={
@@ -1116,7 +1114,7 @@ export default function Setmeal() {
                   : "bg-green-600 text-white hover:bg-green-700"
               }
             >
-              确认
+              Confirm
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1126,22 +1124,22 @@ export default function Setmeal() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogTitle>Delete set meal</AlertDialogTitle>
             <AlertDialogDescription>
               {currentSetmeal && (
                 <>
-                  确定要删除套餐"<span className="font-semibold">{currentSetmeal.name}</span>"吗？
+                  Delete <span className="font-semibold">{currentSetmeal.name}</span>? This cannot be undone.
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              确认
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1154,18 +1152,18 @@ export default function Setmeal() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认批量删除</AlertDialogTitle>
+            <AlertDialogTitle>Batch delete</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除选中的 {selectedIds.length} 个套餐吗？
+              Delete {selectedIds.length} selected set meal(s)? This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmBatchDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              确认
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1175,13 +1173,13 @@ export default function Setmeal() {
       <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{isEditMode ? "修改套餐" : "新建套餐"}</DialogTitle>
+            <DialogTitle>{isEditMode ? "Edit set meal" : "New set meal"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {/* 套餐名称 */}
             <div className="grid gap-2">
               <Label htmlFor="form-name" className="text-sm">
-                <span className="text-destructive">*</span> 套餐名称：
+                <span className="text-destructive">*</span> Name:
               </Label>
               <Input
                 id="form-name"
@@ -1193,7 +1191,7 @@ export default function Setmeal() {
                   }
                 }}
                 onBlur={(e) => handleFieldBlur("name", e.target.value)}
-                placeholder="请输入套餐名称"
+                placeholder="Set meal name"
                 disabled={formLoading}
                 className={formErrors.name ? "border-destructive" : ""}
               />
@@ -1205,7 +1203,7 @@ export default function Setmeal() {
             {/* 套餐分类 */}
             <div className="grid gap-2">
               <Label htmlFor="form-category" className="text-sm">
-                <span className="text-destructive">*</span> 套餐分类：
+                <span className="text-destructive">*</span> Category:
               </Label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -1216,8 +1214,8 @@ export default function Setmeal() {
                     disabled={formLoading}
                   >
                     {formData.categoryId
-                      ? categoryList.find((c) => c.id === formData.categoryId.toString())?.name || "请选择"
-                      : "请选择"}
+                      ? categoryList.find((c) => c.id === formData.categoryId.toString())?.name || "Select"
+                      : "Select"}
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -1245,7 +1243,7 @@ export default function Setmeal() {
             {/* 套餐价格 */}
             <div className="grid gap-2">
               <Label htmlFor="form-price" className="text-sm">
-                <span className="text-destructive">*</span> 套餐价格：
+                <span className="text-destructive">*</span> Price:
               </Label>
               <Input
                 id="form-price"
@@ -1264,7 +1262,7 @@ export default function Setmeal() {
                   const value = e.target.value === "" ? 0 : Number(e.target.value);
                   handleFieldBlur("price", value);
                 }}
-                placeholder="请输入套餐价格"
+                placeholder="Price"
                 disabled={formLoading}
                 className={formErrors.price ? "border-destructive" : ""}
               />
@@ -1276,7 +1274,7 @@ export default function Setmeal() {
             {/* 套餐图片 */}
             <div className="grid gap-2">
               <Label className="text-sm">
-                <span className="text-destructive">*</span> 套餐图片：
+                <span className="text-destructive">*</span> Image:
               </Label>
               <div className="flex items-start gap-4">
                 <div
@@ -1294,18 +1292,18 @@ export default function Setmeal() {
                   {imagePreview ? (
                     <img
                       src={imagePreview}
-                      alt="套餐图片"
+                      alt="Set meal"
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="text-center text-muted-foreground">
                       <Upload className="h-8 w-8 mx-auto mb-2" />
-                      <span className="text-xs">点击上传</span>
+                      <span className="text-xs">Click to upload</span>
                     </div>
                   )}
                   {imageUploading && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <span className="text-white text-sm">上传中...</span>
+                      <span className="text-white text-sm">Uploading…</span>
                     </div>
                   )}
                 </div>
@@ -1318,9 +1316,9 @@ export default function Setmeal() {
                   disabled={formLoading || imageUploading}
                 />
                 <div className="flex-1 text-sm text-muted-foreground space-y-1">
-                  <p>图片大小不超过10M</p>
-                  <p>仅能上传PNG JPEG JPG类型图片</p>
-                  <p>建议上传方形图片</p>
+                  <p>Max file size 10MB</p>
+                  <p>PNG, JPEG, or JPG only</p>
+                  <p>Square images work best</p>
                 </div>
               </div>
               {formErrors.image && (
@@ -1331,7 +1329,7 @@ export default function Setmeal() {
             {/* 套餐菜品 */}
             <div className="grid gap-2">
               <Label className="text-sm">
-                <span className="text-destructive">*</span> 套餐菜品：
+                <span className="text-destructive">*</span> Dishes:
               </Label>
               <div className="space-y-2">
                 <Button
@@ -1341,7 +1339,7 @@ export default function Setmeal() {
                   className="bg-[#ffc200] text-black hover:bg-[#ffc200]/90 w-fit"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  添加菜品
+                  Add dishes
                 </Button>
                 {/* 已选菜品列表 */}
                 {formData.setmealDishes && formData.setmealDishes.length > 0 && (
@@ -1352,13 +1350,13 @@ export default function Setmeal() {
                         className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
                       >
                         <div className="flex-1">
-                          <div className="font-medium">{dish.name || "未知菜品"}</div>
+                          <div className="font-medium">{dish.name || "Unknown dish"}</div>
                           <div className="text-sm text-muted-foreground">
                             ¥{dish.price?.toFixed(2) || "0.00"}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Label className="text-sm whitespace-nowrap">份数：</Label>
+                          <Label className="text-sm whitespace-nowrap">Qty:</Label>
                           <Input
                             type="number"
                             min="1"
@@ -1393,7 +1391,7 @@ export default function Setmeal() {
             {/* 套餐描述 */}
             <div className="grid gap-2">
               <Label htmlFor="form-description" className="text-sm">
-                套餐描述：
+                Description:
               </Label>
               <Textarea
                 id="form-description"
@@ -1401,7 +1399,7 @@ export default function Setmeal() {
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="请输入套餐描述"
+                placeholder="Optional description"
                 disabled={formLoading}
                 className="min-h-[100px]"
               />
@@ -1413,14 +1411,14 @@ export default function Setmeal() {
               onClick={() => setFormDialogOpen(false)}
               disabled={formLoading || imageUploading}
             >
-              取消
+              Cancel
             </Button>
             <Button
               onClick={handleSubmitForm}
               disabled={formLoading || imageUploading}
               className="bg-gray-600 text-white hover:bg-gray-700"
             >
-              {formLoading ? "加载中..." : "确定"}
+              {formLoading ? "Loading…" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1430,7 +1428,7 @@ export default function Setmeal() {
       <Dialog open={dishDialogOpen} onOpenChange={setDishDialogOpen}>
         <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>添加菜品</DialogTitle>
+            <DialogTitle>Add dishes</DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-hidden flex gap-4 min-h-[500px]">
             {/* 左侧：分类列表 */}
@@ -1458,11 +1456,11 @@ export default function Setmeal() {
               <div className="flex-1 overflow-y-auto space-y-2">
                 {dishListLoading ? (
                   <div className="flex items-center justify-center py-8">
-                    <div className="text-muted-foreground">加载中...</div>
+                    <div className="text-muted-foreground">Loading…</div>
                   </div>
                 ) : dishList.length === 0 ? (
                   <div className="flex items-center justify-center py-8">
-                    <div className="text-muted-foreground">暂无菜品</div>
+                    <div className="text-muted-foreground">No dishes</div>
                   </div>
                 ) : (
                   dishList.map((dish) => (
@@ -1479,7 +1477,7 @@ export default function Setmeal() {
                         <div className="flex-1">
                           <div className="font-medium">{dish.name}</div>
                           <div className="text-sm text-muted-foreground flex items-center gap-2">
-                            <span>{dish.status === 1 ? "在售" : "停售"}</span>
+                            <span>{dish.status === 1 ? "On sale" : "Off sale"}</span>
                             <Separator orientation="vertical" className="h-3" />
                             <span>¥{dish.price?.toFixed(2) || "0.00"}</span>
                           </div>
@@ -1493,12 +1491,12 @@ export default function Setmeal() {
             {/* 右侧：已选菜品 */}
             <div className="w-64 border-l pl-4 flex flex-col overflow-hidden">
               <div className="font-semibold mb-3">
-                已选菜品({selectedDishIds.size})
+                Selected ({selectedDishIds.size})
               </div>
               <div className="flex-1 overflow-y-auto space-y-2">
                 {Array.from(selectedDishIds).length === 0 ? (
                   <div className="text-sm text-muted-foreground text-center py-8">
-                    暂无已选菜品
+                    No dishes selected
                   </div>
                 ) : (
                   Array.from(selectedDishIds).map((dishId) => {
@@ -1554,13 +1552,13 @@ export default function Setmeal() {
               variant="outline"
               onClick={() => setDishDialogOpen(false)}
             >
-              取消
+              Cancel
             </Button>
             <Button
               onClick={handleConfirmAddDishes}
               className="bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
             >
-              添加
+              Apply
             </Button>
           </DialogFooter>
         </DialogContent>

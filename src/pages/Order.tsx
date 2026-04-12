@@ -76,12 +76,12 @@ const ORDER_STATUS_CONFIG: Record<
   OrderStatus,
   { label: string; status?: number; badge?: string }
 > = {
-  all: { label: "全部订单", status: undefined },
-  2: { label: "待接单", status: 2 }, // 待接单
-  3: { label: "待派送", status: 3 }, // 已接单（待派送）
-  4: { label: "派送中", status: 4 }, // 派送中
-  5: { label: "已完成", status: 5 }, // 已完成
-  6: { label: "已取消", status: 6 }, // 已取消
+  all: { label: "All orders", status: undefined },
+  2: { label: "Pending acceptance", status: 2 }, // 待接单
+  3: { label: "Pending delivery", status: 3 }, // 已接单（待派送）
+  4: { label: "Out for delivery", status: 4 }, // 派送中
+  5: { label: "Completed", status: 5 }, // 已完成
+  6: { label: "Cancelled", status: 6 }, // 已取消
 };
 
 // 获取订单状态显示文本
@@ -89,21 +89,21 @@ const ORDER_STATUS_CONFIG: Record<
 const getOrderStatusText = (status: number): string => {
   switch (status) {
     case 1:
-      return "待付款";
+      return "Pending payment";
     case 2:
-      return "待接单";
+      return "Pending acceptance";
     case 3:
-      return "已接单";
+      return "Accepted";
     case 4:
-      return "派送中";
+      return "Out for delivery";
     case 5:
-      return "已完成";
+      return "Completed";
     case 6:
-      return "已取消";
+      return "Cancelled";
     case 7:
-      return "退款";
+      return "Refunded";
     default:
-      return "未知";
+      return "Unknown";
   }
 };
 
@@ -133,9 +133,9 @@ const getOrderStatusColor = (status: number): string => {
 const getPayMethodText = (payMethod?: number): string => {
   switch (payMethod) {
     case 1:
-      return "微信";
+      return "WeChat Pay";
     case 2:
-      return "支付宝";
+      return "Alipay";
     default:
       return "-";
   }
@@ -174,13 +174,15 @@ export default function Order() {
   const [orderDetail, setOrderDetail] = useState<Order | null>(null); // 订单详情数据
   const [detailLoading, setDetailLoading] = useState(false); // 详情加载状态
 
+  const CUSTOM_CANCEL_REASON = "Custom reason";
+
   // 取消原因选项列表
   const CANCEL_REASON_OPTIONS = [
-    "订单量较多,暂时无法接单",
-    "菜品已销售完,暂时无法接单",
-    "骑手不足无法配送",
-    "客户电话取消",
-    "自定义原因",
+    "High order volume — cannot accept orders right now",
+    "Items sold out — cannot accept orders right now",
+    "Not enough riders for delivery",
+    "Customer cancelled by phone",
+    CUSTOM_CANCEL_REASON,
   ];
 
   // 获取订单统计
@@ -191,7 +193,7 @@ export default function Order() {
         setStatistics(stats);
       } catch (error) {
         console.error("获取订单统计失败:", error);
-        toast.error("获取订单统计失败，请稍后重试");
+        toast.error("Failed to load order statistics. Please try again.");
       }
     };
     fetchStatistics();
@@ -215,7 +217,7 @@ export default function Order() {
         setTotal(Number(res.total));
       } catch (error) {
         console.error(error);
-        toast.error("获取订单列表失败，请稍后重试");
+        toast.error("Failed to load orders. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -333,7 +335,7 @@ export default function Order() {
         id: currentOrder.id,
         status: 3, // 接单后状态变为3(已接单/待派送)
       });
-      toast.success("接单成功");
+      toast.success("Order accepted");
       setConfirmDialogOpen(false);
       setCurrentOrder(null);
       reloadData();
@@ -342,7 +344,7 @@ export default function Order() {
       setStatistics(stats);
     } catch (error) {
       console.error("接单失败:", error);
-      toast.error("接单失败，请稍后重试");
+      toast.error("Failed to accept order. Please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -358,7 +360,7 @@ export default function Order() {
   // 确认拒单
   const handleRejectOrder = async () => {
     if (!currentOrder || !rejectionReason.trim()) {
-      toast.error("请输入拒单原因");
+      toast.error("Please enter a rejection reason");
       return;
     }
     setActionLoading(true);
@@ -367,7 +369,7 @@ export default function Order() {
         id: currentOrder.id,
         rejectionReason: rejectionReason.trim(),
       });
-      toast.success("拒单成功");
+      toast.success("Order rejected");
       setRejectDialogOpen(false);
       setCurrentOrder(null);
       setRejectionReason("");
@@ -377,7 +379,7 @@ export default function Order() {
       setStatistics(stats);
     } catch (error) {
       console.error("拒单失败:", error);
-      toast.error("拒单失败，请稍后重试");
+      toast.error("Failed to reject order. Please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -395,7 +397,7 @@ export default function Order() {
   // 处理取消原因选择
   const handleCancelReasonSelect = (reason: string) => {
     setSelectedCancelReason(reason);
-    if (reason !== "自定义原因") {
+    if (reason !== CUSTOM_CANCEL_REASON) {
       setCancelReason(reason);
       setCustomCancelReason("");
     } else {
@@ -412,23 +414,23 @@ export default function Order() {
   // 确认取消订单
   const handleCancelOrder = async () => {
     if (!currentOrder) {
-      toast.error("订单信息错误");
+      toast.error("Invalid order");
       return;
     }
     
     // 验证取消原因
     if (!selectedCancelReason) {
-      toast.error("请选择取消原因");
+      toast.error("Please select a cancellation reason");
       return;
     }
     
-    if (selectedCancelReason === "自定义原因" && !customCancelReason.trim()) {
-      toast.error("请输入自定义取消原因");
+    if (selectedCancelReason === CUSTOM_CANCEL_REASON && !customCancelReason.trim()) {
+      toast.error("Please enter your custom cancellation reason");
       return;
     }
     
     if (!cancelReason.trim()) {
-      toast.error("请输入取消原因");
+      toast.error("Please enter a cancellation reason");
       return;
     }
     
@@ -438,7 +440,7 @@ export default function Order() {
         id: currentOrder.id,
         cancelReason: cancelReason.trim(),
       });
-      toast.success("取消订单成功");
+      toast.success("Order cancelled");
       setCancelDialogOpen(false);
       setCurrentOrder(null);
       setCancelReason("");
@@ -450,7 +452,7 @@ export default function Order() {
       setStatistics(stats);
     } catch (error) {
       console.error("取消订单失败:", error);
-      toast.error("取消订单失败，请稍后重试");
+      toast.error("Failed to cancel order. Please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -461,14 +463,14 @@ export default function Order() {
     setActionLoading(true);
     try {
       await deliveryOrderAPI(order.id);
-      toast.success("派送订单成功");
+      toast.success("Order marked as out for delivery");
       reloadData();
       // 刷新统计
       const stats = await getOrderStatisticsAPI();
       setStatistics(stats);
     } catch (error) {
       console.error("派送订单失败:", error);
-      toast.error("派送订单失败，请稍后重试");
+      toast.error("Failed to update delivery status. Please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -479,14 +481,14 @@ export default function Order() {
     setActionLoading(true);
     try {
       await completeOrderAPI(order.id);
-      toast.success("完成订单成功");
+      toast.success("Order completed");
       reloadData();
       // 刷新统计
       const stats = await getOrderStatisticsAPI();
       setStatistics(stats);
     } catch (error) {
       console.error("完成订单失败:", error);
-      toast.error("完成订单失败，请稍后重试");
+      toast.error("Failed to complete order. Please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -502,7 +504,7 @@ export default function Order() {
       setOrderDetail(detail);
     } catch (error) {
       console.error("获取订单详情失败:", error);
-      toast.error("获取订单详情失败，请稍后重试");
+      toast.error("Failed to load order details. Please try again.");
       setDetailDialogOpen(false);
     } finally {
       setDetailLoading(false);
@@ -525,8 +527,8 @@ export default function Order() {
         onValueChange={(value) => handleStatusChange(stringToStatus(value))}
         className="w-full"
       >
-        <div className="bg-white border-b border-gray-200 rounded-t-lg rounded-b-none border-r border-gray-200">
-          <TabsList className="h-auto p-0 bg-transparent w-auto max-w-2xl">
+        <div className="bg-white border-b border-gray-200 rounded-t-lg rounded-b-none border-r border-gray-200 w-full overflow-x-auto">
+          <TabsList className="h-auto p-0 bg-transparent w-full max-w-none flex flex-nowrap min-w-full md:min-w-0">
             {ORDER_STATUS_ORDER.map((status) => {
               const config = ORDER_STATUS_CONFIG[status];
               const count = getStatusCount(status);
@@ -538,7 +540,8 @@ export default function Order() {
                   key={status}
                   value={statusToString(status)}
                   className={`
-                    relative flex-1 min-w-[100px] px-4 py-3 text-sm font-medium rounded-none border-r border-gray-200
+                    relative flex-1 min-w-[112px] sm:min-w-0 shrink-0 sm:shrink px-2 sm:px-3 py-3 text-xs sm:text-sm font-medium rounded-none border-r border-gray-200
+                    whitespace-normal text-center leading-snug
                     data-[state=active]:bg-[#ffc200] data-[state=active]:text-gray-900
                     data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700
                     hover:bg-gray-50
@@ -564,7 +567,7 @@ export default function Order() {
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
               <Label htmlFor="order-number" className="whitespace-nowrap text-sm">
-                订单号：
+                Order no.:
               </Label>
               <Input
                 id="order-number"
@@ -575,13 +578,13 @@ export default function Order() {
                     handleSearch();
                   }
                 }}
-                placeholder="请输入订单号"
+                placeholder="Enter order number"
                 className="w-[200px] h-8"
               />
             </div>
             <div className="flex items-center gap-2">
               <Label htmlFor="phone" className="whitespace-nowrap text-sm">
-                手机号：
+                Phone:
               </Label>
               <Input
                 id="phone"
@@ -592,28 +595,28 @@ export default function Order() {
                     handleSearch();
                   }
                 }}
-                placeholder="请输入手机号"
+                placeholder="Enter phone number"
                 className="w-[200px] h-8"
               />
             </div>
             <div className="flex items-center gap-2">
               <Label htmlFor="begin-time" className="whitespace-nowrap text-sm">
-                开始时间：
+                Start time:
               </Label>
               <DateTimePicker
                 value={beginTime}
                 onChange={(value) => setBeginTime(value)}
-                placeholder="选择开始时间"
+                placeholder="Select start time"
               />
             </div>
             <div className="flex items-center gap-2">
               <Label htmlFor="end-time" className="whitespace-nowrap text-sm">
-                结束时间：
+                End time:
               </Label>
               <DateTimePicker
                 value={endTime}
                 onChange={(value) => setEndTime(value)}
-                placeholder="选择结束时间"
+                placeholder="Select end time"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -623,7 +626,7 @@ export default function Order() {
                 className="bg-gray-600 text-white hover:bg-gray-700 h-8"
               >
                 <Search className="h-4 w-4" />
-                查询
+                Search
               </Button>
               <Button
                 onClick={handleReset}
@@ -631,7 +634,7 @@ export default function Order() {
                 variant="outline"
                 className="h-8"
               >
-                重置
+                Reset
               </Button>
             </div>
           </div>
@@ -656,24 +659,24 @@ export default function Order() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/50 hover:bg-muted/50">
-                      <TableHead className="font-semibold">订单号</TableHead>
-                      <TableHead className="font-semibold">订单菜品</TableHead>
-                      <TableHead className="font-semibold">下单时间</TableHead>
-                      <TableHead className="font-semibold">结账时间</TableHead>
-                      <TableHead className="font-semibold">订单状态</TableHead>
-                      <TableHead className="font-semibold">实收金额</TableHead>
-                      <TableHead className="font-semibold">支付方式</TableHead>
-                      <TableHead className="font-semibold">用户名</TableHead>
-                      <TableHead className="font-semibold">手机号</TableHead>
-                      <TableHead className="font-semibold">地址</TableHead>
-                      <TableHead className="font-semibold">操作</TableHead>
+                      <TableHead className="font-semibold">Order no.</TableHead>
+                      <TableHead className="font-semibold">Items</TableHead>
+                      <TableHead className="font-semibold">Ordered at</TableHead>
+                      <TableHead className="font-semibold">Paid at</TableHead>
+                      <TableHead className="font-semibold">Status</TableHead>
+                      <TableHead className="font-semibold">Amount</TableHead>
+                      <TableHead className="font-semibold">Payment</TableHead>
+                      <TableHead className="font-semibold">Customer</TableHead>
+                      <TableHead className="font-semibold">Phone</TableHead>
+                      <TableHead className="font-semibold">Address</TableHead>
+                      <TableHead className="font-semibold">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {list.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={11} className="text-center py-12">
-                          <div className="text-muted-foreground">暂无数据</div>
+                          <div className="text-muted-foreground">No data</div>
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -723,7 +726,7 @@ export default function Order() {
                                 onClick={() => handleOpenDetailDialog(item)}
                                 className="text-primary hover:text-primary/80 hover:underline text-sm font-medium cursor-pointer transition-colors"
                               >
-                                查看详情
+                                View details
                               </button>
                               {/* 根据订单状态显示不同的操作按钮 */}
                               {/* 状态2: 待接单 - 可以接单或拒单 */}
@@ -735,7 +738,7 @@ export default function Order() {
                                     disabled={actionLoading}
                                     className="text-primary hover:text-primary/80 hover:underline text-sm font-medium cursor-pointer transition-colors disabled:opacity-50"
                                   >
-                                    接单
+                                    Accept
                                   </button>
                                   <Separator orientation="vertical" className="h-4" />
                                   <button
@@ -743,7 +746,7 @@ export default function Order() {
                                     disabled={actionLoading}
                                     className="text-destructive hover:text-destructive/80 hover:underline text-sm font-medium cursor-pointer transition-colors disabled:opacity-50"
                                   >
-                                    拒单
+                                    Reject
                                   </button>
                                 </>
                               )}
@@ -756,7 +759,7 @@ export default function Order() {
                                     disabled={actionLoading}
                                     className="text-primary hover:text-primary/80 hover:underline text-sm font-medium cursor-pointer transition-colors disabled:opacity-50"
                                   >
-                                    派送
+                                    Dispatch
                                   </button>
                                   <Separator orientation="vertical" className="h-4" />
                                   <button
@@ -764,7 +767,7 @@ export default function Order() {
                                     disabled={actionLoading}
                                     className="text-destructive hover:text-destructive/80 hover:underline text-sm font-medium cursor-pointer transition-colors disabled:opacity-50"
                                   >
-                                    取消
+                                    Cancel
                                   </button>
                                 </>
                               )}
@@ -777,7 +780,7 @@ export default function Order() {
                                     disabled={actionLoading}
                                     className="text-primary hover:text-primary/80 hover:underline text-sm font-medium cursor-pointer transition-colors disabled:opacity-50"
                                   >
-                                    完成
+                                    Complete
                                   </button>
                                 </>
                               )}
@@ -795,11 +798,11 @@ export default function Order() {
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
                     <div className="text-sm text-muted-foreground whitespace-nowrap">
-                      共 {total} 条记录，第 {reqData.page} / {totalPages} 页
+                      {total} total · Page {reqData.page} / {totalPages}
                     </div>
                     <div className="flex items-center gap-2">
                       <Label htmlFor="page-size" className="text-sm whitespace-nowrap">
-                        每页显示：
+                        Per page:
                       </Label>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -921,23 +924,23 @@ export default function Order() {
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>确认接单</AlertDialogTitle>
+            <AlertDialogTitle>Accept order</AlertDialogTitle>
             <AlertDialogDescription>
               {currentOrder && (
                 <>
-                  确定要接单"<span className="font-semibold">{currentOrder.number}</span>"吗？
+                  Accept order <span className="font-semibold">{currentOrder.number}</span>?
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={actionLoading}>取消</AlertDialogCancel>
+            <AlertDialogCancel disabled={actionLoading}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmOrder}
               disabled={actionLoading}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              {actionLoading ? "处理中..." : "确认"}
+              {actionLoading ? "Working…" : "Confirm"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -947,17 +950,17 @@ export default function Order() {
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>拒单</DialogTitle>
+            <DialogTitle>Reject order</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <Label htmlFor="rejection-reason" className="text-sm">
-              拒单原因：
+              Reason:
             </Label>
             <Textarea
               id="rejection-reason"
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="请输入拒单原因"
+              placeholder="Enter rejection reason"
               disabled={actionLoading}
               className="mt-2 min-h-[100px]"
             />
@@ -968,14 +971,14 @@ export default function Order() {
               onClick={() => setRejectDialogOpen(false)}
               disabled={actionLoading}
             >
-              取消
+              Cancel
             </Button>
             <Button
               onClick={handleRejectOrder}
               disabled={actionLoading || !rejectionReason.trim()}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {actionLoading ? "处理中..." : "确认"}
+              {actionLoading ? "Working…" : "Confirm"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -985,12 +988,12 @@ export default function Order() {
       <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>取消订单</DialogTitle>
+            <DialogTitle>Cancel order</DialogTitle>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div>
               <Label htmlFor="cancel-reason" className="text-sm">
-                取消原因：
+                Reason:
               </Label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -999,7 +1002,7 @@ export default function Order() {
                       id="cancel-reason"
                       value={selectedCancelReason}
                       readOnly
-                      placeholder="请选择取消原因"
+                      placeholder="Select a reason"
                       disabled={actionLoading}
                       className="w-full pr-8 cursor-pointer"
                     />
@@ -1023,16 +1026,16 @@ export default function Order() {
             </div>
             
             {/* 自定义原因输入框 */}
-            {selectedCancelReason === "自定义原因" && (
+            {selectedCancelReason === CUSTOM_CANCEL_REASON && (
               <div>
                 <Label htmlFor="custom-cancel-reason" className="text-sm">
-                  请输入自定义原因：
+                  Custom reason:
                 </Label>
                 <Textarea
                   id="custom-cancel-reason"
                   value={customCancelReason}
                   onChange={(e) => handleCustomCancelReasonChange(e.target.value)}
-                  placeholder="请输入取消原因"
+                  placeholder="Enter cancellation reason"
                   disabled={actionLoading}
                   className="mt-2 min-h-[100px]"
                 />
@@ -1050,18 +1053,18 @@ export default function Order() {
               }}
               disabled={actionLoading}
             >
-              取消
+              Cancel
             </Button>
             <Button
               onClick={handleCancelOrder}
               disabled={
                 actionLoading ||
                 !selectedCancelReason ||
-                (selectedCancelReason === "自定义原因" && !customCancelReason.trim())
+                (selectedCancelReason === CUSTOM_CANCEL_REASON && !customCancelReason.trim())
               }
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {actionLoading ? "处理中..." : "确认"}
+              {actionLoading ? "Working…" : "Confirm"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1071,7 +1074,7 @@ export default function Order() {
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>订单详情</DialogTitle>
+            <DialogTitle>Order details</DialogTitle>
           </DialogHeader>
           {detailLoading ? (
             <div className="py-8">
@@ -1083,22 +1086,22 @@ export default function Order() {
             <div className="space-y-6 py-4">
               {/* 用户信息 */}
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold border-b pb-2">用户信息</h3>
+                <h3 className="text-lg font-semibold border-b pb-2">Customer</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm text-muted-foreground">用户名</Label>
+                    <Label className="text-sm text-muted-foreground">Name</Label>
                     <div className="text-base font-medium">{orderDetail.userName || "-"}</div>
                   </div>
                   <div>
-                    <Label className="text-sm text-muted-foreground">手机号</Label>
+                    <Label className="text-sm text-muted-foreground">Phone</Label>
                     <div className="text-base font-medium">{orderDetail.phone || "-"}</div>
                   </div>
                   <div className="col-span-2">
-                    <Label className="text-sm text-muted-foreground">收货人</Label>
+                    <Label className="text-sm text-muted-foreground">Recipient</Label>
                     <div className="text-base font-medium">{orderDetail.consignee || "-"}</div>
                   </div>
                   <div className="col-span-2">
-                    <Label className="text-sm text-muted-foreground">收货地址</Label>
+                    <Label className="text-sm text-muted-foreground">Delivery address</Label>
                     <div className="text-base font-medium">{orderDetail.address || "-"}</div>
                   </div>
                 </div>
@@ -1108,14 +1111,14 @@ export default function Order() {
 
               {/* 订单信息 */}
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold border-b pb-2">订单信息</h3>
+                <h3 className="text-lg font-semibold border-b pb-2">Order</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm text-muted-foreground">订单号</Label>
+                    <Label className="text-sm text-muted-foreground">Order no.</Label>
                     <div className="text-base font-medium">{orderDetail.number || "-"}</div>
                   </div>
                   <div>
-                    <Label className="text-sm text-muted-foreground">订单状态</Label>
+                    <Label className="text-sm text-muted-foreground">Status</Label>
                     <div>
                       <Badge className={getOrderStatusColor(orderDetail.status)}>
                         {getOrderStatusText(orderDetail.status)}
@@ -1123,26 +1126,26 @@ export default function Order() {
                     </div>
                   </div>
                   <div>
-                    <Label className="text-sm text-muted-foreground">下单时间</Label>
+                    <Label className="text-sm text-muted-foreground">Ordered at</Label>
                     <div className="text-base font-medium">{orderDetail.orderTime || "-"}</div>
                   </div>
                   <div>
-                    <Label className="text-sm text-muted-foreground">结账时间</Label>
+                    <Label className="text-sm text-muted-foreground">Paid at</Label>
                     <div className="text-base font-medium">{orderDetail.checkoutTime || "-"}</div>
                   </div>
                   <div>
-                    <Label className="text-sm text-muted-foreground">支付方式</Label>
+                    <Label className="text-sm text-muted-foreground">Payment method</Label>
                     <div className="text-base font-medium">{getPayMethodText(orderDetail.payMethod)}</div>
                   </div>
                   <div>
-                    <Label className="text-sm text-muted-foreground">实收金额</Label>
+                    <Label className="text-sm text-muted-foreground">Amount received</Label>
                     <div className="text-base font-semibold text-primary">
                       ¥{orderDetail.amount?.toFixed(2) || "0.00"}
                     </div>
                   </div>
                   {orderDetail.remark && (
                     <div className="col-span-2">
-                      <Label className="text-sm text-muted-foreground">备注</Label>
+                      <Label className="text-sm text-muted-foreground">Note</Label>
                       <div className="text-base font-medium">{orderDetail.remark}</div>
                     </div>
                   )}
@@ -1153,7 +1156,7 @@ export default function Order() {
 
               {/* 菜品信息 */}
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold border-b pb-2">菜品信息</h3>
+                <h3 className="text-lg font-semibold border-b pb-2">Line items</h3>
                 {orderDetail.orderDetailList && orderDetail.orderDetailList.length > 0 ? (
                   <div className="space-y-3">
                     {orderDetail.orderDetailList.map((detail: OrderDetail, index: number) => (
@@ -1164,22 +1167,22 @@ export default function Order() {
                         {detail.image && (
                           <img
                             src={detail.image}
-                            alt={detail.name || "菜品"}
+                            alt={detail.name || "Dish"}
                             className="w-20 h-20 object-cover rounded-md"
                           />
                         )}
                         <div className="flex-1">
                           <div className="font-medium text-base mb-1">
-                            {detail.name || "未知菜品"}
+                            {detail.name || "Unknown item"}
                           </div>
                           {detail.dishFlavor && (
                             <div className="text-sm text-muted-foreground mb-2">
-                              口味：{detail.dishFlavor}
+                              Flavor: {detail.dishFlavor}
                             </div>
                           )}
                           <div className="flex items-center justify-between">
                             <div className="text-sm text-muted-foreground">
-                              数量：{detail.number} × ¥{detail.amount?.toFixed(2) || "0.00"}
+                              Qty: {detail.number} × ¥{detail.amount?.toFixed(2) || "0.00"}
                             </div>
                             <div className="font-semibold text-primary">
                               ¥{((detail.number || 0) * (detail.amount || 0)).toFixed(2)}
@@ -1190,13 +1193,13 @@ export default function Order() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center text-muted-foreground py-8">暂无菜品信息</div>
+                  <div className="text-center text-muted-foreground py-8">No line items</div>
                 )}
               </div>
             </div>
           ) : (
             <div className="py-8 text-center text-muted-foreground">
-              加载失败，请重试
+              Failed to load. Please try again.
             </div>
           )}
           <DialogFooter>
@@ -1204,7 +1207,7 @@ export default function Order() {
               variant="outline"
               onClick={() => setDetailDialogOpen(false)}
             >
-              关闭
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

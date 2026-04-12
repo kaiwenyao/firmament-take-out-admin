@@ -47,8 +47,8 @@ const Dashboard = () => {
       const data = await getBusinessDataAPI();
       setBusinessData(data);
     } catch (error) {
-      console.error("获取今日数据失败:", error);
-      toast.error("获取今日数据失败，请稍后重试");
+      console.error("Failed to load business data:", error);
+      toast.error("Failed to load today’s data. Please try again.");
     }
   };
 
@@ -58,8 +58,8 @@ const Dashboard = () => {
       const data = await getOrderOverViewAPI();
       setOrderOverView(data);
     } catch (error) {
-      console.error("获取订单概览失败:", error);
-      toast.error("获取订单概览失败，请稍后重试");
+      console.error("Failed to load order overview:", error);
+      toast.error("Failed to load order overview. Please try again.");
     }
   };
 
@@ -69,8 +69,8 @@ const Dashboard = () => {
       const data = await getOrderStatisticsAPI();
       setOrderStatistics(data);
     } catch (error) {
-      console.error("获取订单统计数据失败:", error);
-      toast.error("获取订单统计数据失败，请稍后重试");
+      console.error("Failed to load order statistics:", error);
+      toast.error("Failed to load order statistics. Please try again.");
     }
   };
 
@@ -80,8 +80,8 @@ const Dashboard = () => {
       const data = await getDishOverViewAPI();
       setDishOverView(data);
     } catch (error) {
-      console.error("获取菜品总览失败:", error);
-      toast.error("获取菜品总览失败，请稍后重试");
+      console.error("Failed to load dish overview:", error);
+      toast.error("Failed to load dish overview. Please try again.");
     }
   };
 
@@ -91,8 +91,8 @@ const Dashboard = () => {
       const data = await getSetmealOverViewAPI();
       setSetmealOverView(data);
     } catch (error) {
-      console.error("获取套餐总览失败:", error);
-      toast.error("获取套餐总览失败，请稍后重试");
+      console.error("Failed to load set meal overview:", error);
+      toast.error("Failed to load set meal overview. Please try again.");
     }
   };
 
@@ -108,8 +108,8 @@ const Dashboard = () => {
       const res = await getOrderListAPI(queryParams);
       setOrderList(res.records);
     } catch (error) {
-      console.error("获取订单列表失败:", error);
-      toast.error("获取订单列表失败，请稍后重试");
+      console.error("Failed to load order list:", error);
+      toast.error("Failed to load orders. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -147,29 +147,29 @@ const Dashboard = () => {
       <Card>
         <CardContent className="px-6 pt-0 pb-0">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">今日数据 {todayStr}</h2>
+            <h2 className="text-lg font-semibold">Today · {todayStr}</h2>
             <Link
               to="/statistics"
               className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
             >
-              详细数据 <ArrowRight className="h-4 w-4" />
+              Details <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
           <div className="grid grid-cols-5 gap-4">
             <div>
-              <div className="text-sm text-gray-600 mb-1">营业额</div>
+              <div className="text-sm text-gray-600 mb-1">Revenue</div>
               <div className="text-2xl font-bold">
                 {businessData ? formatAmount(businessData.turnover) : "¥0"}
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-600 mb-1">有效订单</div>
+              <div className="text-sm text-gray-600 mb-1">Valid orders</div>
               <div className="text-2xl font-bold">
                 {businessData?.validOrderCount ?? 0}
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-600 mb-1">订单完成率</div>
+              <div className="text-sm text-gray-600 mb-1">Completion rate</div>
               <div className="text-2xl font-bold">
                 {businessData?.orderCompletionRate
                   ? `${(businessData.orderCompletionRate * 100).toFixed(0)}%`
@@ -177,13 +177,13 @@ const Dashboard = () => {
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-600 mb-1">平均客单价</div>
+              <div className="text-sm text-gray-600 mb-1">Avg. ticket</div>
               <div className="text-2xl font-bold">
                 {businessData ? formatAmount(businessData.unitPrice) : "¥0"}
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-600 mb-1">新增用户</div>
+              <div className="text-sm text-gray-600 mb-1">New users</div>
               <div className="text-2xl font-bold">
                 {businessData?.newUsers ?? 0}
               </div>
@@ -196,19 +196,19 @@ const Dashboard = () => {
       <Card>
         <CardContent className="px-6 pt-0 pb-0">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">订单管理 {todayStr}</h2>
+            <h2 className="text-lg font-semibold">Orders · {todayStr}</h2>
             <Link
               to="/order"
               className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
             >
-              订单明细 <ArrowRight className="h-4 w-4" />
+              All orders <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
           <div className="grid grid-cols-5 gap-4">
             <div className="flex items-center gap-3">
               <FileText className="h-5 w-5 text-gray-600" />
               <div>
-                <div className="text-sm text-gray-600">待接单</div>
+                <div className="text-sm text-gray-600">Pending accept</div>
                 <div className="text-xl font-bold">
                   {orderStatistics?.toBeConfirmed ?? 0}
                 </div>
@@ -217,7 +217,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-3">
               <Truck className="h-5 w-5 text-gray-600" />
               <div>
-                <div className="text-sm text-gray-600">待派送</div>
+                <div className="text-sm text-gray-600">Pending delivery</div>
                 <div className="text-xl font-bold">
                   {orderStatistics?.confirmed ?? 0}
                 </div>
@@ -226,7 +226,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-3">
               <CheckCircle className="h-5 w-5 text-gray-600" />
               <div>
-                <div className="text-sm text-gray-600">已完成</div>
+                <div className="text-sm text-gray-600">Completed</div>
                 <div className="text-xl font-bold">
                   {orderOverView?.completedOrders ?? 0}
                 </div>
@@ -235,7 +235,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-3">
               <XCircle className="h-5 w-5 text-gray-600" />
               <div>
-                <div className="text-sm text-gray-600">已取消</div>
+                <div className="text-sm text-gray-600">Cancelled</div>
                 <div className="text-xl font-bold">
                   {orderOverView?.cancelledOrders ?? 0}
                 </div>
@@ -244,7 +244,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-3">
               <FileText className="h-5 w-5 text-gray-600" />
               <div>
-                <div className="text-sm text-gray-600">全部订单</div>
+                <div className="text-sm text-gray-600">All orders</div>
                 <div className="text-xl font-bold">
                   {orderOverView?.allOrders ?? 0}
                 </div>
@@ -260,19 +260,19 @@ const Dashboard = () => {
         <Card>
           <CardContent className="px-6 pt-2 pb-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">菜品总览</h2>
+              <h2 className="text-lg font-semibold">Dishes</h2>
               <Link
                 to="/dish"
                 className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
               >
-                菜品管理 <ArrowRight className="h-4 w-4" />
+                Manage <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Eye className="h-5 w-5 text-green-600" />
-                  <span className="text-sm text-gray-600">已启售</span>
+                  <span className="text-sm text-gray-600">On sale</span>
                 </div>
                 <span className="text-xl font-bold">
                   {dishOverView?.sold ?? 0}
@@ -281,7 +281,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <EyeOff className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm text-gray-600">已停售</span>
+                  <span className="text-sm text-gray-600">Off sale</span>
                 </div>
                 <span className="text-xl font-bold">
                   {dishOverView?.discontinued ?? 0}
@@ -290,7 +290,7 @@ const Dashboard = () => {
               <Link to="/dish">
                 <Button className="w-full bg-[#ffc200] hover:bg-[#ffb300] text-gray-900">
                   <Plus className="mr-2 h-4 w-4" />
-                  新增菜品
+                  Add dish
                 </Button>
               </Link>
             </div>
@@ -301,19 +301,19 @@ const Dashboard = () => {
         <Card>
           <CardContent className="px-6 pt-0 pb-0">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">套餐总览</h2>
+              <h2 className="text-lg font-semibold">Set meals</h2>
               <Link
                 to="/setmeal"
                 className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
               >
-                套餐管理 <ArrowRight className="h-4 w-4" />
+                Manage <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Eye className="h-5 w-5 text-green-600" />
-                  <span className="text-sm text-gray-600">已启售</span>
+                  <span className="text-sm text-gray-600">On sale</span>
                 </div>
                 <span className="text-xl font-bold">
                   {setmealOverView?.sold ?? 0}
@@ -322,7 +322,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <EyeOff className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm text-gray-600">已停售</span>
+                  <span className="text-sm text-gray-600">Off sale</span>
                 </div>
                 <span className="text-xl font-bold">
                   {setmealOverView?.discontinued ?? 0}
@@ -331,7 +331,7 @@ const Dashboard = () => {
               <Link to="/setmeal">
                 <Button className="w-full bg-[#ffc200] hover:bg-[#ffb300] text-gray-900">
                   <Plus className="mr-2 h-4 w-4" />
-                  新增套餐
+                  Add set meal
                 </Button>
               </Link>
             </div>
@@ -343,7 +343,7 @@ const Dashboard = () => {
       <Card>
         <CardContent className="px-6 pt-0 pb-0">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">订单信息</h2>
+            <h2 className="text-lg font-semibold">Order queue</h2>
           </div>
           {/* 订单状态标签 */}
           <Tabs
@@ -356,7 +356,7 @@ const Dashboard = () => {
                 value="2"
                 className="px-4 py-2 text-sm font-medium relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#ffc200] data-[state=active]:bg-transparent data-[state=active]:text-gray-900 data-[state=inactive]:text-gray-700 hover:bg-gray-50"
               >
-                待接单
+                Pending accept
                 {orderStatistics && orderStatistics.toBeConfirmed > 0 && (
                   <Badge className="ml-2 bg-red-500 text-white">
                     {orderStatistics.toBeConfirmed}
@@ -367,7 +367,7 @@ const Dashboard = () => {
                 value="3"
                 className="px-4 py-2 text-sm font-medium relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#ffc200] data-[state=active]:bg-transparent data-[state=active]:text-gray-900 data-[state=inactive]:text-gray-700 hover:bg-gray-50"
               >
-                待派送
+                Pending delivery
                 {orderStatistics && orderStatistics.confirmed > 0 && (
                   <Badge className="ml-2 bg-red-500 text-white">
                     {orderStatistics.confirmed}
@@ -382,26 +382,26 @@ const Dashboard = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>订单号</TableHead>
-                  <TableHead>订单菜品</TableHead>
-                  <TableHead>地址</TableHead>
-                  <TableHead>预计送达时间</TableHead>
-                  <TableHead>实收金额</TableHead>
-                  <TableHead>备注</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>Order #</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>Address</TableHead>
+                  <TableHead>Checkout time</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Notes</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8">
-                      加载中...
+                      Loading…
                     </TableCell>
                   </TableRow>
                 ) : orderList.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                      暂无订单数据
+                      No orders
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -425,7 +425,7 @@ const Dashboard = () => {
                             to={`/order?status=${activeStatus}`}
                             className="text-blue-600 hover:text-blue-800 text-sm"
                           >
-                            查看
+                            View
                           </Link>
                         </div>
                       </TableCell>

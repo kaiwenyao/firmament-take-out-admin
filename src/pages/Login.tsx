@@ -28,12 +28,12 @@ export default function Login() {
     e.preventDefault();
     
     if (!formData.username.trim()) {
-      toast.error("请输入用户名");
+      toast.error("Please enter your username");
       return;
     }
     
     if (!formData.password.trim()) {
-      toast.error("请输入密码");
+      toast.error("Please enter your password");
       return;
     }
 
@@ -50,11 +50,11 @@ export default function Login() {
         localStorage.setItem("name", response.name);
         localStorage.setItem("userId", response.id.toString());
 
-        toast.success("登录成功");
+        toast.success("Signed in successfully");
         // 跳转到首页
         navigate("/dashboard", { replace: true });
       } else {
-        toast.error("登录失败，未获取到 token");
+        toast.error("Sign-in failed: no token received");
       }
     } catch (error: unknown) {
       const errorMessage =
@@ -62,7 +62,7 @@ export default function Login() {
           ? error
           : error instanceof Error
           ? error.message
-          : "登录失败，请检查用户名和密码";
+          : "Sign-in failed. Check your username and password.";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -76,7 +76,7 @@ export default function Login() {
         <div className="hidden md:block w-1/2 relative">
           <img
             src={loginImage}
-            alt="登录背景"
+            alt="Sign-in"
             className="w-full h-full object-cover"
           />
         </div>
@@ -88,7 +88,7 @@ export default function Login() {
             <div className="flex justify-center mb-2">
               <img 
                 src={logoImage} 
-                alt="苍穹外卖" 
+                alt="Firmament"
                 className="h-20"
               />
             </div>
@@ -103,7 +103,7 @@ export default function Login() {
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder="用户名"
+                  placeholder="Username"
                   value={formData.username}
                   onChange={(e) =>
                     setFormData({ ...formData, username: e.target.value })
@@ -120,7 +120,7 @@ export default function Login() {
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   type="password"
-                  placeholder="密码"
+                  placeholder="Password"
                   value={formData.password}
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
@@ -137,7 +137,7 @@ export default function Login() {
               disabled={loading}
               className="w-full h-12 bg-[#ffc200] hover:bg-[#e6af00] text-white font-medium text-base rounded-lg transition-colors"
             >
-              {loading ? "登录中..." : "登录"}
+              {loading ? "Signing in…" : "Sign in"}
             </Button>
           </form>
         </div>

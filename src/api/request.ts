@@ -136,7 +136,7 @@ instance.interceptors.response.use(
       return res.data; // 直接返回数据核心部分
     } else {
       // 如果 code 不为 1，代表业务错误（比如"用户名已存在"）
-      const errorMsg: string = res.msg || "操作失败";
+      const errorMsg: string = res.msg || "Operation failed";
       toast.error(errorMsg); // 统一显示错误提示给用户
       return Promise.reject(new Error(errorMsg));
     }
@@ -185,14 +185,14 @@ instance.interceptors.response.use(
         } else {
           // 刷新失败，清空队列并跳转登录页
           processQueue(new Error("Token 刷新失败"), null);
-          toast.warning("登录过期，现在跳转到登录页");
+          toast.warning("Session expired. Redirecting to sign in…");
           handleTokenExpired();
-          return Promise.reject(new Error("登录已过期，请重新登录"));
+          return Promise.reject(new Error("Session expired. Please sign in again."));
         }
       } catch (refreshError) {
         // 刷新过程中出错
         processQueue(new Error("Token 刷新失败"), null);
-        toast.warning("登录过期，现在跳转到登录页");
+        toast.warning("Session expired. Redirecting to sign in…");
         handleTokenExpired();
         return Promise.reject(refreshError);
       } finally {
@@ -203,7 +203,7 @@ instance.interceptors.response.use(
     // 处理其他错误
     const errorData = error.response?.data as { msg?: string } | undefined;
     const errorMessage =
-      errorData?.msg || error.message || "网络异常";
+      errorData?.msg || error.message || "Network error";
     toast.error(errorMessage); // 统一显示错误提示给用户
     return Promise.reject(new Error(errorMessage));
   }

@@ -43,12 +43,12 @@ export function DateRangePicker({
 
   const displayText = React.useMemo(() => {
     if (beginDate && endDate) {
-      return `${format(beginDate, "yyyy-MM-dd")} 至 ${format(endDate, "yyyy-MM-dd")}`;
+      return `${format(beginDate, "yyyy-MM-dd")} – ${format(endDate, "yyyy-MM-dd")}`;
     }
     if (beginDate) {
       return format(beginDate, "yyyy-MM-dd");
     }
-    return "选择日期范围";
+    return "Select date range";
   }, [beginDate, endDate]);
 
   return (

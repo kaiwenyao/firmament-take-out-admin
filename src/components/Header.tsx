@@ -1,9 +1,9 @@
-import { 
-  AlignJustify, // 对应截图中的收起图标
-  Clock,        // 对应营业状态设置的图标
-  LogOut, 
-  KeyRound, 
-  ChevronDown 
+import {
+  AlignJustify,
+  Clock,
+  LogOut,
+  KeyRound,
+  ChevronDown,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -61,8 +61,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         const status = await getShopStatusAPI();
         setShopStatusState(status);
       } catch (error) {
-        console.error("获取店铺营业状态失败:", error);
-        // 失败时默认为营业中
+        console.error("Failed to fetch shop status:", error);
         setShopStatusState(1);
       } finally {
         setStatusLoading(false);
@@ -73,7 +72,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
 
   const handleLogout = async () => {
     await employeeLogoutAPI();
-    toast.success("已退出登录");
+    toast.success("Signed out");
     navigate("/login", { replace: true });
   };
 
@@ -84,11 +83,11 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       await setShopStatusAPI(status);
       setShopStatusState(status);
       setStatusDialogOpen(false);
-      toast.success(`已设置为${status === 1 ? "营业中" : "打烊中"}`);
+      toast.success(`Shop is now ${status === 1 ? "open" : "closed"}`);
     } catch (error) {
-      console.error("设置店铺营业状态失败:", error);
-      toast.error("设置营业状态失败", {
-        description: (error as Error).message, // 把具体错误放在这里
+      console.error("Failed to set shop status:", error);
+      toast.error("Could not update shop status", {
+        description: (error as Error).message,
       });
     } finally {
       setLoading(false);
@@ -104,26 +103,26 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     switch (field) {
       case "oldPassword":
         if (!value.trim()) {
-          return "原始密码不能为空";
+          return "Current password is required";
         }
         return "";
       case "newPassword":
         if (!value.trim()) {
-          return "新密码不能为空";
+          return "New password is required";
         }
         if (value.length < 6 || value.length > 20) {
-          return "密码长度必须在6-20位之间";
+          return "Password must be 6–20 characters";
         }
         if (!/^[a-zA-Z0-9]+$/.test(value)) {
-          return "密码只能包含数字或字母";
+          return "Password may only contain letters and numbers";
         }
         return "";
       case "confirmPassword":
         if (!value.trim()) {
-          return "确认密码不能为空";
+          return "Confirm your new password";
         }
         if (confirmValue && value !== confirmValue) {
-          return "两次输入的密码不一致";
+          return "Passwords do not match";
         }
         return "";
       default:
@@ -187,8 +186,8 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         newPassword: true,
         confirmPassword: true,
       });
-      toast.error("表单校验失败", {
-        description: "请检查表单信息，确保所有字段填写正确",
+      toast.error("Validation failed", {
+        description: "Please check all fields and try again.",
       });
       return;
     }
@@ -201,7 +200,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         newPassword: passwordFormData.newPassword,
       };
       await updatePasswordAPI(passwordData);
-      toast.success("修改密码成功");
+      toast.success("Password updated");
       setPasswordDialogOpen(false);
       setPasswordFormData({
         oldPassword: "",
@@ -211,9 +210,8 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       setPasswordFormErrors({});
       setPasswordFormTouched({}); // 重置触摸状态
     } catch (error) {
-      console.error("修改密码失败:", error);
-      // 提取错误信息
-      let errorMessage = "修改密码失败，请稍后重试";
+      console.error("Failed to change password:", error);
+      let errorMessage = "Could not change password. Please try again.";
       if (error && typeof error === "object" && "response" in error) {
         const axiosError = error as {
           response?: { data?: { msg?: string }; status?: number };
@@ -222,7 +220,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           errorMessage = axiosError.response.data.msg;
         }
       }
-      toast.error("修改密码失败", {
+      toast.error("Could not change password", {
         description: errorMessage,
       });
     } finally {
@@ -238,7 +236,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         <div className="flex items-center gap-2 mr-4">
             <img 
                 src={logoImage} 
-                alt="苍穹外卖" 
+                alt="Firmament"
                 className="h-10"
             />
         </div>
@@ -260,7 +258,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           <div className={`flex items-center justify-center text-white text-sm font-medium px-3 py-1 rounded-sm shadow-sm ml-4 ${
             shopStatus === 1 ? "bg-red-600" : "bg-gray-500"
           }`}>
-            {shopStatus === 1 ? "营业中" : "打烊中"}
+            {shopStatus === 1 ? "Open" : "Closed"}
           </div>
         ) : null}
       </div>
@@ -273,7 +271,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           onClick={() => setStatusDialogOpen(true)}
         >
           <Clock className="h-5 w-5" />
-          <span className="text-sm font-medium">营业状态设置</span>
+          <span className="text-sm font-medium">Shop hours</span>
         </div>
 
         {/* 2. 管理员下拉菜单 */}
@@ -290,14 +288,14 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
               onClick={handleOpenPasswordDialog}
             >
               <KeyRound className="mr-2 h-4 w-4" />
-              <span>修改密码</span>
+              <span>Change password</span>
             </DropdownMenuItem>
             <DropdownMenuItem 
               className="cursor-pointer text-red-600 focus:text-red-600"
               onClick={handleLogout}
             >
               <LogOut className="mr-2 h-4 w-4" />
-              <span>退出登录</span>
+              <span>Sign out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -307,9 +305,9 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>设置营业状态</DialogTitle>
+            <DialogTitle>Shop status</DialogTitle>
             <DialogDescription>
-              请选择店铺的营业状态
+              Choose whether the shop is open for orders.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-3">
@@ -320,7 +318,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
               disabled={loading || shopStatus === 1}
             >
               <div className="w-3 h-3 bg-red-600 rounded-full mr-2"></div>
-              营业中
+              Open
             </Button>
             <Button
               variant={shopStatus === 0 ? "default" : "outline"}
@@ -329,7 +327,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
               disabled={loading || shopStatus === 0}
             >
               <div className="w-3 h-3 bg-gray-500 rounded-full mr-2"></div>
-              打烊中
+              Closed
             </Button>
           </div>
           <DialogFooter>
@@ -338,7 +336,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
               onClick={() => setStatusDialogOpen(false)}
               disabled={loading}
             >
-              取消
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -348,11 +346,11 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
         <DialogContent className="sm:max-w-[500px]" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle>修改密码</DialogTitle>
+            <DialogTitle>Change password</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="old-password">原始密码：</Label>
+              <Label htmlFor="old-password">Current password</Label>
               <Input
                 id="old-password"
                 type="password"
@@ -365,7 +363,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                   }
                 }}
                 onBlur={(e) => handlePasswordFieldBlur("oldPassword", e.target.value)}
-                placeholder="请输入"
+                placeholder="Enter current password"
                 disabled={passwordFormLoading}
                 className={passwordFormErrors.oldPassword && passwordFormTouched.oldPassword ? "border-destructive" : ""}
               />
@@ -376,7 +374,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
               )}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="new-password">新密码：</Label>
+              <Label htmlFor="new-password">New password</Label>
               <Input
                 id="new-password"
                 type="password"
@@ -404,7 +402,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                   }
                 }}
                 onBlur={(e) => handlePasswordFieldBlur("newPassword", e.target.value)}
-                placeholder="6 - 20位密码,数字或字母,区分大小写"
+                placeholder="6–20 characters, letters and numbers, case-sensitive"
                 disabled={passwordFormLoading}
                 className={passwordFormErrors.newPassword && passwordFormTouched.newPassword ? "border-destructive" : ""}
               />
@@ -415,7 +413,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
               )}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="confirm-password">确认密码：</Label>
+              <Label htmlFor="confirm-password">Confirm new password</Label>
               <Input
                 id="confirm-password"
                 type="password"
@@ -428,7 +426,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                   }
                 }}
                 onBlur={(e) => handlePasswordFieldBlur("confirmPassword", e.target.value)}
-                placeholder="请输入"
+                placeholder="Re-enter new password"
                 disabled={passwordFormLoading}
                 className={passwordFormErrors.confirmPassword && passwordFormTouched.confirmPassword ? "border-destructive" : ""}
               />
@@ -445,14 +443,14 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
               onClick={() => setPasswordDialogOpen(false)}
               disabled={passwordFormLoading}
             >
-              取消
+              Cancel
             </Button>
             <Button
               onClick={handleSubmitPassword}
               disabled={passwordFormLoading}
               className="bg-[#ffc200] text-black hover:bg-[#ffc200]/90"
             >
-              {passwordFormLoading ? "保存中..." : "保存"}
+              {passwordFormLoading ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
