@@ -92,7 +92,7 @@ export default function Login() {
                 className="h-20"
               />
             </div>
-            <p className="text-sm text-gray-500">Firmament take out</p>
+            <p className="text-sm text-gray-500">Firmament Take-Out</p>
           </div>
 
           {/* 登录表单 */}

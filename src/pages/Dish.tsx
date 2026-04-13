@@ -939,7 +939,7 @@ export default function Dish() {
                                     : "text-green-600 hover:text-green-700"
                                 } hover:underline text-sm font-medium cursor-pointer transition-colors`}
                               >
-                                {item.status === 1 ? "Delist" : "List"}
+                                {item.status === 1 ? "Disable" : "Enable"}
                               </button>
                             </div>
                           </TableCell>
@@ -1086,9 +1086,9 @@ export default function Dish() {
               {currentDish && (
                 <>
                   {currentDish.status === 1 ? (
-                    <>Delist <span className="font-semibold">{currentDish.name}</span>?</>
+                    <>Disable <span className="font-semibold">{currentDish.name}</span>?</>
                   ) : (
-                    <>List <span className="font-semibold">{currentDish.name}</span> for sale?</>
+                    <>Enable <span className="font-semibold">{currentDish.name}</span>?</>
                   )}
                 </>
               )}

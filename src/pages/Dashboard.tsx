@@ -91,8 +91,8 @@ const Dashboard = () => {
       const data = await getSetmealOverViewAPI();
       setSetmealOverView(data);
     } catch (error) {
-      console.error("Failed to load set meal overview:", error);
-      toast.error("Failed to load set meal overview. Please try again.");
+      console.error("Failed to load setmeal overview:", error);
+      toast.error("Failed to load setmeal overview. Please try again.");
     }
   };
 
@@ -208,7 +208,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-3">
               <FileText className="h-5 w-5 text-gray-600" />
               <div>
-                <div className="text-sm text-gray-600">Pending accept</div>
+                <div className="text-sm text-gray-600">Pending acceptance</div>
                 <div className="text-xl font-bold">
                   {orderStatistics?.toBeConfirmed ?? 0}
                 </div>
@@ -301,7 +301,7 @@ const Dashboard = () => {
         <Card>
           <CardContent className="px-6 pt-0 pb-0">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Set meals</h2>
+              <h2 className="text-lg font-semibold">Setmeals</h2>
               <Link
                 to="/setmeal"
                 className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
@@ -331,7 +331,7 @@ const Dashboard = () => {
               <Link to="/setmeal">
                 <Button className="w-full bg-[#ffc200] hover:bg-[#ffb300] text-gray-900">
                   <Plus className="mr-2 h-4 w-4" />
-                  Add set meal
+                  Add setmeal
                 </Button>
               </Link>
             </div>
@@ -356,7 +356,7 @@ const Dashboard = () => {
                 value="2"
                 className="px-4 py-2 text-sm font-medium relative rounded-none border-b-2 border-transparent data-[state=active]:border-[#ffc200] data-[state=active]:bg-transparent data-[state=active]:text-gray-900 data-[state=inactive]:text-gray-700 hover:bg-gray-50"
               >
-                Pending accept
+                Pending acceptance
                 {orderStatistics && orderStatistics.toBeConfirmed > 0 && (
                   <Badge className="ml-2 bg-red-500 text-white">
                     {orderStatistics.toBeConfirmed}
