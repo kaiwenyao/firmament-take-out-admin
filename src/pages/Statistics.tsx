@@ -190,7 +190,7 @@ const Statistics = () => {
         formatter: (params: unknown) => {
           const param = Array.isArray(params) ? params[0] : params;
           if (param && typeof param === "object" && "name" in param && "value" in param) {
-            return `${param.name}<br/>Revenue: ${param.value} CNY`;
+            return `${param.name}<br/>Revenue: ¥${param.value}`;
           }
           return "";
         },
@@ -200,7 +200,7 @@ const Statistics = () => {
         data: turnoverData ? parseStringList(turnoverData.dateList) : [],
         axisLabel: { rotate: 45 },
       },
-      yAxis: { type: "value", name: "Revenue (CNY)" },
+      yAxis: { type: "value", name: "Revenue (¥)" },
       series: [
         {
           name: "Revenue",

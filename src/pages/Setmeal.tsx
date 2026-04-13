@@ -221,7 +221,7 @@ export default function Setmeal() {
         setSelectedIds([]);
       } catch (error) {
         console.error(error);
-        toast.error("Failed to load set meals", {
+        toast.error("Failed to load setmeals", {
           description: getErrorMessage(error) || "Please try again"
         });
       } finally {
@@ -300,13 +300,13 @@ export default function Setmeal() {
       await enableOrDisableSetmealAPI(newStatus, currentSetmeal.id);
       setConfirmDialogOpen(false);
       setCurrentSetmeal(null);
-      toast.success(`Set meal ${action}`);
+      toast.success(`Setmeal ${action}`);
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error(`${action}套餐失败:`, error);
       setConfirmDialogOpen(false);
-      toast.error("Failed to update set meal status", {
+      toast.error("Failed to update setmeal status", {
         description: getErrorMessage(error) || "Please try again"
       });
     }
@@ -326,13 +326,12 @@ export default function Setmeal() {
       await deleteSetmealAPI([currentSetmeal.id]);
       setDeleteDialogOpen(false);
       setCurrentSetmeal(null);
-      toast.success("Set meal deleted");
-      // 操作成功后刷新列表
+            // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error("删除套餐失败:", error);
       setDeleteDialogOpen(false);
-      toast.error("Failed to delete set meal", {
+      toast.error("Failed to delete setmeal", {
         description: getErrorMessage(error) || "Please try again"
       });
     }
@@ -342,7 +341,7 @@ export default function Setmeal() {
   const handleBatchDelete = () => {
     if (selectedIds.length === 0) {
       toast.error("Nothing selected", {
-        description: "Select at least one set meal"
+        description: "Select at least one setmeal"
       });
       return;
     }
@@ -355,7 +354,7 @@ export default function Setmeal() {
       await deleteSetmealAPI(selectedIds);
       setBatchDeleteDialogOpen(false);
       setSelectedIds([]);
-      toast.success(`Deleted ${selectedIds.length} set meal(s)`);
+      toast.success(`Deleted ${selectedIds.length} setmeal(s)`);
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
@@ -372,7 +371,7 @@ export default function Setmeal() {
     switch (field) {
       case "name":
         if (!value || (typeof value === "string" && !value.trim())) {
-          return "Set meal name is required";
+          return "Setmeal name is required";
         }
         return "";
       case "categoryId": {
@@ -582,7 +581,7 @@ export default function Setmeal() {
       setImagePreview(setmealDetail.image || "");
     } catch (error) {
       console.error("获取套餐详情失败:", error);
-      toast.error("Failed to load set meal", {
+      toast.error("Failed to load setmeal", {
         description: getErrorMessage(error) || "Please try again"
       });
       setFormDialogOpen(false); // 失败了关掉弹窗是合理的
@@ -659,7 +658,7 @@ export default function Setmeal() {
         await updateSetmealAPI({
           ...formData,
         });
-        toast.success("Set meal updated");
+        toast.success("Setmeal updated");
       } else {
         // 新增套餐 - 不发送 id
         const newSetmealData: Omit<SetmealFormData, "id"> = {
@@ -672,14 +671,14 @@ export default function Setmeal() {
           setmealDishes: formData.setmealDishes || [],
         };
         await saveSetmealAPI(newSetmealData);
-        toast.success("Set meal created");
+        toast.success("Setmeal created");
       }
       setFormDialogOpen(false);
       // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error(`${isEditMode ? "修改" : "新增"}套餐失败:`, error);
-      toast.error(`${isEditMode ? "Failed to update" : "Failed to create"} set meal`, {
+      toast.error(`${isEditMode ? "Failed to update" : "Failed to create"} setmeal`, {
         description: getErrorMessage(error) || "Please try again"
       });
     } finally {
@@ -711,8 +710,7 @@ export default function Setmeal() {
                   handleSearch();
                 }
               }}
-              placeholder="Set meal name"
-              className="w-[200px] h-8"
+                            className="w-[200px] h-8"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -825,7 +823,7 @@ export default function Setmeal() {
             onClick={handleAddSetmeal}
           >
             <Plus className="h-4 w-4" />
-            New set meal
+            New setmeal
           </Button>
         </div>
       </div>
@@ -949,7 +947,7 @@ export default function Setmeal() {
                                     : "text-green-600 hover:text-green-700"
                                 } hover:underline text-sm font-medium cursor-pointer transition-colors`}
                               >
-                                {item.status === 1 ? "Delist" : "List"}
+                                {item.status === 1 ? "Disable" : "Enable"}
                               </button>
                             </div>
                           </TableCell>
@@ -1096,9 +1094,9 @@ export default function Setmeal() {
               {currentSetmeal && (
                 <>
                   {currentSetmeal.status === 1 ? (
-                    <>Delist <span className="font-semibold">{currentSetmeal.name}</span>?</>
+                    <>Disable <span className="font-semibold">{currentSetmeal.name}</span>?</>
                   ) : (
-                    <>List <span className="font-semibold">{currentSetmeal.name}</span> for sale?</>
+                    <>Enable <span className="font-semibold">{currentSetmeal.name}</span>?</>
                   )}
                 </>
               )}
@@ -1124,7 +1122,7 @@ export default function Setmeal() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete set meal</AlertDialogTitle>
+            <AlertDialogTitle>Delete setmeal</AlertDialogTitle>
             <AlertDialogDescription>
               {currentSetmeal && (
                 <>
@@ -1154,7 +1152,7 @@ export default function Setmeal() {
           <AlertDialogHeader>
             <AlertDialogTitle>Batch delete</AlertDialogTitle>
             <AlertDialogDescription>
-              Delete {selectedIds.length} selected set meal(s)? This cannot be undone.
+              Delete {selectedIds.length} selected setmeal(s)? This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1173,7 +1171,7 @@ export default function Setmeal() {
       <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{isEditMode ? "Edit set meal" : "New set meal"}</DialogTitle>
+            <DialogTitle>{isEditMode ? "Edit setmeal" : "New setmeal"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {/* 套餐名称 */}
@@ -1191,8 +1189,7 @@ export default function Setmeal() {
                   }
                 }}
                 onBlur={(e) => handleFieldBlur("name", e.target.value)}
-                placeholder="Set meal name"
-                disabled={formLoading}
+                                disabled={formLoading}
                 className={formErrors.name ? "border-destructive" : ""}
               />
               {formErrors.name && (
@@ -1292,7 +1289,7 @@ export default function Setmeal() {
                   {imagePreview ? (
                     <img
                       src={imagePreview}
-                      alt="Set meal"
+                      alt="Setmeal"
                       className="w-full h-full object-cover"
                     />
                   ) : (

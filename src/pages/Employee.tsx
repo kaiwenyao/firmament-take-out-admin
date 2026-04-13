@@ -754,7 +754,7 @@ export default function Employee() {
               </RadioGroup>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="form-idNumber">National ID</Label>
+              <Label htmlFor="form-idNumber">ID Number</Label>
               <Input
                 id="form-idNumber"
                 value={formData.idNumber}
@@ -785,7 +785,7 @@ export default function Employee() {
               Cancel
             </Button>
             <Button onClick={handleSubmitForm} disabled={formLoading}>
-              {formLoading ? "Loading…" : "Save"}
+              {formLoading ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -271,7 +271,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           onClick={() => setStatusDialogOpen(true)}
         >
           <Clock className="h-5 w-5" />
-          <span className="text-sm font-medium">Shop hours</span>
+          <span className="text-sm font-medium">Business status</span>
         </div>
 
         {/* 2. 管理员下拉菜单 */}

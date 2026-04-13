@@ -19,10 +19,10 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/statistics", label: "Statistics", icon: BarChart3 },
     { path: "/order", label: "Orders", icon: ShoppingCart },
-    { path: "/setmeal", label: "Set meals", icon: Package },
+    { path: "/setmeal", label: "Setmeals", icon: Package },
     { path: "/dish", label: "Dishes", icon: UtensilsCrossed },
     { path: "/category", label: "Categories", icon: FolderTree },
-    { path: "/employee", label: "Staff", icon: Users },
+    { path: "/employee", label: "Employees", icon: Users },
   ];
 
   return (

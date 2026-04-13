@@ -97,10 +97,10 @@ function App() {
         console.log("WebSocket message:", data);
 
         if (data.type === 1) {
-          toast.success("You have a new takeaway order");
+          toast.success("New order received");
           playAudio("preview");
         } else if (data.type === 2) {
-          toast.warning("Customer is requesting a faster order!" + (data.content || ""));
+          toast.warning("Order reminder: customer is asking for a faster delivery" + (data.content ? ` — ${data.content}` : ""));
           playAudio("reminder");
         }
       } catch (e) {

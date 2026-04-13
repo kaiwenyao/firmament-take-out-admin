@@ -59,12 +59,12 @@ import {
 import { toast } from "sonner";
 
 const getCategoryTypeText = (type: number): string => {
-  return type === 1 ? "Dish category" : "Set meal category";
+  return type === 1 ? "Dish category" : "Setmeal category";
 };
 
 const getCategoryTypeNumber = (type: string): number | undefined => {
   if (type === "Dish category") return 1;
-  if (type === "Set meal category") return 2;
+  if (type === "Setmeal category") return 2;
   return undefined;
 };
 
@@ -261,7 +261,7 @@ export default function Category() {
   };
 
   // 打开新增套餐分类表单
-  const handleAddComboCategory = () => {
+  const handleAddSetmealCategory = () => {
     setIsEditMode(false);
     setFormType(2);
     setFormData({
@@ -438,10 +438,10 @@ export default function Category() {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
-                    setCategoryType("Set meal category");
+                    setCategoryType("Setmeal category");
                   }}
                 >
-                  Set meal category
+                  Setmeal category
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
@@ -476,10 +476,10 @@ export default function Category() {
           <Button
             size="sm"
             className="bg-[#ffc200] text-black hover:bg-[#ffc200]/90 h-8"
-            onClick={handleAddComboCategory}
+            onClick={handleAddSetmealCategory}
           >
             <Plus className="h-4 w-4" />
-            New set meal category
+            New setmeal category
           </Button>
         </div>
       </div>
@@ -774,7 +774,7 @@ export default function Category() {
                 ? "Edit category"
                 : formType === 1
                 ? "New dish category"
-                : "New set meal category"}
+                : "New setmeal category"}
             </DialogTitle>
           </DialogHeader>
           {formLoading ? (
