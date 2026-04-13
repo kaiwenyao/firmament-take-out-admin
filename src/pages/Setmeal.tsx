@@ -326,7 +326,8 @@ export default function Setmeal() {
       await deleteSetmealAPI([currentSetmeal.id]);
       setDeleteDialogOpen(false);
       setCurrentSetmeal(null);
-            // 操作成功后刷新列表
+      toast.success("Setmeal deleted");
+      // 操作成功后刷新列表
       reloadData();
     } catch (error) {
       console.error("删除套餐失败:", error);
