@@ -1,64 +1,63 @@
 import request from "./request";
 
-// 今日数据响应
+// Today's data response
 export interface BusinessDataVO {
-  turnover: number; // 营业额
-  validOrderCount: number; // 有效订单数
-  orderCompletionRate: number; // 订单完成率
-  unitPrice: number; // 平均客单价
-  newUsers: number; // 新增用户数
+  turnover: number; // Turnover
+  validOrderCount: number; // Valid order count
+  orderCompletionRate: number; // Order completion rate
+  unitPrice: number; // Average unit price
+  newUsers: number; // New users count
 }
 
-// 订单概览响应
+// Order overview response
 export interface OrderOverViewVO {
-  waitingOrders: number; // 待接单数量
-  deliveredOrders: number; // 待派送数量
-  completedOrders: number; // 已完成数量
-  cancelledOrders: number; // 已取消数量
-  allOrders: number; // 全部订单
+  waitingOrders: number; // Pending orders count
+  deliveredOrders: number; // Waiting for delivery count
+  completedOrders: number; // Completed count
+  cancelledOrders: number; // Cancelled count
+  allOrders: number; // All orders
 }
 
-// 菜品总览响应
+// Dish overview response
 export interface DishOverViewVO {
-  sold: number; // 已启售数量
-  discontinued: number; // 已停售数量
+  sold: number; // Enabled count
+  discontinued: number; // Disabled count
 }
 
-// 套餐总览响应
+// Setmeal overview response
 export interface SetmealOverViewVO {
-  sold: number; // 已启售数量
-  discontinued: number; // 已停售数量
+  sold: number; // Enabled count
+  discontinued: number; // Disabled count
 }
 
 /**
- * 获取今日数据概览
- * @returns 今日数据
+ * Get today's business data overview
+ * @returns Today's data
  */
 export const getBusinessDataAPI = async (): Promise<BusinessDataVO> => {
   return request.get("/workspace/businessData");
 };
 
 /**
- * 获取订单概览
- * @returns 订单概览数据
+ * Get order overview
+ * @returns Order overview data
  */
 export const getOrderOverViewAPI = async (): Promise<OrderOverViewVO> => {
   return request.get("/workspace/overviewOrders");
 };
 
 /**
- * 获取菜品总览
- * @returns 菜品总览数据
+ * Get dish overview
+ * @returns Dish overview data
  */
 export const getDishOverViewAPI = async (): Promise<DishOverViewVO> => {
   return request.get("/workspace/overviewDishes");
 };
 
 /**
- * 获取套餐总览
- * @returns 套餐总览数据
+ * Get setmeal overview
+ * @returns Setmeal overview data
  */
 export const getSetmealOverViewAPI = async (): Promise<SetmealOverViewVO> => {
   return request.get("/workspace/overviewSetmeals");
 };
-

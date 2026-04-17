@@ -1,54 +1,54 @@
 import request from "./request";
 
-// 分类数据类型定义
+// Category data type definition
 export interface Category {
   id: string;
   name: string;
-  type: number; // 1: 菜品分类, 2: 套餐分类
+  type: number; // 1: Dish category, 2: Setmeal category
   sort: number;
-  status: number; // 1: 启用, 0: 禁用
+  status: number; // 1: Enabled, 0: Disabled
   createTime?: string;
   updateTime?: string;
   createUser?: string;
   updateUser?: string;
 }
 
-// 分页查询请求参数
+// Paginated query request parameters
 export interface CategoryPageQuery {
   name?: string;
-  type?: number; // 1: 菜品分类, 2: 套餐分类
+  type?: number; // 1: Dish category, 2: Setmeal category
   page: number;
   pageSize: number;
 }
 
-// 分页查询响应数据
+// Paginated query response data
 export interface CategoryPageResponse {
   total: string;
   records: Category[];
 }
 
-// 根据类型查询分类请求参数
+// Query categories by type request parameters
 export interface CategoryListQuery {
-  type: number; // 1: 菜品分类, 2: 套餐分类
+  type: number; // 1: Dish category, 2: Setmeal category
 }
 
-// 分类表单数据类型
+// Category form data type
 export interface CategoryFormData {
   id?: string;
   name: string;
-  type: number; // 1: 菜品分类, 2: 套餐分类
+  type: number; // 1: Dish category, 2: Setmeal category
   sort: number;
 }
 
 /**
- * 分类分页查询
- * @param params 查询参数
- * @returns 分页数据
+ * Category paginated query
+ * @param params Query parameters
+ * @returns Paginated data
  */
 export const getCategoryListAPI = async (
   params: CategoryPageQuery
 ): Promise<CategoryPageResponse> => {
-  // GET 请求，将参数作为 query string
+  // GET request, parameters as query string
   const queryParams = new URLSearchParams();
   if (params.name) {
     queryParams.append("name", params.name);
@@ -58,15 +58,15 @@ export const getCategoryListAPI = async (
   }
   queryParams.append("page", params.page.toString());
   queryParams.append("pageSize", params.pageSize.toString());
-  
+
   return request.get(`/category/page?${queryParams.toString()}`);
 };
 
 /**
- * 启用/禁用分类
- * @param status 状态：1-启用，0-禁用
- * @param categoryId 分类ID
- * @returns 操作结果
+ * Enable/Disable category
+ * @param status Status: 1-Enabled, 0-Disabled
+ * @param categoryId Category ID
+ * @returns Operation result
  */
 export const enableOrDisableCategoryAPI = async (
   status: number,
@@ -76,43 +76,42 @@ export const enableOrDisableCategoryAPI = async (
 };
 
 /**
- * 根据类型查询分类列表
- * @param params 查询参数
- * @returns 分类列表
+ * Query category list by type
+ * @param params Query parameters
+ * @returns Category list
  */
 export const getCategoryListByTypeAPI = async (
   params: CategoryListQuery
 ): Promise<Category[]> => {
   const queryParams = new URLSearchParams();
   queryParams.append("type", params.type.toString());
-  
+
   return request.get(`/category/list?${queryParams.toString()}`);
 };
 
 /**
- * 新增分类
- * @param data 分类表单数据
- * @returns 操作结果
+ * Add new category
+ * @param data Category form data
+ * @returns Operation result
  */
 export const saveCategoryAPI = async (data: CategoryFormData): Promise<string> => {
   return request.post("/category", data);
 };
 
 /**
- * 修改分类
- * @param data 分类表单数据
- * @returns 操作结果
+ * Update category
+ * @param data Category form data
+ * @returns Operation result
  */
 export const updateCategoryAPI = async (data: CategoryFormData): Promise<void> => {
   return request.put("/category", data);
 };
 
 /**
- * 删除分类
- * @param categoryId 分类ID
- * @returns 操作结果
+ * Delete category
+ * @param categoryId Category ID
+ * @returns Operation result
  */
 export const deleteCategoryAPI = async (categoryId: string): Promise<void> => {
   return request.delete(`/category?id=${categoryId}`);
 };
-

@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 interface DateTimePickerProps {
-  value?: string; // datetime-local 格式的字符串，如 "2024-01-01T12:00"
+  value?: string; // datetime-local format string, e.g. "2024-01-01T12:00"
   onChange?: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
@@ -40,7 +40,7 @@ export function DateTimePicker({
   );
   const [open, setOpen] = React.useState(false);
 
-  // 当外部 value 变化时，更新内部状态
+  // When external value changes, update internal state
   React.useEffect(() => {
     if (value) {
       const dateValue = new Date(value);
@@ -52,7 +52,7 @@ export function DateTimePicker({
     }
   }, [value]);
 
-  // 处理日期选择
+  // Handle date selection
   const handleDateSelect = (selectedDate: Date | undefined) => {
     if (!selectedDate) {
       setDate(undefined);
@@ -60,34 +60,34 @@ export function DateTimePicker({
       return;
     }
 
-    // 如果已经选择了时间，合并日期和时间
+    // If time is already selected, merge date and time
     const [hours, minutes] = time.split(":").map(Number);
     const newDateTime = new Date(selectedDate);
     newDateTime.setHours(hours, minutes, 0, 0);
 
     setDate(selectedDate);
-    // 格式化为 datetime-local 格式: "YYYY-MM-DDTHH:mm"
+    // Format to datetime-local format: "YYYY-MM-DDTHH:mm"
     const formatted = format(newDateTime, "yyyy-MM-dd'T'HH:mm");
     onChange?.(formatted);
   };
 
-  // 处理时间变化
+  // Handle time change
   const handleTimeChange = (newTime: string) => {
     setTime(newTime);
     
-    // 只有在选择了日期的情况下才触发 onChange
+    // Only trigger onChange if date is selected
     if (date) {
       const [hours, minutes] = newTime.split(":").map(Number);
       const newDateTime = new Date(date);
       newDateTime.setHours(hours, minutes, 0, 0);
       
-      // 格式化为 datetime-local 格式
+      // Format to datetime-local format
       const formatted = format(newDateTime, "yyyy-MM-dd'T'HH:mm");
       onChange?.(formatted);
     }
   };
 
-  // 显示文本
+  // Display text
   const displayText = date
     ? `${format(date, "yyyy-MM-dd")} ${time}`
     : placeholder;

@@ -65,7 +65,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import type { SetmealDish } from "@/api/setmeal";
 
-// 提取错误信息的辅助函数
+// Helper function to extract error messages
 const getErrorMessage = (error: unknown): string => {
   if (typeof error === "string") {
     return error;
@@ -93,15 +93,15 @@ const getErrorMessage = (error: unknown): string => {
 
 export default function Setmeal() {
   
-  // 定义状态
+  // State definitions
   const [list, setList] = useState<Setmeal[]>([]);
-  const [categoryList, setCategoryList] = useState<Category[]>([]); // 分类列表（用于下拉选择）
-  const [setmealName, setSetmealName] = useState(""); // 搜索框绑定的值
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined); // 选中的分类ID
-  const [selectedStatus, setSelectedStatus] = useState<number | undefined>(undefined); // 选中的状态
-  const [selectedIds, setSelectedIds] = useState<string[]>([]); // 选中的套餐ID
-  const [total, setTotal] = useState(0); // 总条数
-  const [loading, setLoading] = useState(false); // 加载状态
+  const [categoryList, setCategoryList] = useState<Category[]>([]); // Category list (for dropdown selection)
+  const [setmealName, setSetmealName] = useState(""); // Search input value
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined); // Selected category ID
+  const [selectedStatus, setSelectedStatus] = useState<number | undefined>(undefined); // Selected status
+  const [selectedIds, setSelectedIds] = useState<string[]>([]); // Selected setmeal IDs
+  const [total, setTotal] = useState(0); // Total count
+  const [loading, setLoading] = useState(false); // Loading state
   const [reqData, setReqData] = useState<SetmealPageQuery>({
     page: 1,
     pageSize: 10,
@@ -109,12 +109,12 @@ export default function Setmeal() {
     categoryId: undefined,
     status: undefined,
   });
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // 确认对话框状态（启用/禁用）
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // 删除确认对话框状态
-  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false); // 批量删除确认对话框
-  const [currentSetmeal, setCurrentSetmeal] = useState<Setmeal | null>(null); // 当前操作的套餐
-  const [formDialogOpen, setFormDialogOpen] = useState(false); // 表单对话框状态
-  const [isEditMode, setIsEditMode] = useState(false); // 是否为编辑模式
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // Confirm dialog state (enable/disable)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // Delete confirm dialog state
+  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false); // Batch delete confirm dialog
+  const [currentSetmeal, setCurrentSetmeal] = useState<Setmeal | null>(null); // Current operated setmeal
+  const [formDialogOpen, setFormDialogOpen] = useState(false); // Form dialog state
+  const [isEditMode, setIsEditMode] = useState(false); // Whether it's edit mode
   const [formData, setFormData] = useState<SetmealFormData>({
     name: "",
     categoryId: 0,
@@ -123,30 +123,30 @@ export default function Setmeal() {
     description: "",
     status: 1,
     setmealDishes: [],
-  }); // 表单数据
-  const [formLoading, setFormLoading] = useState(false); // 表单提交加载状态
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({}); // 表单错误信息
-  const [imagePreview, setImagePreview] = useState<string>(""); // 图片预览
-  const [imageUploading, setImageUploading] = useState(false); // 图片上传中
+  }); // Form data
+  const [formLoading, setFormLoading] = useState(false); // Form submission loading state
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({}); // Form error messages
+  const [imagePreview, setImagePreview] = useState<string>(""); // Image preview
+  const [imageUploading, setImageUploading] = useState(false); // Image uploading
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // 添加菜品对话框相关状态
-  const [dishDialogOpen, setDishDialogOpen] = useState(false); // 添加菜品对话框状态
-  const [dishCategories, setDishCategories] = useState<Category[]>([]); // 菜品分类列表
-  const [selectedDishCategoryId, setSelectedDishCategoryId] = useState<string | null>(null); // 选中的菜品分类ID
-  const [dishList, setDishList] = useState<Dish[]>([]); // 菜品列表（当前分类）
-  const [selectedDishIds, setSelectedDishIds] = useState<Set<string>>(new Set()); // 临时选中的菜品ID（用于对话框）
-  const [selectedDishesInfo, setSelectedDishesInfo] = useState<Map<string, Dish>>(new Map()); // 已选菜品的完整信息（用于右侧显示）
-  const [dishListLoading, setDishListLoading] = useState(false); // 菜品列表加载状态
+  // Add dish dialog related state
+  const [dishDialogOpen, setDishDialogOpen] = useState(false); // Add dish dialog state
+  const [dishCategories, setDishCategories] = useState<Category[]>([]); // Dish category list
+  const [selectedDishCategoryId, setSelectedDishCategoryId] = useState<string | null>(null); // Selected dish category ID
+  const [dishList, setDishList] = useState<Dish[]>([]); // Dish list (current category)
+  const [selectedDishIds, setSelectedDishIds] = useState<Set<string>>(new Set()); // Temporary selected dish IDs (for dialog)
+  const [selectedDishesInfo, setSelectedDishesInfo] = useState<Map<string, Dish>>(new Map()); // Full info of selected dishes (for right side display)
+  const [dishListLoading, setDishListLoading] = useState(false); // Dish list loading state
 
-  // 获取分类列表（用于下拉选择）
+  // Get category list (for dropdown selection)
   useEffect(() => {
     const fetchCategoryList = async () => {
       try {
-        const categories = await getCategoryListByTypeAPI({ type: 2 }); // 2: 套餐分类
+        const categories = await getCategoryListByTypeAPI({ type: 2 }); // 2: Setmeal category
         setCategoryList(categories);
       } catch (error) {
-        console.error("获取分类列表失败:", error);
+        console.error("Failed to get category list:", error);
         toast.error("Failed to load categories", {
           description: getErrorMessage(error) || "Please try again"
         });
@@ -155,18 +155,18 @@ export default function Setmeal() {
     fetchCategoryList();
   }, []);
 
-  // 获取菜品分类列表（用于添加菜品对话框）
+  // Get dish category list (for add dish dialog)
   useEffect(() => {
     const fetchDishCategories = async () => {
       try {
-        const categories = await getCategoryListByTypeAPI({ type: 1 }); // 1: 菜品分类
+        const categories = await getCategoryListByTypeAPI({ type: 1 }); // 1: Dish category
         setDishCategories(categories);
-        // 默认选中第一个分类
+        // Default select first category
         if (categories.length > 0) {
           setSelectedDishCategoryId(categories[0].id);
         }
       } catch (error) {
-        console.error("获取菜品分类列表失败:", error);
+        console.error("Failed to get dish category list:", error);
         toast.error("Failed to load dish categories", {
           description: getErrorMessage(error) || "Please try again"
         });
@@ -177,7 +177,7 @@ export default function Setmeal() {
     }
   }, [dishDialogOpen]);
 
-  // 根据分类获取菜品列表
+  // Get dish list by category
   useEffect(() => {
     const fetchDishList = async () => {
       if (!selectedDishCategoryId || !dishDialogOpen) return;
@@ -186,13 +186,13 @@ export default function Setmeal() {
       try {
         const res = await getDishListAPI({
           categoryId: Number(selectedDishCategoryId),
-          status: 1, // 只查询起售的菜品
+          status: 1, // Only query dishes that are on sale
           page: 1,
-          pageSize: 1000, // 获取所有菜品
+          pageSize: 1000, // Get all dishes
         });
         setDishList(res.records);
       } catch (error) {
-        console.error("获取菜品列表失败:", error);
+        console.error("Failed to get dish list:", error);
         toast.error("Failed to load dishes", {
           description: getErrorMessage(error) || "Please try again"
         });
@@ -204,11 +204,11 @@ export default function Setmeal() {
   }, [selectedDishCategoryId, dishDialogOpen]);
 
   useEffect(() => {
-    // 定义在内部，无需 useCallback
+    // Defined internally, no need for useCallback
     const fetchData = async () => {
       setLoading(true);
       try {
-        console.log("发起请求，参数:", reqData);
+        console.log("Sending request with params:", reqData);
         const res = await getSetmealListAPI({
           ...reqData,
           name: reqData.name || undefined,
@@ -217,7 +217,7 @@ export default function Setmeal() {
         });
         setList(res.records);
         setTotal(Number(res.total));
-        // 清空选中项
+        // Clear selected items
         setSelectedIds([]);
       } catch (error) {
         console.error(error);
@@ -229,26 +229,26 @@ export default function Setmeal() {
       }
     };
     fetchData();
-    // 🔥 核心魔法：只依赖 reqData
+    // 🔥 Core magic: only depend on reqData
   }, [reqData]);
 
   const reloadData = () => {
-    // 复制一份自己，内容一样，但内存地址变了
+    // Create a copy with same content but different memory reference
     setReqData((prev) => ({ ...prev }));
   };
 
-  // 搜索功能
+  // Search function
   const handleSearch = () => {
     setReqData((prev) => ({
       ...prev,
-      page: 1, // 搜索新词，回到第一页
+      page: 1, // New search term, go back to first page
       name: setmealName || undefined,
       categoryId: selectedCategoryId,
       status: selectedStatus,
     }));
   };
 
-  // 分页处理
+  // Pagination handling
   const handlePageChange = (newPage: number) => {
     setReqData((prev) => ({
       ...prev,
@@ -256,16 +256,16 @@ export default function Setmeal() {
     }));
   };
 
-  // 每页条数变化处理
+  // Page size change handling
   const handlePageSizeChange = (newPageSize: string) => {
     setReqData((prev) => ({
       ...prev,
       pageSize: Number(newPageSize),
-      page: 1, // 重置到第一页
+      page: 1, // Reset to first page
     }));
   };
 
-  // 处理单个复选框选择
+  // Handle individual checkbox selection
   const handleSelectItem = (setmealId: string, checked: boolean) => {
     if (checked) {
       setSelectedIds([...selectedIds, setmealId]);
@@ -274,7 +274,7 @@ export default function Setmeal() {
     }
   };
 
-  // 处理全选
+  // Handle select all
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedIds(list.map((item) => item.id));
@@ -283,13 +283,13 @@ export default function Setmeal() {
     }
   };
 
-  // 打开确认对话框（启用/禁用）
+  // Open confirm dialog (enable/disable)
   const handleOpenConfirmDialog = (setmeal: Setmeal) => {
     setCurrentSetmeal(setmeal);
     setConfirmDialogOpen(true);
   };
 
-  // 确认启用/禁用套餐
+  // Confirm enable/disable setmeal
   const handleConfirmToggleStatus = async () => {
     if (!currentSetmeal) return;
 
@@ -301,10 +301,10 @@ export default function Setmeal() {
       setConfirmDialogOpen(false);
       setCurrentSetmeal(null);
       toast.success(`Setmeal ${action}`);
-      // 操作成功后刷新列表
+      // Refresh list after successful operation
       reloadData();
     } catch (error) {
-      console.error(`${action}套餐失败:`, error);
+      console.error(`${action} setmeal failed:`, error);
       setConfirmDialogOpen(false);
       toast.error("Failed to update setmeal status", {
         description: getErrorMessage(error) || "Please try again"
@@ -312,13 +312,13 @@ export default function Setmeal() {
     }
   };
 
-  // 打开删除确认对话框
+  // Open delete confirm dialog
   const handleDelete = (setmeal: Setmeal) => {
     setCurrentSetmeal(setmeal);
     setDeleteDialogOpen(true);
   };
 
-  // 确认删除套餐
+  // Confirm delete setmeal
   const handleConfirmDelete = async () => {
     if (!currentSetmeal) return;
 
@@ -327,10 +327,10 @@ export default function Setmeal() {
       setDeleteDialogOpen(false);
       setCurrentSetmeal(null);
       toast.success("Setmeal deleted");
-      // 操作成功后刷新列表
+      // Refresh list after successful operation
       reloadData();
     } catch (error) {
-      console.error("删除套餐失败:", error);
+      console.error("Delete setmeal failed:", error);
       setDeleteDialogOpen(false);
       toast.error("Failed to delete setmeal", {
         description: getErrorMessage(error) || "Please try again"
@@ -338,7 +338,7 @@ export default function Setmeal() {
     }
   };
 
-  // 打开批量删除确认对话框
+  // Open batch delete confirm dialog
   const handleBatchDelete = () => {
     if (selectedIds.length === 0) {
       toast.error("Nothing selected", {
@@ -349,17 +349,17 @@ export default function Setmeal() {
     setBatchDeleteDialogOpen(true);
   };
 
-  // 确认批量删除
+  // Confirm batch delete
   const handleConfirmBatchDelete = async () => {
     try {
       await deleteSetmealAPI(selectedIds);
       setBatchDeleteDialogOpen(false);
       setSelectedIds([]);
       toast.success(`Deleted ${selectedIds.length} setmeal(s)`);
-      // 操作成功后刷新列表
+      // Refresh list after successful operation
       reloadData();
     } catch (error) {
-      console.error("批量删除套餐失败:", error);
+      console.error("Batch delete setmeal failed:", error);
       setBatchDeleteDialogOpen(false);
       toast.error("Batch delete failed", {
         description: getErrorMessage(error) || "Please try again"
@@ -367,7 +367,7 @@ export default function Setmeal() {
     }
   };
 
-  // 校验单个字段
+  // Validate single field
   const validateField = (field: string, value: string | number | undefined | null): string => {
     switch (field) {
       case "name":
@@ -402,7 +402,7 @@ export default function Setmeal() {
     }
   };
 
-  // 处理字段失焦校验
+  // Handle field blur validation
   const handleFieldBlur = (field: string, value: string | number | undefined | null) => {
     const error = validateField(field, value);
     setFormErrors((prev) => ({
@@ -411,7 +411,7 @@ export default function Setmeal() {
     }));
   };
 
-  // 打开新增套餐表单
+  // Open add setmeal form
   const handleAddSetmeal = () => {
     setIsEditMode(false);
     setFormData({
@@ -428,25 +428,25 @@ export default function Setmeal() {
     setFormDialogOpen(true);
   };
 
-  // 打开添加菜品对话框
+  // Open add dish dialog
   const handleOpenDishDialog = async () => {
-    // 初始化已选菜品ID（从formData.setmealDishes中获取）
+    // Initialize selected dish IDs (from formData.setmealDishes)
     const existingDishIds = new Set(
       (formData.setmealDishes || []).map((dish) => dish.dishId)
     );
     setSelectedDishIds(existingDishIds);
     setDishDialogOpen(true);
     
-    // 如果有已选菜品，需要加载它们的完整信息到selectedDishesInfo中
+    // If there are selected dishes, need to load their full info into selectedDishesInfo
     if (existingDishIds.size > 0) {
       try {
-        // 获取所有已选菜品的详细信息（不限制分类）
+        // Get full info of all selected dishes (no category limit)
         const allDishesRes = await getDishListAPI({
           status: 1,
           page: 1,
           pageSize: 1000,
         });
-        // 将已选菜品信息存储到Map中，用于右侧显示
+        // Store selected dish info into Map for right side display
         const dishesMap = new Map<string, Dish>();
         allDishesRes.records.forEach((dish) => {
           if (existingDishIds.has(dish.id)) {
@@ -455,23 +455,23 @@ export default function Setmeal() {
         });
         setSelectedDishesInfo(dishesMap);
       } catch (error) {
-        console.error("加载已选菜品信息失败:", error);
+        console.error("Failed to load selected dish info:", error);
         toast.error("Failed to load selected dishes", {
           description: getErrorMessage(error) || "Please try again"
         });
       }
     } else {
-      // 如果没有已选菜品，清空Map
+      // If no selected dishes, clear the Map
       setSelectedDishesInfo(new Map());
     }
   };
 
-  // 处理菜品选择
+  // Handle dish selection
   const handleDishSelect = (dishId: string, checked: boolean) => {
     const newSelectedIds = new Set(selectedDishIds);
     if (checked) {
       newSelectedIds.add(dishId);
-      // 将选中的菜品信息添加到selectedDishesInfo中
+      // Add selected dish info to selectedDishesInfo
       const dish = dishList.find((d) => d.id === dishId);
       if (dish) {
         setSelectedDishesInfo((prev) => {
@@ -482,7 +482,7 @@ export default function Setmeal() {
       }
     } else {
       newSelectedIds.delete(dishId);
-      // 从selectedDishesInfo中移除
+      // Remove from selectedDishesInfo
       setSelectedDishesInfo((prev) => {
         const newMap = new Map(prev);
         newMap.delete(dishId);
@@ -492,22 +492,22 @@ export default function Setmeal() {
     setSelectedDishIds(newSelectedIds);
   };
 
-  // 确认添加菜品
+  // Confirm add dishes
   const handleConfirmAddDishes = async () => {
-    // 获取已选中的菜品信息
+    // Get selected dish info
     const selectedDishes: SetmealDish[] = [];
     
     for (const dishId of selectedDishIds) {
-      // 检查是否已经存在于formData中
+      // Check if already exists in formData
       const existingDish = formData.setmealDishes?.find((d) => d.dishId === dishId);
       if (existingDish) {
-        selectedDishes.push(existingDish); // 保留原有的份数等信息
+        selectedDishes.push(existingDish); // Keep original copies info
       } else {
-        // 从dishList中查找，如果找不到则从API获取
+        // Find from dishList, if not found get from API
         let dish = dishList.find((d) => d.id === dishId);
         if (!dish) {
           try {
-            // 如果不在当前列表中，尝试获取单个菜品信息
+            // If not in current list, try to get single dish info
             const allDishesRes = await getDishListAPI({
               status: 1,
               page: 1,
@@ -515,19 +515,19 @@ export default function Setmeal() {
             });
             dish = allDishesRes.records.find((d) => d.id === dishId);
           } catch (error) {
-            console.error("获取菜品信息失败:", error);
+            console.error("Failed to get dish info:", error);
           }
         }
         selectedDishes.push({
           dishId,
           name: dish?.name || "",
           price: dish?.price || 0,
-          copies: 1, // 默认份数为1
+          copies: 1, // Default copies is 1
         });
       }
     }
 
-    // 更新formData
+    // Update formData
     setFormData({
       ...formData,
       setmealDishes: selectedDishes,
@@ -537,7 +537,7 @@ export default function Setmeal() {
     toast.success("Dishes updated");
   };
 
-  // 删除已选菜品
+  // Remove selected dish
   const handleRemoveDish = (dishId: string) => {
     const newSetmealDishes = (formData.setmealDishes || []).filter(
       (dish) => dish.dishId !== dishId
@@ -548,7 +548,7 @@ export default function Setmeal() {
     });
   };
 
-  // 更新菜品份数
+  // Update dish copies
   const handleUpdateDishCopies = (dishId: string, copies: number) => {
     if (copies < 1) return;
     const newSetmealDishes = (formData.setmealDishes || []).map((dish) =>
@@ -560,12 +560,12 @@ export default function Setmeal() {
     });
   };
 
-  // 打开修改表单
+  // Open edit form
   const handleEdit = async (setmeal: Setmeal) => {
     setIsEditMode(true);
     setFormErrors({});
-    setFormDialogOpen(true); // ✅ 立即弹窗
-    setFormLoading(true); // ✅ 立即显示骨架屏/转圈
+    setFormDialogOpen(true); // ✅ Show dialog immediately
+    setFormLoading(true); // ✅ Show loading indicator immediately
 
     try {
       const setmealDetail = await getSetmealByIdAPI(setmeal.id);
@@ -581,23 +581,23 @@ export default function Setmeal() {
       });
       setImagePreview(setmealDetail.image || "");
     } catch (error) {
-      console.error("获取套餐详情失败:", error);
+      console.error("Failed to get setmeal details:", error);
       toast.error("Failed to load setmeal", {
         description: getErrorMessage(error) || "Please try again"
       });
-      setFormDialogOpen(false); // 失败了关掉弹窗是合理的
+      setFormDialogOpen(false); // Closing dialog on failure is reasonable
     } finally {
-      // ✅ 放在这里！
+      // ✅ Put it here!
       setFormLoading(false);
     }
   };
 
-  // 处理图片上传
+  // Handle image upload
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 验证文件类型
+    // Validate file type
     const validTypes = ["image/png", "image/jpeg", "image/jpg"];
     if (!validTypes.includes(file.type)) {
       toast.error("Invalid image type", {
@@ -606,7 +606,7 @@ export default function Setmeal() {
       return;
     }
 
-    // 验证文件大小（10MB）
+    // Validate file size (10MB)
     if (file.size > 10 * 1024 * 1024) {
       toast.error("File too large", {
         description: "Image must be 10MB or smaller"
@@ -623,7 +623,7 @@ export default function Setmeal() {
         setFormErrors((prev) => ({ ...prev, image: "" }));
       }
     } catch (error) {
-      console.error("图片上传失败:", error);
+      console.error("Image upload failed:", error);
       toast.error("Upload failed", {
         description: getErrorMessage(error) || "Please try again"
       });
@@ -632,9 +632,9 @@ export default function Setmeal() {
     }
   };
 
-  // 提交表单
+  // Submit form
   const handleSubmitForm = async () => {
-    // 校验所有字段
+    // Validate all fields
     const errors: Record<string, string> = {};
     errors.name = validateField("name", formData.name);
     errors.categoryId = validateField("categoryId", formData.categoryId);
@@ -643,7 +643,7 @@ export default function Setmeal() {
 
     setFormErrors(errors);
 
-    // 检查是否有错误
+    // Check if there are errors
     const hasErrors = Object.values(errors).some((error) => error !== "");
     if (hasErrors) {
       toast.error("Validation failed", {
@@ -655,13 +655,13 @@ export default function Setmeal() {
     setFormLoading(true);
     try {
       if (isEditMode) {
-        // 修改套餐
+        // Update setmeal
         await updateSetmealAPI({
           ...formData,
         });
         toast.success("Setmeal updated");
       } else {
-        // 新增套餐 - 不发送 id
+        // Add setmeal - don't send id
         const newSetmealData: Omit<SetmealFormData, "id"> = {
           name: formData.name,
           categoryId: formData.categoryId,
@@ -675,10 +675,10 @@ export default function Setmeal() {
         toast.success("Setmeal created");
       }
       setFormDialogOpen(false);
-      // 操作成功后刷新列表
+      // Refresh list after successful operation
       reloadData();
     } catch (error) {
-      console.error(`${isEditMode ? "修改" : "新增"}套餐失败:`, error);
+      console.error(`${isEditMode ? "Update" : "Add"} setmeal failed:`, error);
       toast.error(`${isEditMode ? "Failed to update" : "Failed to create"} setmeal`, {
         description: getErrorMessage(error) || "Please try again"
       });
@@ -687,16 +687,16 @@ export default function Setmeal() {
     }
   };
 
-  // 计算总页数
+  // Calculate total pages
   const totalPages = Math.ceil(total / reqData.pageSize);
   const isAllSelected = list.length > 0 && selectedIds.length === list.length;
   const isIndeterminate = selectedIds.length > 0 && selectedIds.length < list.length;
 
   return (
     <div className="h-full flex flex-col gap-3">
-      {/* 顶部操作栏 */}
+      {/* Top action bar */}
       <div className="flex items-center justify-between">
-        {/* 左侧：搜索区域 */}
+        {/* Left: Search area */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Label htmlFor="setmeal-name" className="whitespace-nowrap text-sm">
@@ -808,7 +808,7 @@ export default function Setmeal() {
           </Button>
         </div>
 
-        {/* 右侧：操作按钮 */}
+        {/* Right: Action buttons */}
         <div className="flex items-center gap-2">
           <Button
             size="sm"
@@ -829,7 +829,7 @@ export default function Setmeal() {
         </div>
       </div>
 
-      {/* 下方表格区域 */}
+      {/* Bottom table area */}
       <Card className="flex-1 flex flex-col">
         <CardContent className="p-4 flex-1 flex flex-col">
           {loading ? (
@@ -842,7 +842,7 @@ export default function Setmeal() {
             </div>
           ) : (
             <>
-              {/* 表格 */}
+              {/* Table */}
               <div className="flex-1 overflow-auto rounded-md border">
                 <Table>
                   <TableHeader>
@@ -959,7 +959,7 @@ export default function Setmeal() {
                 </Table>
               </div>
 
-              {/* 分页组件 */}
+              {/* Pagination component */}
               {total > 0 && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
@@ -1086,7 +1086,7 @@ export default function Setmeal() {
         </CardContent>
       </Card>
 
-      {/* 启用/禁用确认对话框 */}
+      {/* Enable/Disable confirm dialog */}
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -1119,7 +1119,7 @@ export default function Setmeal() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 删除确认对话框 */}
+      {/* Delete confirm dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -1144,7 +1144,7 @@ export default function Setmeal() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 批量删除确认对话框 */}
+      {/* Batch delete confirm dialog */}
       <AlertDialog
         open={batchDeleteDialogOpen}
         onOpenChange={setBatchDeleteDialogOpen}
@@ -1168,14 +1168,14 @@ export default function Setmeal() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 新增/修改套餐表单对话框 */}
+      {/* Add/Edit setmeal form dialog */}
       <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isEditMode ? "Edit setmeal" : "New setmeal"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            {/* 套餐名称 */}
+            {/* Setmeal name */}
             <div className="grid gap-2">
               <Label htmlFor="form-name" className="text-sm">
                 <span className="text-destructive">*</span> Name:
@@ -1198,7 +1198,7 @@ export default function Setmeal() {
               )}
             </div>
 
-            {/* 套餐分类 */}
+            {/* Setmeal category */}
             <div className="grid gap-2">
               <Label htmlFor="form-category" className="text-sm">
                 <span className="text-destructive">*</span> Category:
@@ -1238,7 +1238,7 @@ export default function Setmeal() {
               )}
             </div>
 
-            {/* 套餐价格 */}
+            {/* Setmeal price */}
             <div className="grid gap-2">
               <Label htmlFor="form-price" className="text-sm">
                 <span className="text-destructive">*</span> Price:
@@ -1269,7 +1269,7 @@ export default function Setmeal() {
               )}
             </div>
 
-            {/* 套餐图片 */}
+            {/* Setmeal image */}
             <div className="grid gap-2">
               <Label className="text-sm">
                 <span className="text-destructive">*</span> Image:
@@ -1324,7 +1324,7 @@ export default function Setmeal() {
               )}
             </div>
 
-            {/* 套餐菜品 */}
+            {/* Setmeal dishes */}
             <div className="grid gap-2">
               <Label className="text-sm">
                 <span className="text-destructive">*</span> Dishes:
@@ -1339,7 +1339,7 @@ export default function Setmeal() {
                   <Plus className="h-4 w-4 mr-2" />
                   Add dishes
                 </Button>
-                {/* 已选菜品列表 */}
+                {/* Selected dishes list */}
                 {formData.setmealDishes && formData.setmealDishes.length > 0 && (
                   <div className="border rounded-md p-3 space-y-2 max-h-[200px] overflow-y-auto">
                     {formData.setmealDishes.map((dish) => (
@@ -1386,7 +1386,7 @@ export default function Setmeal() {
               </div>
             </div>
 
-            {/* 套餐描述 */}
+            {/* Setmeal description */}
             <div className="grid gap-2">
               <Label htmlFor="form-description" className="text-sm">
                 Description:
@@ -1422,14 +1422,14 @@ export default function Setmeal() {
         </DialogContent>
       </Dialog>
 
-      {/* 添加菜品对话框 */}
+      {/* Add dish dialog */}
       <Dialog open={dishDialogOpen} onOpenChange={setDishDialogOpen}>
         <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Add dishes</DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-hidden flex gap-4 min-h-[500px]">
-            {/* 左侧：分类列表 */}
+            {/* Left: Category list */}
             <div className="w-48 border-r pr-4 overflow-y-auto">
               <div className="space-y-1">
                 {dishCategories.map((category) => (
@@ -1448,9 +1448,9 @@ export default function Setmeal() {
               </div>
             </div>
 
-            {/* 中间：菜品列表 */}
+            {/* Middle: Dish list */}
             <div className="flex-1 flex flex-col overflow-hidden">
-              {/* 菜品列表 */}
+              {/* Dish list */}
               <div className="flex-1 overflow-y-auto space-y-2">
                 {dishListLoading ? (
                   <div className="flex items-center justify-center py-8">
@@ -1486,7 +1486,7 @@ export default function Setmeal() {
               </div>
             </div>
 
-            {/* 右侧：已选菜品 */}
+            {/* Right: Selected dishes */}
             <div className="w-64 border-l pl-4 flex flex-col overflow-hidden">
               <div className="font-semibold mb-3">
                 Selected ({selectedDishIds.size})
@@ -1498,13 +1498,13 @@ export default function Setmeal() {
                   </div>
                 ) : (
                   Array.from(selectedDishIds).map((dishId) => {
-                    // 优先从selectedDishesInfo中获取完整信息
+                    // Prefer to get full info from selectedDishesInfo
                     let dish = selectedDishesInfo.get(dishId);
                     
-                    // 如果selectedDishesInfo中没有，尝试从当前dishList中查找
+                    // If not in selectedDishesInfo, try to find from current dishList
                     if (!dish) {
                       dish = dishList.find((d) => d.id === dishId);
-                      // 如果找到了，更新到selectedDishesInfo中
+                      // If found, update to selectedDishesInfo
                       if (dish) {
                         setSelectedDishesInfo((prev) => {
                           const newMap = new Map(prev);
@@ -1514,7 +1514,7 @@ export default function Setmeal() {
                       }
                     }
                     
-                    // 如果还是找不到，从formData中查找（作为后备方案）
+                    // If still not found, search from formData (as backup)
                     if (!dish) {
                       const existingDish = formData.setmealDishes?.find(
                         (d) => d.dishId === dishId

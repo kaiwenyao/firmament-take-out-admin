@@ -31,17 +31,17 @@ const Dashboard = () => {
   const today = new Date();
   const todayStr = format(today, "yyyy.MM.dd");
 
-  // 数据状态
+  // Data state
   const [businessData, setBusinessData] = useState<BusinessDataVO | null>(null);
   const [orderOverView, setOrderOverView] = useState<OrderOverViewVO | null>(null);
   const [orderStatistics, setOrderStatistics] = useState<OrderStatistics | null>(null);
   const [dishOverView, setDishOverView] = useState<DishOverViewVO | null>(null);
   const [setmealOverView, setSetmealOverView] = useState<SetmealOverViewVO | null>(null);
   const [orderList, setOrderList] = useState<Order[]>([]);
-  const [activeStatus, setActiveStatus] = useState<2 | 3>(2); // 2: 待接单, 3: 待派送
+  const [activeStatus, setActiveStatus] = useState<2 | 3>(2); // 2: Pending acceptance, 3: Pending delivery
   const [loading, setLoading] = useState(false);
 
-  // 获取今日数据
+  // Get today's data
   const fetchBusinessData = async () => {
     try {
       const data = await getBusinessDataAPI();
@@ -52,7 +52,7 @@ const Dashboard = () => {
     }
   };
 
-  // 获取订单概览
+  // Get order overview
   const fetchOrderOverView = async () => {
     try {
       const data = await getOrderOverViewAPI();
@@ -63,7 +63,7 @@ const Dashboard = () => {
     }
   };
 
-  // 获取订单统计数据（待接单、待派送）
+  // Get order statistics (pending acceptance, pending delivery)
   const fetchOrderStatistics = async () => {
     try {
       const data = await getOrderStatisticsAPI();
@@ -74,7 +74,7 @@ const Dashboard = () => {
     }
   };
 
-  // 获取菜品总览
+  // Get dish overview
   const fetchDishOverView = async () => {
     try {
       const data = await getDishOverViewAPI();
@@ -85,7 +85,7 @@ const Dashboard = () => {
     }
   };
 
-  // 获取套餐总览
+  // Get setmeal overview
   const fetchSetmealOverView = async () => {
     try {
       const data = await getSetmealOverViewAPI();
@@ -96,7 +96,7 @@ const Dashboard = () => {
     }
   };
 
-  // 获取订单列表
+  // Get order list
   const fetchOrderList = useCallback(async () => {
     setLoading(true);
     try {
@@ -115,7 +115,7 @@ const Dashboard = () => {
     }
   }, [activeStatus]);
 
-  // 初始化加载所有数据
+  // Initial load of all data
   useEffect(() => {
     fetchBusinessData();
     fetchOrderOverView();
@@ -124,26 +124,26 @@ const Dashboard = () => {
     fetchSetmealOverView();
   }, []);
 
-  // 当订单状态切换时重新获取订单列表（包括首次加载）
+  // Re-fetch order list when status changes (including first load)
   useEffect(() => {
     fetchOrderList();
   }, [activeStatus, fetchOrderList]);
 
-  // 格式化金额
+  // Format amount
   const formatAmount = (amount: number): string => {
     return `¥${amount.toFixed(2)}`;
   };
 
-  // 格式化订单菜品信息
+  // Format order dishes info
   const formatOrderDishes = (dishes: string | undefined): string => {
     if (!dishes) return "-";
-    // 解析订单菜品字符串，格式可能是 "菜品名*数量;菜品名*数量;"
+    // Parse order dishes string, format may be "dishName*quantity;dishName*quantity;"
     return dishes.split(";").filter(Boolean).join("; ");
   };
 
   return (
     <div className="space-y-6">
-      {/* 今日数据 */}
+      {/* Today's data */}
       <Card>
         <CardContent className="px-6 pt-0 pb-0">
           <div className="flex items-center justify-between mb-4">
@@ -192,7 +192,7 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {/* 订单管理 */}
+      {/* Order management */}
       <Card>
         <CardContent className="px-6 pt-0 pb-0">
           <div className="flex items-center justify-between mb-4">
@@ -254,9 +254,9 @@ const Dashboard = () => {
         </CardContent>
       </Card>
 
-      {/* 菜品总览和套餐总览 */}
+      {/* Dish overview and setmeal overview */}
       <div className="grid grid-cols-2 gap-6">
-        {/* 菜品总览 */}
+        {/* Dish overview */}
         <Card>
           <CardContent className="px-6 pt-2 pb-4">
             <div className="flex items-center justify-between mb-4">
@@ -297,7 +297,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* 套餐总览 */}
+        {/* Setmeal overview */}
         <Card>
           <CardContent className="px-6 pt-0 pb-0">
             <div className="flex items-center justify-between mb-4">
@@ -339,13 +339,13 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* 订单信息 */}
+      {/* Order info */}
       <Card>
         <CardContent className="px-6 pt-0 pb-0">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Order queue</h2>
           </div>
-          {/* 订单状态标签 */}
+          {/* Order status tabs */}
           <Tabs
             value={activeStatus.toString()}
             onValueChange={(value) => setActiveStatus(parseInt(value, 10) as 2 | 3)}
@@ -377,7 +377,7 @@ const Dashboard = () => {
             </TabsList>
           </Tabs>
 
-          {/* 订单表格 */}
+          {/* Order table */}
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>

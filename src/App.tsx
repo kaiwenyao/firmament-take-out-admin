@@ -8,8 +8,8 @@ import { toast } from "sonner";
 import { setNavigate } from "@/utils/navigation";
 // import { useMemo } from "react";
 
-// ✅ 1. 关键修改：通过 import 引入资源，而不是写死字符串路径
-// Vite 会自动处理这些文件的最终 hash 路径
+// Key change: Import resources via import instead of hardcoding paths
+// Vite automatically handles final hash paths for these files
 import previewSound from "@/assets/audio/preview.mp3";
 import reminderSound from "@/assets/audio/reminder.mp3";
 
@@ -17,30 +17,30 @@ function App() {
   const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // 初始化 navigate 函数，供非组件环境使用
+  // Initialize navigate function for use in non-component contexts
   useEffect(() => {
     setNavigate(navigate);
   }, [navigate]);
 
   /**
-   * 生成客户端ID（用于 WebSocket 连接标识）
+   * Generate client ID (for WebSocket connection identifier)
    *
-   * 为什么使用函数初始化（惰性初始化）？
-   * 1. React 机制：useState 的初始化函数只在组件首次挂载时执行一次
-   *    后续的重渲染（state 更新、父组件重渲染等）不会再次执行这个函数
+   * Why use function initialization (lazy initialization)?
+   * 1. React mechanism: useState initializer function only executes once on component mount
+   *    Subsequent re-renders (state updates, parent re-renders, etc.) will not execute this function again
    *
-   * 2. 性能优化：
-   *    - 避免每次重渲染都读取 localStorage（I/O 操作）
-   *    - 避免每次重渲染都生成新的随机 ID（保证 ID 一致性）
-   *    - 减少不必要的计算开销
+   * 2. Performance optimization:
+   *    - Avoid reading localStorage on every re-render (I/O operation)
+   *    - Avoid generating new random ID on every re-render (ensures ID consistency)
+   *    - Reduce unnecessary computation overhead
    *
-   * 3. 数据一致性：
-   *    - 确保整个组件生命周期内使用同一个客户端 ID
-   *    - 如果使用普通值初始化，每次重渲染都可能生成不同的 ID（错误！）
+   * 3. Data consistency:
+   *    - Ensure same client ID is used throughout component lifecycle
+   *    - If using plain value initialization, different IDs may be generated on each re-render (wrong!)
    *
-   * 4. 实际执行流程：
-   *    - 首次渲染：执行函数 → 读取 localStorage → 不存在则生成并保存 → 返回 ID
-   *    - 后续渲染：直接使用已保存的状态值，不再执行函数
+   * 4. Actual execution flow:
+   *    - First render: execute function -> read localStorage -> not found, generate and save -> return ID
+   *    - Subsequent renders: directly use saved state value, function not executed
    */
   const [sid] = useState<string>(() => {
     const STORAGE_KEY = "ws_client_id";
@@ -54,13 +54,13 @@ function App() {
     return storedId;
   });
 
-  // ✅ 1. 使用 useRef 存放音频对象 (这是存放 Mutable 可变对象的标准方式，不会报错)
+  // 1. Use useRef to store audio object (standard way to store mutable objects, won't cause errors)
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const reminderAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  // ✅ 2. 简单的初始化 (只执行一次)
+  // 2. Simple initialization (only executes once)
   useEffect(() => {
-    // 只有当 ref 为空时才创建，避免重复
+    // Only create audio objects if ref is empty to avoid duplication
     if (!previewAudioRef.current) {
       previewAudioRef.current = new Audio(previewSound);
     }
@@ -69,17 +69,17 @@ function App() {
     }
   }, []);
 
-  // ✅ 3. 播放逻辑
+  // 3. Playback logic
   const playAudio = useCallback(async (type: "preview" | "reminder") => {
-    // 从 ref.current 中取出音频对象
+    // Get audio object from ref.current
     const audio =
       type === "preview" ? previewAudioRef.current : reminderAudioRef.current;
 
-    // 安全检查：如果万一没初始化好，直接返回
+    // Safety check: return early if not initialized
     if (!audio) return;
 
     try {
-      // ✅ 这里修改 currentTime 不会报错，因为 ref 里的对象允许修改
+      // Modifying currentTime won't cause errors since ref object allows mutation
       audio.currentTime = 0;
       await audio.play();
       console.log(`Audio played: ${type}`);
@@ -89,7 +89,7 @@ function App() {
     }
   }, []);
 
-  // ✅ 4. 消息处理
+  // 4. Message handling
   const handleMessage = useCallback(
     (message: string) => {
       try {
@@ -110,7 +110,7 @@ function App() {
     [playAudio]
   );
 
-  // WebSocket 连接
+  // WebSocket connection
   useWebSocket({
     sid,
     onMessage: handleMessage,
@@ -131,7 +131,7 @@ function App() {
           </main>
         </div>
       </div>
-      {/* 确保 Toaster 配置正确 */}
+      {/* Ensure Toaster is configured correctly */}
       <Toaster position="top-center" richColors />
     </>
   );

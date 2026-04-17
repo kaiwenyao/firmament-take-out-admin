@@ -68,27 +68,27 @@ const getCategoryTypeNumber = (type: string): number | undefined => {
   return undefined;
 };
 
-// 提取错误信息的辅助函数
+// Helper function to extract error messages
 const getErrorMessage = (error: unknown): string => {
-  // 如果是字符串，直接返回
+  // If it's a string, return directly
   if (typeof error === "string") {
     return error;
   }
   
-  // 如果是 Error 对象，检查是否有 response
+  // If it's an Error object, check if it has response
   if (error && typeof error === "object" && "response" in error) {
     const axiosError = error as { response?: { data?: { msg?: string }; status?: number } };
-    // 后端返回的错误格式：{ code: 0, msg: "错误信息" }
+    // Backend error format: { code: 0, msg: "error message" }
     if (axiosError.response?.data?.msg) {
       return axiosError.response.data.msg;
     }
-    // HTTP 状态码错误
+    // HTTP status code error
     if (axiosError.response?.status) {
       return `Request failed (${axiosError.response.status})`;
     }
   }
   
-  // 如果是 Error 对象，返回 message
+  // If it's an Error object, return message
   if (error && typeof error === "object" && "message" in error) {
     const err = error as { message?: string };
     if (err.message) {
@@ -96,24 +96,24 @@ const getErrorMessage = (error: unknown): string => {
     }
   }
   
-  // 默认错误信息
+  // Default error message
   return "Something went wrong. Please try again.";
 };
 
 export default function Category() {
   
-  // 定义状态
+  // Define state
   const [list, setList] = useState<Category[]>([]);
-  const [categoryName, setCategoryName] = useState(""); // 搜索框绑定的值
-  const [categoryType, setCategoryType] = useState<string>(""); // 搜索类型（中文）
-  const [total, setTotal] = useState(0); // 总条数
-  const [loading, setLoading] = useState(false); // 加载状态
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // 确认对话框状态（启用/禁用）
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // 删除确认对话框状态
-  const [currentCategory, setCurrentCategory] = useState<Category | null>(null); // 当前操作的分类
-  const [formDialogOpen, setFormDialogOpen] = useState(false); // 表单对话框状态
-  const [isEditMode, setIsEditMode] = useState(false); // 是否为编辑模式
-  const [formType, setFormType] = useState<number>(1); // 表单类型：1-菜品分类，2-套餐分类
+  const [categoryName, setCategoryName] = useState(""); // Search input bound value
+  const [categoryType, setCategoryType] = useState<string>(""); // Search type (Chinese)
+  const [total, setTotal] = useState(0); // Total count
+  const [loading, setLoading] = useState(false); // Loading state
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // Confirm dialog state (enable/disable)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // Delete confirm dialog state
+  const [currentCategory, setCurrentCategory] = useState<Category | null>(null); // Currently operating on category
+  const [formDialogOpen, setFormDialogOpen] = useState(false); // Form dialog state
+  const [isEditMode, setIsEditMode] = useState(false); // Whether in edit mode
+  const [formType, setFormType] = useState<number>(1); // Form type: 1-dish category, 2-setmeal category
   const [reqData, setReqData] = useState<CategoryPageQuery>({
     page: 1,
     pageSize: 10,
@@ -124,16 +124,16 @@ export default function Category() {
     name: "",
     type: 1,
     sort: 0,
-  }); // 表单数据
-  const [formLoading, setFormLoading] = useState(false); // 表单提交加载状态
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({}); // 表单错误信息
+  }); // Form data
+  const [formLoading, setFormLoading] = useState(false); // Form submission loading state
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({}); // Form error messages
 
   useEffect(() => {
-    // 定义在内部，无需 useCallback
+    // Defined inside, no need for useCallback
     const fetchData = async () => {
       setLoading(true);
       try {
-        console.log("发起请求，参数:", reqData);
+        console.log("Sending request with params:", reqData);
         const res = await getCategoryListAPI({
           ...reqData,
           name: reqData.name || undefined,
@@ -151,25 +151,25 @@ export default function Category() {
       }
     };
     fetchData();
-    // 🔥 核心魔法：只依赖 reqData
+    // 🔥 Key trick: only depend on reqData
   }, [reqData]);
 
   const reloadData = () => {
-    // 复制一份自己，内容一样，但内存地址变了
+    // Copy self, same content but different memory address
     setReqData((prev) => ({ ...prev }));
   };
 
-  // 搜索功能
+  // Search function
   const handleSearch = () => {
     setReqData((prev) => ({
       ...prev,
-      page: 1, // 搜索新词，回到第一页
+      page: 1, // New search term, return to first page
       name: categoryName || undefined,
       type: getCategoryTypeNumber(categoryType) || undefined,
     }));
   };
 
-  // 分页处理
+  // Pagination handling
   const handlePageChange = (newPage: number) => {
     setReqData((prev) => ({
       ...prev,
@@ -177,22 +177,22 @@ export default function Category() {
     }));
   };
 
-  // 每页条数变化处理
+  // Page size change handling
   const handlePageSizeChange = (newPageSize: string) => {
     setReqData((prev) => ({
       ...prev,
       pageSize: Number(newPageSize),
-      page: 1, // 重置到第一页
+      page: 1, // Reset to first page
     }));
   };
 
-  // 打开确认对话框
+  // Open confirm dialog
   const handleOpenConfirmDialog = (category: Category) => {
     setCurrentCategory(category);
     setConfirmDialogOpen(true);
   };
 
-  // 确认启用/禁用分类
+  // Confirm enable/disable category
   const handleConfirmToggleStatus = async () => {
     if (!currentCategory) return;
 
@@ -204,10 +204,10 @@ export default function Category() {
       setConfirmDialogOpen(false);
       setCurrentCategory(null);
       toast.success(`Category ${action.toLowerCase()}`);
-      // 操作成功后刷新列表
+      // Refresh list after successful operation
       reloadData();
     } catch (error) {
-      console.error(`${action}分类失败:`, error);
+      console.error(`${action} category failed:`, error);
       setConfirmDialogOpen(false);
       toast.error(`Failed to update category`, {
         description: getErrorMessage(error) || "Please try again"
@@ -215,7 +215,7 @@ export default function Category() {
     }
   };
 
-  // 校验单个字段
+  // Validate single field
   const validateField = (field: string, value: string | number): string => {
     switch (field) {
       case "name":
@@ -238,7 +238,7 @@ export default function Category() {
     }
   };
 
-  // 处理字段失焦校验
+  // Handle field blur validation
   const handleFieldBlur = (field: string, value: string | number) => {
     const error = validateField(field, value);
     setFormErrors((prev) => ({
@@ -247,7 +247,7 @@ export default function Category() {
     }));
   };
 
-  // 打开新增菜品分类表单
+  // Open add dish category form
   const handleAddDishCategory = () => {
     setIsEditMode(false);
     setFormType(1);
@@ -260,7 +260,7 @@ export default function Category() {
     setFormDialogOpen(true);
   };
 
-  // 打开新增套餐分类表单
+  // Open add setmeal category form
   const handleAddSetmealCategory = () => {
     setIsEditMode(false);
     setFormType(2);
@@ -273,16 +273,16 @@ export default function Category() {
     setFormDialogOpen(true);
   };
 
-  // 打开修改表单
+  // Open edit form
   const handleEdit = async (category: Category) => {
     setIsEditMode(true);
     setFormType(category.type);
     setFormErrors({});
-    setFormDialogOpen(true); // ✅ 立即弹窗
-    setFormLoading(true); // ✅ 立即显示骨架屏/转圈
+    setFormDialogOpen(true); // ✅ Show dialog immediately
+    setFormLoading(true); // ✅ Show skeleton/spinner immediately
 
     try {
-      // 直接使用传入的 category 数据，因为分类数据已经在列表中
+      // Use the passed category data directly since it's already in the list
       setFormData({
         id: category.id,
         name: category.name,
@@ -290,22 +290,22 @@ export default function Category() {
         sort: category.sort,
       });
     } catch (error) {
-      console.error("获取分类详情失败:", error);
+      console.error("Failed to get category details:", error);
       toast.error("Failed to load category");
       setFormDialogOpen(false);
     } finally {
-      // ✅ 放在这里！
+      // ✅ Put it here!
       setFormLoading(false);
     }
   };
 
-  // 打开删除确认对话框
+  // Open delete confirm dialog
   const handleDelete = (category: Category) => {
     setCurrentCategory(category);
     setDeleteDialogOpen(true);
   };
 
-  // 确认删除分类
+  // Confirm delete category
   const handleConfirmDelete = async () => {
     if (!currentCategory) return;
 
@@ -314,10 +314,10 @@ export default function Category() {
       setDeleteDialogOpen(false);
       setCurrentCategory(null);
       toast.success("Category deleted");
-      // 操作成功后刷新列表
+      // Refresh list after successful operation
       reloadData();
     } catch (error) {
-      console.error("删除分类失败:", error);
+      console.error("Delete category failed:", error);
       setDeleteDialogOpen(false);
       toast.error("Failed to delete category", {
         description: getErrorMessage(error) || "Please try again"
@@ -325,16 +325,16 @@ export default function Category() {
     }
   };
 
-  // 提交表单
+  // Submit form
   const handleSubmitForm = async (continueAdd: boolean = false) => {
-    // 校验所有字段
+    // Validate all fields
     const errors: Record<string, string> = {};
     errors.name = validateField("name", formData.name);
     errors.sort = validateField("sort", formData.sort);
 
     setFormErrors(errors);
 
-    // 检查是否有错误
+    // Check if there are errors
     const hasErrors = Object.values(errors).some((error) => error !== "");
     if (hasErrors) {
       toast.error("Validation failed", {
@@ -346,11 +346,11 @@ export default function Category() {
     setFormLoading(true);
     try {
       if (isEditMode) {
-        // 修改分类
+        // Update category
         await updateCategoryAPI(formData);
         toast.success("Category updated");
       } else {
-        // 新增分类 - 不发送 id
+        // Add category - don't send id
         const newCategoryData: Omit<CategoryFormData, "id"> = {
           name: formData.name,
           type: formData.type,
@@ -361,23 +361,23 @@ export default function Category() {
       }
       
       if (continueAdd) {
-        // 保存并继续添加：重置表单，保持对话框打开
+        // Save and continue adding: reset form, keep dialog open
         setFormData({
           name: "",
           type: formType,
           sort: 0,
         });
         setFormErrors({});
-        // 刷新列表
+        // Refresh list
         reloadData();
       } else {
-        // 普通保存：关闭对话框
+        // Normal save: close dialog
         setFormDialogOpen(false);
-        // 刷新列表
+        // Refresh list
         reloadData();
       }
     } catch (error) {
-      console.error(`${isEditMode ? "修改" : "新增"}分类失败:`, error);
+      console.error(`${isEditMode ? "Update" : "Add"} category failed:`, error);
       toast.error(`${isEditMode ? "Failed to update" : "Failed to create"} category`, {
         description: getErrorMessage(error) || "Please try again"
       });
@@ -386,14 +386,14 @@ export default function Category() {
     }
   };
 
-  // 计算总页数
+  // Calculate total pages
   const totalPages = Math.ceil(total / reqData.pageSize);
 
   return (
     <div className="h-full flex flex-col gap-3">
-      {/* 顶部操作栏 */}
+      {/* Top action bar */}
       <div className="flex items-center justify-between">
-        {/* 左侧：搜索区域 */}
+        {/* Left: search area */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Label htmlFor="category-name" className="whitespace-nowrap text-sm">
@@ -463,7 +463,7 @@ export default function Category() {
           </Button>
         </div>
 
-        {/* 右侧：添加按钮 */}
+        {/* Right: add button */}
         <div className="flex items-center gap-2">
           <Button
             size="sm"
@@ -484,7 +484,7 @@ export default function Category() {
         </div>
       </div>
 
-      {/* 下方表格区域 */}
+      {/* Table area below */}
       <Card className="flex-1 flex flex-col">
         <CardContent className="p-4 flex-1 flex flex-col">
           {loading ? (
@@ -497,7 +497,7 @@ export default function Category() {
             </div>
           ) : (
             <>
-              {/* 表格 */}
+              {/* Table */}
               <div className="flex-1 overflow-auto rounded-md border">
                 <Table>
                   <TableHeader>
@@ -580,7 +580,7 @@ export default function Category() {
                 </Table>
               </div>
 
-              {/* 分页组件 */}
+              {/* Pagination component */}
               {total > 0 && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
@@ -707,7 +707,7 @@ export default function Category() {
         </CardContent>
       </Card>
 
-      {/* 确认对话框 */}
+      {/* Confirm dialog */}
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -740,7 +740,7 @@ export default function Category() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 删除确认对话框 */}
+      {/* Delete confirm dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -765,7 +765,7 @@ export default function Category() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 新增/修改分类表单对话框 */}
+      {/* Add/edit category form dialog */}
       <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -793,7 +793,7 @@ export default function Category() {
                 value={formData.name}
                 onChange={(e) => {
                   setFormData({ ...formData, name: e.target.value });
-                  // 清除该字段的错误信息
+                  // Clear error for this field
                   if (formErrors.name) {
                     setFormErrors((prev) => ({ ...prev, name: "" }));
                   }
@@ -818,7 +818,7 @@ export default function Category() {
                 onChange={(e) => {
                   const value = e.target.value === "" ? 0 : Number(e.target.value);
                   setFormData({ ...formData, sort: value });
-                  // 清除该字段的错误信息
+                  // Clear error for this field
                   if (formErrors.sort) {
                     setFormErrors((prev) => ({ ...prev, sort: "" }));
                   }

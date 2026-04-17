@@ -1,9 +1,9 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import App from "./App"; // 你的主布局组件
-import Login from "./pages/Login"; // 登录页面
-import ProtectedLayout from "./components/ProtectedLayout"; // 路由守卫组件
+import App from "./App"; // Your main layout component
+import Login from "./pages/Login"; // Login page
+import ProtectedLayout from "./components/ProtectedLayout"; // Route guard component
 
-// 引入页面组件
+// Import page components
 import Dashboard from "./pages/Dashboard";
 import Statistics from "./pages/Statistics";
 import Order from "./pages/Order";
@@ -21,14 +21,14 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <ProtectedLayout />,
-    errorElement: <NotFound />, // 全局错误处理
+    errorElement: <NotFound />, // Global error handling
     children: [
       {
-        element: <App />, // App 是布局容器（包含侧边栏/头部）
+        element: <App />, // App is the layout container (includes sidebar/header)
         children: [
           {
-            // 当访问 "/" 时，自动重定向到 "/dashboard"
-            index: true, 
+            // When accessing "/", auto-redirect to "/dashboard"
+            index: true,
             element: <Navigate to="/dashboard" replace />,
           },
           {
@@ -44,19 +44,19 @@ const router = createBrowserRouter([
             element: <Order />,
           },
           {
-            path: "setmeal", // 套餐
+            path: "setmeal", // Setmeal
             element: <Setmeal />,
           },
           {
-            path: "dish", // 菜品
+            path: "dish", // Dish
             element: <Dish />,
           },
           {
-            path: "category", // 分类
+            path: "category", // Category
             element: <Category />,
           },
           {
-            path: "employee", // 员工
+            path: "employee", // Employee
             element: <Employee />,
           },
         ],
@@ -64,7 +64,7 @@ const router = createBrowserRouter([
     ],
   },
   {
-    // 捕获所有未定义的路由，显示 404 页面
+    // Catch all undefined routes, show 404 page
     path: "*",
     element: <NotFound />,
   },

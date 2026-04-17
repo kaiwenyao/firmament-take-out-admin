@@ -1,7 +1,7 @@
 import request from "./request";
 import { uploadImage } from "@/utils/upload";
 
-// 菜品数据类型定义
+// Dish data type definition
 export interface Dish {
   id: string;
   name: string;
@@ -10,7 +10,7 @@ export interface Dish {
   price: number;
   image?: string;
   description?: string;
-  status: number; // 0: 停售, 1: 起售
+  status: number; // 0: Off sale, 1: On sale
   updateTime?: string;
   createTime?: string;
   createUser?: string;
@@ -18,7 +18,7 @@ export interface Dish {
   flavors?: DishFlavor[];
 }
 
-// 菜品口味
+// Dish flavor
 export interface DishFlavor {
   id?: string;
   dishId?: string;
@@ -26,22 +26,22 @@ export interface DishFlavor {
   value: string;
 }
 
-// 分页查询请求参数
+// Paginated query request parameters
 export interface DishPageQuery {
   name?: string;
   categoryId?: number;
-  status?: number; // 0: 停售, 1: 起售
+  status?: number; // 0: Off sale, 1: On sale
   page: number;
   pageSize: number;
 }
 
-// 分页查询响应数据
+// Paginated query response data
 export interface DishPageResponse {
   total: string;
   records: Dish[];
 }
 
-// 菜品表单数据类型
+// Dish form data type
 export interface DishFormData {
   id?: string;
   name: string;
@@ -49,14 +49,14 @@ export interface DishFormData {
   price: number;
   image?: string;
   description?: string;
-  status: number; // 0: 停售, 1: 起售
+  status: number; // 0: Off sale, 1: On sale
   flavors?: DishFlavor[];
 }
 
 /**
- * 菜品分页查询
- * @param params 查询参数
- * @returns 分页数据
+ * Dish paginated query
+ * @param params Query parameters
+ * @returns Paginated data
  */
 export const getDishListAPI = async (
   params: DishPageQuery
@@ -73,42 +73,42 @@ export const getDishListAPI = async (
   }
   queryParams.append("page", params.page.toString());
   queryParams.append("pageSize", params.pageSize.toString());
-  
+
   return request.get(`/dish/page?${queryParams.toString()}`);
 };
 
 /**
- * 新增菜品
- * @param data 菜品表单数据
- * @returns 操作结果
+ * Add new dish
+ * @param data Dish form data
+ * @returns Operation result
  */
 export const saveDishAPI = async (data: DishFormData): Promise<string> => {
   return request.post("/dish", data);
 };
 
 /**
- * 修改菜品
- * @param data 菜品表单数据
- * @returns 操作结果
+ * Update dish
+ * @param data Dish form data
+ * @returns Operation result
  */
 export const updateDishAPI = async (data: DishFormData): Promise<void> => {
   return request.put("/dish", data);
 };
 
 /**
- * 删除菜品
- * @param dishIds 菜品ID数组
- * @returns 操作结果
+ * Delete dish
+ * @param dishIds Dish ID array
+ * @returns Operation result
  */
 export const deleteDishAPI = async (dishIds: string[]): Promise<void> => {
   return request.delete(`/dish?ids=${dishIds.join(",")}`);
 };
 
 /**
- * 启用/禁用菜品
- * @param status 状态：1-起售，0-停售
- * @param dishId 菜品ID
- * @returns 操作结果
+ * Enable/Disable dish
+ * @param status Status: 1-On sale, 0-Off sale
+ * @param dishId Dish ID
+ * @returns Operation result
  */
 export const enableOrDisableDishAPI = async (
   status: number,
@@ -118,19 +118,18 @@ export const enableOrDisableDishAPI = async (
 };
 
 /**
- * 根据ID查询菜品
- * @param id 菜品ID
- * @returns 菜品信息
+ * Query dish by ID
+ * @param id Dish ID
+ * @returns Dish information
  */
 export const getDishByIdAPI = async (id: string): Promise<Dish> => {
   return request.get(`/dish/${id}`);
 };
 
 /**
- * 上传图片
- * @param file 图片文件
- * @returns 图片URL
- * @deprecated 请使用 @/utils/upload 中的 uploadImage
+ * Upload image
+ * @param file Image file
+ * @returns Image URL
+ * @deprecated Use uploadImage from @/utils/upload instead
  */
 export { uploadImage };
-

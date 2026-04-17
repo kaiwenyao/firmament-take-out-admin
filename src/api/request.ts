@@ -2,29 +2,29 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { toast } from "sonner";
 import { getNavigate } from "@/utils/navigation";
 
-// 1. 创建 axios 实例
+// 1. Create axios instance
 const instance = axios.create({
-  // 这里通常写 '/api'，然后通过 Vite 的代理转发到后台端口
+  // Usually '/api', then Vite proxy forwards to backend port
   baseURL: "/api",
-  timeout: 5000, // 超时时间 5 秒
+  timeout: 5000, // Timeout 5 seconds
 });
 
-// 标记是否正在处理 token 过期，防止重复跳转
+// Flag indicating if token expiration is being handled, prevent duplicate redirects
 let isHandlingTokenExpired = false;
 
-// ⭐ 标记是否正在刷新 token，防止多个请求同时刷新
+// ⭐ Flag indicating if token is being refreshed, prevent multiple simultaneous refreshes
 let isRefreshing = false;
 
-// ⭐ 存储等待刷新 token 后重试的请求队列
+// ⭐ Store requests waiting in queue after token refresh
 let failedQueue: Array<{
   resolve: (value?: unknown) => void;
   reject: (reason?: unknown) => void;
 }> = [];
 
 /**
- * ⭐ 处理等待队列中的请求
- * @param error 错误对象（如果刷新失败）
- * @param token 新的 access token（如果刷新成功）
+ * ⭐ Process requests in the waiting queue
+ * @param error Error object (if refresh failed)
+ * @param token New access token (if refresh succeeded)
  */
 const processQueue = (error: Error | null, token: string | null = null) => {
   failedQueue.forEach((promise) => {
@@ -39,84 +39,84 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 };
 
 /**
- * ⭐ 刷新 Access Token
- * @returns 新的 access token 或 null（刷新失败）
+ * ⭐ Refresh Access Token
+ * @returns New access token or null (if refresh failed)
  */
 const refreshAccessToken = async (): Promise<string | null> => {
   try {
     const refreshToken = localStorage.getItem("refreshToken");
 
     if (!refreshToken) {
-      console.warn("没有 refresh token，无法刷新");
+      console.warn("No refresh token available, cannot refresh");
       return null;
     }
 
-    // 调用刷新 token 接口（不使用 instance，避免触发拦截器）
+    // Call refresh token endpoint (don't use instance to avoid interceptor)
     const response = await axios.post("/api/employee/refresh", {
       refreshToken,
     });
 
-    // 后端返回格式：{ code: 1, data: { token, refreshToken } }
+    // Backend response format: { code: 1, data: { token, refreshToken } }
     if (response.data.code === 1) {
       const newToken = response.data.data.token;
       const newRefreshToken = response.data.data.refreshToken;
 
-      // 更新本地存储
+      // Update local storage
       localStorage.setItem("token", newToken);
       localStorage.setItem("refreshToken", newRefreshToken);
 
-      console.log("Token 刷新成功");
+      console.log("Token refreshed successfully");
       return newToken;
     }
 
     return null;
   } catch (error) {
-    console.error("刷新 token 失败:", error);
+    console.error("Failed to refresh token:", error);
     return null;
   }
 };
 
 /**
- * 清除本地存储的用户信息并跳转到登录页
+ * Clear local storage user info and redirect to login page
  */
 const handleTokenExpired = () => {
-  // 如果正在处理，直接返回，防止重复跳转
+  // If already handling, return directly to prevent duplicate redirects
   if (isHandlingTokenExpired) {
     return;
   }
 
   isHandlingTokenExpired = true;
 
-  // 清除本地存储的 token 和用户信息
+  // Clear locally stored token and user info
   localStorage.removeItem("token");
-  localStorage.removeItem("refreshToken");  // ⭐ 清除 refresh token
+  localStorage.removeItem("refreshToken");  // ⭐ Clear refresh token
   localStorage.removeItem("userName");
   localStorage.removeItem("name");
   localStorage.removeItem("userId");
 
-  // 延迟跳转，确保 toast 提示能够显示
+  // Delay redirect to ensure toast notification displays
   setTimeout(() => {
-    // 核心区别：使用 navigate 进行无刷新跳转
+    // Core difference: use navigate for seamless redirect
     const navigate = getNavigate();
     if (navigate) {
       navigate("/login", { replace: true });
     } else {
-      // 如果 navigate 未初始化，使用 window.location 作为后备方案
+      // If navigate not initialized, use window.location as fallback
       window.location.href = "/login";
     }
 
-    // 重置锁
+    // Reset lock
     isHandlingTokenExpired = false;
   }, 1000);
 };
 
-// 2. 请求拦截器 (Request Interceptor)
+// 2. Request Interceptor
 instance.interceptors.request.use(
   (config) => {
-    // Token 存在 localStorage 中
+    // Token exists in localStorage
     const token = localStorage.getItem("token");
     if (token) {
-      config.headers.token = token; // 根据后端要求，可能是 'Authorization' 或 'token'
+      config.headers.token = token; // Per backend requirement, may be 'Authorization' or 'token'
     }
     return config;
   },
@@ -125,19 +125,19 @@ instance.interceptors.request.use(
   }
 );
 
-// 3. 响应拦截器 (Response Interceptor)
+// 3. Response Interceptor
 instance.interceptors.response.use(
   (response) => {
     const res = response.data;
 
-    // 假设后端返回格式是：{ code: 1, msg: 'success', data: ... }
-    // 如果 code === 1 代表成功
+    // Assume backend response format: { code: 1, msg: 'success', data: ... }
+    // If code === 1 means success
     if (res.code === 1) {
-      return res.data; // 直接返回数据核心部分
+      return res.data; // Return data core part directly
     } else {
-      // 如果 code 不为 1，代表业务错误（比如"用户名已存在"）
+      // If code is not 1, means business error (e.g. "Username already exists")
       const errorMsg: string = res.msg || "Operation failed";
-      toast.error(errorMsg); // 统一显示错误提示给用户
+      toast.error(errorMsg); // Unified error notification for user
       return Promise.reject(new Error(errorMsg));
     }
   },
@@ -146,9 +146,9 @@ instance.interceptors.response.use(
       _retry?: boolean;
     };
 
-    // ⭐ 处理 401 错误：Token 过期
+    // ⭐ Handle 401 error: Token expired
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
-      // 如果正在刷新 token，将当前请求加入队列
+      // If token refresh is in progress, add current request to queue
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -164,34 +164,34 @@ instance.interceptors.response.use(
           });
       }
 
-      // 标记当前请求已重试过，防止无限循环
+      // Mark current request as retried to prevent infinite loop
       originalRequest._retry = true;
       isRefreshing = true;
 
       try {
-        // 尝试刷新 token
+        // Attempt to refresh token
         const newToken = await refreshAccessToken();
 
         if (newToken) {
-          // 刷新成功，处理队列中的请求
+          // Refresh succeeded, process queued requests
           processQueue(null, newToken);
 
-          // 更新原请求的 token 并重试
+          // Update original request's token and retry
           if (originalRequest.headers) {
             originalRequest.headers.token = newToken;
           }
 
           return instance(originalRequest);
         } else {
-          // 刷新失败，清空队列并跳转登录页
-          processQueue(new Error("Token 刷新失败"), null);
+          // Refresh failed, clear queue and redirect to login
+          processQueue(new Error("Token refresh failed"), null);
           toast.warning("Session expired. Redirecting to sign in…");
           handleTokenExpired();
           return Promise.reject(new Error("Session expired. Please sign in again."));
         }
       } catch (refreshError) {
-        // 刷新过程中出错
-        processQueue(new Error("Token 刷新失败"), null);
+        // Error during refresh
+        processQueue(new Error("Token refresh failed"), null);
         toast.warning("Session expired. Redirecting to sign in…");
         handleTokenExpired();
         return Promise.reject(refreshError);
@@ -200,11 +200,11 @@ instance.interceptors.response.use(
       }
     }
 
-    // 处理其他错误
+    // Handle other errors
     const errorData = error.response?.data as { msg?: string } | undefined;
     const errorMessage =
       errorData?.msg || error.message || "Network error";
-    toast.error(errorMessage); // 统一显示错误提示给用户
+    toast.error(errorMessage); // Unified error notification for user
     return Promise.reject(new Error(errorMessage));
   }
 );

@@ -20,13 +20,13 @@ export interface WebSocketOptions {
 }
 
 
-// 获取当前协议 (如果是 https 就是 wss，如果是 http 就是 ws)
+// Get current protocol (wss for https, ws for http)
 const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
 
-// 获取当前域名 (firmament-admin.kaiwen.dev)
+// Get current domain
 const domain = window.location.host;
 
-// 拼装地址 -> wss://firmament-admin.kaiwen.dev/api/ws
+// Assemble address -> wss://firmament-admin.kaiwen.dev/api/ws
 export const WS_URL = `${protocol}${domain}/api`;
 
 export function useWebSocket(options: WebSocketOptions) {
@@ -48,7 +48,7 @@ export function useWebSocket(options: WebSocketOptions) {
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const connectRef = useRef<(() => void) | null>(null);
 
-  // 1. 新增：追踪组件挂载状态，防止卸载后更新 State
+  // Track component mount state to prevent state updates after unmount
   const isUnmountedRef = useRef(false);
 
   const callbacksRef = useRef({ onOpen, onClose, onError, onMessage });
@@ -68,20 +68,20 @@ export function useWebSocket(options: WebSocketOptions) {
           ws.current.readyState === WebSocket.OPEN ||
           ws.current.readyState === WebSocket.CONNECTING
         ) {
-          // 优化：如果是主动断开，其实可以移除 onclose 监听，
-          // 这样就不会触发 CLOSED 状态更新（如果你希望断开后保持 CLOSED 状态，这步可选）
-          // 但为了保持状态同步，这里保留 close 调用，但在 onclose 里做判断
-          ws.current.close(1000, "前端主动关闭");
+          // Optimization: If actively disconnecting, can remove onclose listener
+          // This prevents CLOSED state update (optional if you want to keep CLOSED state after disconnect)
+          // For state sync, keep close call but check in onclose
+          ws.current.close(1000, "Client initiated close");
         }
       } catch (error) {
-        console.warn("[WebSocket] 断开连接时出错:", error);
+        console.warn("[WebSocket] Error disconnecting:", error);
       }
     }
   }, []);
 
   const connect = useCallback(() => {
     if (!sid) {
-      // 修复：检查是否卸载
+      // Fix: Check if unmounted
       if (!isUnmountedRef.current) setStatus(WebSocketStatus.CLOSED);
       return;
     }
@@ -99,7 +99,7 @@ export function useWebSocket(options: WebSocketOptions) {
       oldSocket.onclose = null;
 
       try {
-        oldSocket.close(1000, "被新连接接管");
+        oldSocket.close(1000, "Taken over by new connection");
       } catch {
         // ignore
       }
@@ -109,14 +109,14 @@ export function useWebSocket(options: WebSocketOptions) {
     const wsUrl = `${url}/ws/${sid}`;
 
     try {
-      // 修复：检查是否卸载
+      // Fix: Check if unmounted
       if (!isUnmountedRef.current) setStatus(WebSocketStatus.CONNECTING);
 
       const socket = new WebSocket(wsUrl);
       ws.current = socket;
 
       socket.onopen = () => {
-        // 修复：增加 !isUnmountedRef.current 判断
+        // Fix: Add !isUnmountedRef.current check
         if (ws.current === socket && !isUnmountedRef.current) {
           setStatus(WebSocketStatus.OPEN);
           retryCountRef.current = 0;
@@ -131,7 +131,7 @@ export function useWebSocket(options: WebSocketOptions) {
       };
 
       socket.onclose = (event) => {
-        // 关键点：即使 socket 匹配，如果组件卸载了，也绝对不能 setStatus
+        // Key point: Even if socket matches, if component is unmounted, must NOT setStatus
         if (ws.current === socket) {
           ws.current = null;
 
@@ -155,7 +155,7 @@ export function useWebSocket(options: WebSocketOptions) {
               clearTimeout(reconnectTimerRef.current);
 
             reconnectTimerRef.current = setTimeout(() => {
-              // 再次检查卸载状态
+              // Check unmount state again
               if (!isUnmountedRef.current && connectRef.current) {
                 connectRef.current();
               }
@@ -170,7 +170,7 @@ export function useWebSocket(options: WebSocketOptions) {
         }
       };
     } catch (error) {
-      console.error("[WebSocket] 创建连接失败:", error);
+      console.error("[WebSocket] Connection creation failed:", error);
       if (!isUnmountedRef.current) setStatus(WebSocketStatus.CLOSED);
       ws.current = null;
     }
@@ -197,15 +197,12 @@ export function useWebSocket(options: WebSocketOptions) {
     connect();
   }, [connect]);
 
-  // --- 生命周期管理 ---
+  // Lifecycle management
   useEffect(() => {
-    // 每次副作用执行，重置卸载标记（应对 React 18 Strict Mode 的多次挂载）
     isUnmountedRef.current = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     if (autoConnect) {
-      // 这里的 setTimeout 0 其实在 useEffect 里不是必须的，
-      // 因为 useEffect 本身就在渲染提交后执行。不过留着也没坏处。
       timer = setTimeout(() => {
         if (!isUnmountedRef.current) {
           connect();
@@ -214,7 +211,6 @@ export function useWebSocket(options: WebSocketOptions) {
     }
 
     return () => {
-      // 2. 标记组件已卸载
       isUnmountedRef.current = true;
 
       if (timer !== undefined) clearTimeout(timer);
@@ -226,20 +222,15 @@ export function useWebSocket(options: WebSocketOptions) {
 
       retryCountRef.current = maxRetries + 1;
 
-      // 3. 安全清理
       if (ws.current) {
-        // 在这里，我们其实可以直接暴力 close，因为 isUnmountedRef 已经是 true 了，
-        // 就算触发 onclose，上面的逻辑也会拦截 setStatus
         try {
-          ws.current.close(1000, "组件卸载");
+          ws.current.close(1000, "Component unmounted");
         } catch {
           // ignore
         }
-        // 不必调用 disconnect()，因为 disconnect 内部逻辑比较多，
-        // 直接 close 加上 isUnmountedRef=true 的拦截机制最安全
       }
     };
-  }, [connect, autoConnect]); // 移除 disconnect 依赖，cleanup 里直接写逻辑更清晰
+  }, [connect, autoConnect]);
 
   return {
     status,

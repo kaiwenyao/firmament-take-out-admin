@@ -37,12 +37,12 @@ interface HeaderProps {
 
 export default function Header({ onToggleSidebar }: HeaderProps) {
   const navigate = useNavigate();
-  const [shopStatus, setShopStatusState] = useState<number | null>(null); // null 表示未加载
-  const [statusLoading, setStatusLoading] = useState(true); // 加载状态
+  const [shopStatus, setShopStatusState] = useState<number | null>(null); // null indicates not loaded
+  const [statusLoading, setStatusLoading] = useState(true); // Loading state
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  // 修改密码相关状态
+  // Change password related state
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [passwordFormData, setPasswordFormData] = useState({
     oldPassword: "",
@@ -50,10 +50,10 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     confirmPassword: "",
   });
   const [passwordFormErrors, setPasswordFormErrors] = useState<Record<string, string>>({});
-  const [passwordFormTouched, setPasswordFormTouched] = useState<Record<string, boolean>>({}); // 跟踪字段是否被触摸过
+  const [passwordFormTouched, setPasswordFormTouched] = useState<Record<string, boolean>>({}); // Track whether field has been touched
   const [passwordFormLoading, setPasswordFormLoading] = useState(false);
   
-  // 组件挂载时获取店铺营业状态
+  // Fetch shop business status on component mount
   useEffect(() => {
     const fetchShopStatus = async () => {
       setStatusLoading(true);
@@ -76,7 +76,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     navigate("/login", { replace: true });
   };
 
-  // 处理设置营业状态
+  // Handle setting business status
   const handleSetStatus = async (status: number) => {
     setLoading(true);
     try {
@@ -94,11 +94,11 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     }
   };
 
-  // 获取当前登录用户名和ID
+  // Get current logged-in username and ID
   const userName = localStorage.getItem("userName");
   const userId = localStorage.getItem("userId");
 
-  // 校验密码字段
+  // Validate password field
   const validatePasswordField = (field: string, value: string, confirmValue?: string): string => {
     switch (field) {
       case "oldPassword":
@@ -130,15 +130,15 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     }
   };
 
-  // 处理字段失焦校验
+  // Handle field blur validation
   const handlePasswordFieldBlur = (field: string, value: string) => {
-    // 标记字段已被触摸
+    // Mark field as touched
     setPasswordFormTouched((prev) => ({
       ...prev,
       [field]: true,
     }));
     
-    // 进行校验
+    // Perform validation
     let error = "";
     if (field === "confirmPassword") {
       error = validatePasswordField(field, value, passwordFormData.newPassword);
@@ -151,7 +151,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
     }));
   };
 
-  // 打开修改密码对话框
+  // Open change password dialog
   const handleOpenPasswordDialog = () => {
     setPasswordDialogOpen(true);
     setPasswordFormData({
@@ -160,12 +160,12 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       confirmPassword: "",
     });
     setPasswordFormErrors({});
-    setPasswordFormTouched({}); // 重置触摸状态
+    setPasswordFormTouched({}); // Reset touched state
   };
 
-  // 提交修改密码
+  // Submit password change
   const handleSubmitPassword = async () => {
-    // 校验所有字段
+    // Validate all fields
     const errors: Record<string, string> = {};
     errors.oldPassword = validatePasswordField("oldPassword", passwordFormData.oldPassword);
     errors.newPassword = validatePasswordField("newPassword", passwordFormData.newPassword);
@@ -177,10 +177,10 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
 
     setPasswordFormErrors(errors);
 
-    // 检查是否有错误
+    // Check for errors
     const hasErrors = Object.values(errors).some((error) => error !== "");
     if (hasErrors) {
-      // 如果有错误，将所有字段标记为已触摸，这样错误信息才会显示
+      // If there are errors, mark all fields as touched so error messages display
       setPasswordFormTouched({
         oldPassword: true,
         newPassword: true,
@@ -208,7 +208,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         confirmPassword: "",
       });
       setPasswordFormErrors({});
-      setPasswordFormTouched({}); // 重置触摸状态
+      setPasswordFormTouched({}); // Reset touched state
     } catch (error) {
       console.error("Failed to change password:", error);
       let errorMessage = "Could not change password. Please try again.";
@@ -230,7 +230,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
 
   return (
     <header className="h-16 w-full bg-[#ffc200] px-6 flex items-center justify-between text-[#333] shadow-md z-50 relative">
-      {/* 左侧区域 */}
+      {/* Left area */}
       <div className="flex items-center gap-4">
         {/* 1. Logo */}
         <div className="flex items-center gap-2 mr-4">
@@ -241,7 +241,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
             />
         </div>
 
-        {/* 2. 收起/展开 Sidebar 按钮 */}
+        {/* 2. Collapse/expand sidebar button */}
         <Button 
           variant="ghost" 
           size="icon" 
@@ -251,7 +251,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           <AlignJustify className="h-6 w-6" />
         </Button>
 
-        {/* 3. 营业状态 Badge */}
+        {/* 3. Business status badge */}
         {statusLoading ? (
           <Skeleton className="h-6 w-16 ml-4" />
         ) : shopStatus !== null ? (
@@ -263,9 +263,9 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         ) : null}
       </div>
 
-      {/* 右侧区域 */}
+      {/* Right area */}
       <div className="flex items-center gap-8">
-        {/* 1. 营业状态设置 */}
+        {/* 1. Business status setting */}
         <div 
           className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
           onClick={() => setStatusDialogOpen(true)}
@@ -274,7 +274,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
           <span className="text-sm font-medium">Business status</span>
         </div>
 
-        {/* 2. 管理员下拉菜单 */}
+        {/* 2. Admin dropdown menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div className="flex items-center gap-2 cursor-pointer outline-none">
@@ -301,7 +301,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         </DropdownMenu>
       </div>
 
-      {/* 营业状态设置对话框 */}
+      {/* Business status setting dialog */}
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -342,7 +342,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         </DialogContent>
       </Dialog>
 
-      {/* 修改密码对话框 */}
+      {/* Change password dialog */}
       <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
         <DialogContent className="sm:max-w-[500px]" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
@@ -387,17 +387,14 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                     setPasswordFormErrors((prev) => ({ ...prev, newPassword: "" }));
                   }
                   if (passwordFormData.confirmPassword) {
-                    // 假设我们需要稍微改写一下校验逻辑，或者手动在这里比对
-                    // 这里我们不仅要传确认密码，还要把【最新的新密码】传给校验逻辑
-                    
-                    // 方式 A：如果 validatePasswordField 支持传第三个参数作为对比值
+                    // If confirm password has a value, re-validate it with the new password value
                     const error = validatePasswordField(
-                        "confirmPassword", 
-                        passwordFormData.confirmPassword, 
-                        newPassValue // 👈 传这个！不要传 state.newPassword
+                        "confirmPassword",
+                        passwordFormData.confirmPassword,
+                        newPassValue
                     );
-                    
-                    // 手动更新 confirmPassword 的错误信息
+
+                    // Manually update confirmPassword error
                     setPasswordFormErrors(prev => ({...prev, confirmPassword: error}));
                   }
                 }}

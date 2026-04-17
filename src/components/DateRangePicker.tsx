@@ -34,7 +34,7 @@ export function DateRangePicker({
       onDateChange?.(undefined, undefined);
       return;
     }
-    // 如果只选择了开始日期，等待选择结束日期
+    // If only start date is selected, wait for end date selection
     if (range.from && !range.to) {
       return;
     }
