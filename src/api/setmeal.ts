@@ -1,7 +1,7 @@
 import request from "./request";
 import { uploadImage } from "@/utils/upload";
 
-// 套餐数据类型定义
+// Setmeal data type definition
 export interface Setmeal {
   id: string;
   name: string;
@@ -10,7 +10,7 @@ export interface Setmeal {
   price: number;
   image?: string;
   description?: string;
-  status: number; // 0: 停售, 1: 起售
+  status: number; // 0: Off sale, 1: On sale
   updateTime?: string;
   createTime?: string;
   createUser?: string;
@@ -18,32 +18,32 @@ export interface Setmeal {
   setmealDishes?: SetmealDish[];
 }
 
-// 套餐菜品关联
+// Setmeal-dish association
 export interface SetmealDish {
   id?: string;
   setmealId?: string;
   dishId: string;
   name?: string;
   price?: number;
-  copies: number; // 份数
+  copies: number; // Number of copies
 }
 
-// 分页查询请求参数
+// Paginated query request parameters
 export interface SetmealPageQuery {
   name?: string;
   categoryId?: number;
-  status?: number; // 0: 停售, 1: 起售
+  status?: number; // 0: Off sale, 1: On sale
   page: number;
   pageSize: number;
 }
 
-// 分页查询响应数据
+// Paginated query response data
 export interface SetmealPageResponse {
   total: string;
   records: Setmeal[];
 }
 
-// 套餐表单数据类型
+// Setmeal form data type
 export interface SetmealFormData {
   id?: string;
   name: string;
@@ -51,14 +51,14 @@ export interface SetmealFormData {
   price: number;
   image?: string;
   description?: string;
-  status: number; // 0: 停售, 1: 起售
+  status: number; // 0: Off sale, 1: On sale
   setmealDishes?: SetmealDish[];
 }
 
 /**
- * 套餐分页查询
- * @param params 查询参数
- * @returns 分页数据
+ * Setmeal paginated query
+ * @param params Query parameters
+ * @returns Paginated data
  */
 export const getSetmealListAPI = async (
   params: SetmealPageQuery
@@ -75,42 +75,42 @@ export const getSetmealListAPI = async (
   }
   queryParams.append("page", params.page.toString());
   queryParams.append("pageSize", params.pageSize.toString());
-  
+
   return request.get(`/setmeal/page?${queryParams.toString()}`);
 };
 
 /**
- * 新增套餐
- * @param data 套餐表单数据
- * @returns 操作结果
+ * Add new setmeal
+ * @param data Setmeal form data
+ * @returns Operation result
  */
 export const saveSetmealAPI = async (data: SetmealFormData): Promise<string> => {
   return request.post("/setmeal", data);
 };
 
 /**
- * 修改套餐
- * @param data 套餐表单数据
- * @returns 操作结果
+ * Update setmeal
+ * @param data Setmeal form data
+ * @returns Operation result
  */
 export const updateSetmealAPI = async (data: SetmealFormData): Promise<void> => {
   return request.put("/setmeal", data);
 };
 
 /**
- * 删除套餐
- * @param setmealIds 套餐ID数组
- * @returns 操作结果
+ * Delete setmeal
+ * @param setmealIds Setmeal ID array
+ * @returns Operation result
  */
 export const deleteSetmealAPI = async (setmealIds: string[]): Promise<void> => {
   return request.delete(`/setmeal?ids=${setmealIds.join(",")}`);
 };
 
 /**
- * 启用/禁用套餐
- * @param status 状态：1-起售，0-停售
- * @param setmealId 套餐ID
- * @returns 操作结果
+ * Enable/Disable setmeal
+ * @param status Status: 1-On sale, 0-Off sale
+ * @param setmealId Setmeal ID
+ * @returns Operation result
  */
 export const enableOrDisableSetmealAPI = async (
   status: number,
@@ -120,19 +120,18 @@ export const enableOrDisableSetmealAPI = async (
 };
 
 /**
- * 根据ID查询套餐
- * @param id 套餐ID
- * @returns 套餐信息
+ * Query setmeal by ID
+ * @param id Setmeal ID
+ * @returns Setmeal information
  */
 export const getSetmealByIdAPI = async (id: string): Promise<Setmeal> => {
   return request.get(`/setmeal/${id}`);
 };
 
 /**
- * 上传图片
- * @param file 图片文件
- * @returns 图片URL
- * @deprecated 请使用 @/utils/upload 中的 uploadImage
+ * Upload image
+ * @param file Image file
+ * @returns Image URL
+ * @deprecated Use uploadImage from @/utils/upload instead
  */
 export { uploadImage };
-

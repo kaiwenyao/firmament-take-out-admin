@@ -65,27 +65,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 
-// 提取错误信息的辅助函数
+// Helper function to extract error messages
 const getErrorMessage = (error: unknown): string => {
-  // 如果是字符串，直接返回
+  // If it's a string, return directly
   if (typeof error === "string") {
     return error;
   }
   
-  // 如果是 Error 对象，检查是否有 response
+  // If it's an Error object, check if it has response
   if (error && typeof error === "object" && "response" in error) {
     const axiosError = error as { response?: { data?: { msg?: string }; status?: number } };
-    // 后端返回的错误格式：{ code: 0, msg: "错误信息" }
+    // Backend error format: { code: 0, msg: "error message" }
     if (axiosError.response?.data?.msg) {
       return axiosError.response.data.msg;
     }
-    // HTTP 状态码错误
+    // HTTP status code error
     if (axiosError.response?.status) {
       return `Request failed (${axiosError.response.status})`;
     }
   }
   
-  // 如果是 Error 对象，返回 message
+  // If it's an Error object, return message
   if (error && typeof error === "object" && "message" in error) {
     const err = error as { message?: string };
     if (err.message) {
@@ -93,7 +93,7 @@ const getErrorMessage = (error: unknown): string => {
     }
   }
   
-  // 默认错误信息
+  // Default error message
   return "Something went wrong. Please try again.";
 };
 
@@ -108,27 +108,27 @@ const FLAVOR_OPTIONS: Record<FlavorType, string[]> = {
   "Spice Level": ["Not Spicy", "Mild", "Medium", "Extra Spicy"],
 };
 
-// 扩展的口味数据类型（包含类型和已删除的选项）
+// Extended flavor data type (includes type and removed options)
 interface ExtendedFlavor {
-  id?: string; // 口味ID（编辑时使用）
-  dishId?: string; // 菜品ID（编辑时使用）
-  type?: FlavorType; // 口味类型
-  name: string; // 口味名称（用于后端，对应原来的name）
-  value: string; // 口味值（用于后端，对应原来的value，存储剩余的选项）
-  removedOptions?: string[]; // 已删除的选项列表
+  id?: string; // Flavor ID (used when editing)
+  dishId?: string; // Dish ID (used when editing)
+  type?: FlavorType; // Flavor type
+  name: string; // Flavor name (for backend, corresponds to original name)
+  value: string; // Flavor value (for backend, corresponds to original value, stores remaining options)
+  removedOptions?: string[]; // List of removed options
 }
 
 export default function Dish() {
   
-  // 定义状态
+  // Define state
   const [list, setList] = useState<Dish[]>([]);
-  const [categoryList, setCategoryList] = useState<Category[]>([]); // 分类列表（用于下拉选择）
-  const [dishName, setDishName] = useState(""); // 搜索框绑定的值
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined); // 选中的分类ID
-  const [selectedStatus, setSelectedStatus] = useState<number | undefined>(undefined); // 选中的状态
-  const [selectedIds, setSelectedIds] = useState<string[]>([]); // 选中的菜品ID
-  const [total, setTotal] = useState(0); // 总条数
-  const [loading, setLoading] = useState(false); // 加载状态
+  const [categoryList, setCategoryList] = useState<Category[]>([]); // Category list (for dropdown selection)
+  const [dishName, setDishName] = useState(""); // Search input bound value
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>(undefined); // Selected category ID
+  const [selectedStatus, setSelectedStatus] = useState<number | undefined>(undefined); // Selected status
+  const [selectedIds, setSelectedIds] = useState<string[]>([]); // Selected dish IDs
+  const [total, setTotal] = useState(0); // Total count
+  const [loading, setLoading] = useState(false); // Loading state
   const [reqData, setReqData] = useState<DishPageQuery>({
     page: 1,
     pageSize: 10,
@@ -136,12 +136,12 @@ export default function Dish() {
     categoryId: undefined,
     status: undefined,
   });
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // 确认对话框状态（启用/禁用）
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // 删除确认对话框状态
-  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false); // 批量删除确认对话框
-  const [currentDish, setCurrentDish] = useState<Dish | null>(null); // 当前操作的菜品
-  const [formDialogOpen, setFormDialogOpen] = useState(false); // 表单对话框状态
-  const [isEditMode, setIsEditMode] = useState(false); // 是否为编辑模式
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // Confirm dialog state (enable/disable)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // Delete confirm dialog state
+  const [batchDeleteDialogOpen, setBatchDeleteDialogOpen] = useState(false); // Batch delete confirm dialog
+  const [currentDish, setCurrentDish] = useState<Dish | null>(null); // Currently operating on dish
+  const [formDialogOpen, setFormDialogOpen] = useState(false); // Form dialog state
+  const [isEditMode, setIsEditMode] = useState(false); // Whether in edit mode
   const [formData, setFormData] = useState<DishFormData>({
     name: "",
     categoryId: 0,
@@ -150,23 +150,23 @@ export default function Dish() {
     description: "",
     status: 1,
     flavors: [],
-  }); // 表单数据
-  const [extendedFlavors, setExtendedFlavors] = useState<ExtendedFlavor[]>([]); // 扩展的口味数据（用于UI显示）
-  const [formLoading, setFormLoading] = useState(false); // 表单提交加载状态
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({}); // 表单错误信息
-  const [imagePreview, setImagePreview] = useState<string>(""); // 图片预览
-  const [imageUploading, setImageUploading] = useState(false); // 图片上传中
+  }); // Form data
+  const [extendedFlavors, setExtendedFlavors] = useState<ExtendedFlavor[]>([]); // Extended flavors data (for UI display)
+  const [formLoading, setFormLoading] = useState(false); // Form submission loading state
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({}); // Form error messages
+  const [imagePreview, setImagePreview] = useState<string>(""); // Image preview
+  const [imageUploading, setImageUploading] = useState(false); // Image uploading
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
-  // 获取分类列表（用于下拉选择）
+  // Get category list (for dropdown selection)
   useEffect(() => {
     const fetchCategoryList = async () => {
       try {
-        const categories = await getCategoryListByTypeAPI({ type: 1 }); // 1: 菜品分类
+        const categories = await getCategoryListByTypeAPI({ type: 1 }); // 1: Dish category
         setCategoryList(categories);
       } catch (error) {
-        console.error("获取分类列表失败:", error);
+        console.error("Failed to get category list:", error);
         toast.error("Failed to load categories", {
           description: getErrorMessage(error) || "Please try again"
         });
@@ -176,11 +176,11 @@ export default function Dish() {
   }, []);
 
   useEffect(() => {
-    // 定义在内部，无需 useCallback
+    // Defined inside, no need for useCallback
     const fetchData = async () => {
       setLoading(true);
       try {
-        console.log("发起请求，参数:", reqData);
+        console.log("Sending request with params:", reqData);
         const res = await getDishListAPI({
           ...reqData,
           name: reqData.name || undefined,
@@ -189,7 +189,7 @@ export default function Dish() {
         });
         setList(res.records);
         setTotal(Number(res.total));
-        // 清空选中项
+        // Clear selected items
         setSelectedIds([]);
       } catch (error) {
         console.error(error);
@@ -201,26 +201,26 @@ export default function Dish() {
       }
     };
     fetchData();
-    // 🔥 核心魔法：只依赖 reqData
+    // 🔥 Key trick: only depend on reqData
   }, [reqData]);
 
   const reloadData = () => {
-    // 复制一份自己，内容一样，但内存地址变了
+    // Copy self, same content but different memory address
     setReqData((prev) => ({ ...prev }));
   };
 
-  // 搜索功能
+  // Search function
   const handleSearch = () => {
     setReqData((prev) => ({
       ...prev,
-      page: 1, // 搜索新词，回到第一页
+      page: 1, // New search term, return to first page
       name: dishName || undefined,
       categoryId: selectedCategoryId,
       status: selectedStatus,
     }));
   };
 
-  // 分页处理
+  // Pagination handling
   const handlePageChange = (newPage: number) => {
     setReqData((prev) => ({
       ...prev,
@@ -228,16 +228,16 @@ export default function Dish() {
     }));
   };
 
-  // 每页条数变化处理
+  // Page size change handling
   const handlePageSizeChange = (newPageSize: string) => {
     setReqData((prev) => ({
       ...prev,
       pageSize: Number(newPageSize),
-      page: 1, // 重置到第一页
+      page: 1, // Reset to first page
     }));
   };
 
-  // 处理单个复选框选择
+  // Handle single checkbox selection
   const handleSelectItem = (dishId: string, checked: boolean) => {
     if (checked) {
       setSelectedIds([...selectedIds, dishId]);
@@ -246,7 +246,7 @@ export default function Dish() {
     }
   };
 
-  // 处理全选
+  // Handle select all
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedIds(list.map((item) => item.id));
@@ -255,13 +255,13 @@ export default function Dish() {
     }
   };
 
-  // 打开确认对话框（启用/禁用）
+  // Open confirm dialog (enable/disable)
   const handleOpenConfirmDialog = (dish: Dish) => {
     setCurrentDish(dish);
     setConfirmDialogOpen(true);
   };
 
-  // 确认启用/禁用菜品
+  // Confirm enable/disable dish
   const handleConfirmToggleStatus = async () => {
     if (!currentDish) return;
 
@@ -273,10 +273,10 @@ export default function Dish() {
       setConfirmDialogOpen(false);
       setCurrentDish(null);
       toast.success(`Dish ${action}`);
-      // 操作成功后刷新列表
+      // Refresh list after successful operation
       reloadData();
     } catch (error) {
-      console.error(`${action}菜品失败:`, error);
+      console.error(`${action} dish failed:`, error);
       setConfirmDialogOpen(false);
       toast.error("Failed to update dish status", {
         description: getErrorMessage(error) || "Please try again"
@@ -284,13 +284,13 @@ export default function Dish() {
     }
   };
 
-  // 打开删除确认对话框
+  // Open delete confirm dialog
   const handleDelete = (dish: Dish) => {
     setCurrentDish(dish);
     setDeleteDialogOpen(true);
   };
 
-  // 确认删除菜品
+  // Confirm delete dish
   const handleConfirmDelete = async () => {
     if (!currentDish) return;
 
@@ -299,10 +299,10 @@ export default function Dish() {
       setDeleteDialogOpen(false);
       setCurrentDish(null);
       toast.success("Dish deleted");
-      // 操作成功后刷新列表
+      // Refresh list after successful operation
       reloadData();
     } catch (error) {
-      console.error("删除菜品失败:", error);
+      console.error("Delete dish failed:", error);
       setDeleteDialogOpen(false);
       toast.error("Failed to delete dish", {
         description: getErrorMessage(error) || "Please try again"
@@ -310,7 +310,7 @@ export default function Dish() {
     }
   };
 
-  // 打开批量删除确认对话框
+  // Open batch delete confirm dialog
   const handleBatchDelete = () => {
     if (selectedIds.length === 0) {
       toast.error("Nothing selected", {
@@ -321,17 +321,17 @@ export default function Dish() {
     setBatchDeleteDialogOpen(true);
   };
 
-  // 确认批量删除
+  // Confirm batch delete
   const handleConfirmBatchDelete = async () => {
     try {
       await deleteDishAPI(selectedIds);
       setBatchDeleteDialogOpen(false);
       setSelectedIds([]);
       toast.success(`Deleted ${selectedIds.length} dish(es)`);
-      // 操作成功后刷新列表
+      // Refresh list after successful operation
       reloadData();
     } catch (error) {
-      console.error("批量删除菜品失败:", error);
+      console.error("Batch delete dish failed:", error);
       setBatchDeleteDialogOpen(false);
       toast.error("Batch delete failed", {
         description: getErrorMessage(error) || "Please try again"
@@ -339,7 +339,7 @@ export default function Dish() {
     }
   };
 
-  // 校验单个字段
+  // Validate single field
   const validateField = (field: string, value: string | number | undefined | null): string => {
     switch (field) {
       case "name":
@@ -374,7 +374,7 @@ export default function Dish() {
     }
   };
 
-  // 处理字段失焦校验
+  // Handle field blur validation
   const handleFieldBlur = (field: string, value: string | number | undefined | null) => {
     const error = validateField(field, value);
     setFormErrors((prev) => ({
@@ -383,7 +383,7 @@ export default function Dish() {
     }));
   };
 
-  // 将后端格式的口味转换为扩展格式
+  // Convert backend flavor format to extended format
   const convertFlavorsToExtended = (flavors: DishFlavor[]): ExtendedFlavor[] => {
     if (!flavors || flavors.length === 0) {
       return [];
@@ -391,61 +391,61 @@ export default function Dish() {
     
     return flavors.map((flavor) => {
       const type = flavor.name as FlavorType;
-      // 验证类型是否有效
+      // Verify if type is valid
       if (!FLAVOR_OPTIONS[type]) {
         return null;
       }
       
-      // 解析 value（JSON 字符串）为选项数组
+      // Parse value (JSON string) to options array
       let currentOptions: string[] = [];
       try {
         if (flavor.value) {
-          // value 可能是 JSON 字符串，需要解析
+          // value may be JSON string, need to parse
           currentOptions = JSON.parse(flavor.value);
         }
       } catch {
-        // 如果解析失败，可能是旧格式（逗号分隔），尝试兼容
+        // If parsing fails, may be old format (comma-separated), try compatibility
         currentOptions = flavor.value.split(",").filter(Boolean);
       }
       
-      // 计算已删除的选项
+      // Calculate removed options
       const allOptions = FLAVOR_OPTIONS[type] || [];
       const removedOptions = allOptions.filter(
         (opt) => !currentOptions.includes(opt)
       );
       
       return {
-        id: flavor.id, // 保留 id（编辑时使用）
-        dishId: flavor.dishId, // 保留 dishId（编辑时使用）
+        id: flavor.id, // Keep id (used when editing)
+        dishId: flavor.dishId, // Keep dishId (used when editing)
         type,
         name: flavor.name,
-        value: flavor.value, // 保留原始 value（JSON 字符串）
+        value: flavor.value, // Keep original value (JSON string)
         removedOptions,
       } as ExtendedFlavor;
     }).filter((item): item is ExtendedFlavor => item !== null);
   };
 
-  // 将扩展格式的口味转换为后端格式
+  // Convert extended format flavors to backend format
   const convertExtendedToFlavors = (extended: ExtendedFlavor[]): DishFlavor[] => {
     const flavors: DishFlavor[] = [];
     
     extended.forEach((item) => {
       if (item.type && item.name) {
-        // 获取当前剩余的选项
+        // Get current remaining options
         const allOptions = FLAVOR_OPTIONS[item.type] || [];
         const currentOptions = allOptions.filter(
           (opt) => !(item.removedOptions || []).includes(opt)
         );
         
-        // 将选项数组转换为 JSON 字符串
+        // Convert options array to JSON string
         const valueJsonString = JSON.stringify(currentOptions);
         
-        // 每个口味类型只创建一个条目，value 是 JSON 字符串
+        // Create only one entry per flavor type, value is JSON string
         flavors.push({
-          id: item.id, // 如果有 id，保留它（编辑时）
-          dishId: item.dishId, // 如果有 dishId，保留它（编辑时）
+          id: item.id, // If has id, keep it (when editing)
+          dishId: item.dishId, // If has dishId, keep it (when editing)
           name: item.name,
-          value: valueJsonString, // JSON 字符串格式：'["无糖","少糖","半糖","多糖","全糖"]'
+          value: valueJsonString, // JSON string format: '["No Sugar","Less Sugar","Half Sugar","More Sugar","Full Sugar"]'
         });
       }
     });
@@ -453,7 +453,7 @@ export default function Dish() {
     return flavors;
   };
 
-  // 打开新增菜品表单
+  // Open add dish form
   const handleAddDish = () => {
     setIsEditMode(false);
     setFormData({
@@ -471,12 +471,12 @@ export default function Dish() {
     setFormDialogOpen(true);
   };
 
-  // 打开修改表单
+  // Open edit form
   const handleEdit = async (dish: Dish) => {
     setIsEditMode(true);
     setFormErrors({});
-    setFormDialogOpen(true); // ✅ 立即弹窗
-    setFormLoading(true); // ✅ 立即显示骨架屏/转圈
+    setFormDialogOpen(true); // ✅ Show dialog immediately
+    setFormLoading(true); // ✅ Show skeleton/spinner immediately
 
     try {
       const dishDetail = await getDishByIdAPI(dish.id);
@@ -491,9 +491,9 @@ export default function Dish() {
         status: dishDetail.status,
         flavors: flavors,
       });
-      // 转换口味数据（保留 id 和 dishId）
+      // Convert flavor data (keep id and dishId)
       const extendedFlavors = convertFlavorsToExtended(flavors);
-      // 将 id 和 dishId 也传递到扩展格式中
+      // Also pass id and dishId to extended format
       extendedFlavors.forEach((extended, index) => {
         if (flavors[index]) {
           extended.id = flavors[index].id;
@@ -503,23 +503,23 @@ export default function Dish() {
       setExtendedFlavors(extendedFlavors);
       setImagePreview(dishDetail.image || "");
     } catch (error) {
-      console.error("获取菜品详情失败:", error);
+      console.error("Failed to get dish details:", error);
       toast.error("Failed to load dish", {
         description: getErrorMessage(error) || "Please try again"
       });
-      setFormDialogOpen(false); // 失败了关掉弹窗是合理的
+      setFormDialogOpen(false); // Closing dialog on failure is reasonable
     } finally {
-      // ✅ 放在这里！
+      // ✅ Put it here!
       setFormLoading(false);
     }
   };
 
-  // 处理图片上传
+  // Handle image upload
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 验证文件类型
+    // Validate file type
     const validTypes = ["image/png", "image/jpeg", "image/jpg"];
     if (!validTypes.includes(file.type)) {
       toast.error("Invalid image type", {
@@ -528,7 +528,7 @@ export default function Dish() {
       return;
     }
 
-    // 验证文件大小（10MB）
+    // Validate file size (10MB)
     if (file.size > 10 * 1024 * 1024) {
       toast.error("File too large", {
         description: "Image must be 10MB or smaller"
@@ -545,7 +545,7 @@ export default function Dish() {
         setFormErrors((prev) => ({ ...prev, image: "" }));
       }
     } catch (error) {
-      console.error("图片上传失败:", error);
+      console.error("Image upload failed:", error);
       toast.error("Upload failed", {
         description: getErrorMessage(error) || "Please try again"
       });
@@ -554,7 +554,7 @@ export default function Dish() {
     }
   };
 
-  // 添加口味
+  // Add flavor
   const handleAddFlavor = () => {
     if (extendedFlavors.length >= 4) {
       toast.error("Too many flavor groups", {
@@ -573,36 +573,36 @@ export default function Dish() {
     ]);
   };
 
-  // 删除口味
+  // Remove flavor
   const handleRemoveFlavor = (index: number) => {
     const newFlavors = [...extendedFlavors];
     newFlavors.splice(index, 1);
     setExtendedFlavors(newFlavors);
-    // 同步更新formData
+    // Sync update formData
     setFormData({
       ...formData,
       flavors: convertExtendedToFlavors(newFlavors),
     });
   };
 
-  // 更新口味类型
+  // Update flavor type
   const handleUpdateFlavorType = (index: number, type: FlavorType) => {
     const newFlavors = [...extendedFlavors];
     newFlavors[index] = {
       type,
       name: type,
       value: "",
-      removedOptions: [], // 初始时所有选项都显示
+      removedOptions: [], // All options shown initially
     };
     setExtendedFlavors(newFlavors);
-    // 同步更新formData
+    // Sync update formData
     setFormData({
       ...formData,
       flavors: convertExtendedToFlavors(newFlavors),
     });
   };
 
-  // 删除口味选项（点击选项删除）
+  // Remove flavor option (click option to remove)
   const handleRemoveFlavorOption = (flavorIndex: number, option: string) => {
     const newFlavors = [...extendedFlavors];
     const flavor = newFlavors[flavorIndex];
@@ -611,16 +611,16 @@ export default function Dish() {
     }
     flavor.removedOptions.push(option);
     setExtendedFlavors(newFlavors);
-    // 同步更新formData
+    // Sync update formData
     setFormData({
       ...formData,
       flavors: convertExtendedToFlavors(newFlavors),
     });
   };
 
-  // 提交表单
+  // Submit form
   const handleSubmitForm = async () => {
-    // 校验所有字段
+    // Validate all fields
     const errors: Record<string, string> = {};
     errors.name = validateField("name", formData.name);
     errors.categoryId = validateField("categoryId", formData.categoryId);
@@ -629,7 +629,7 @@ export default function Dish() {
 
     setFormErrors(errors);
 
-    // 检查是否有错误
+    // Check if there are errors
     const hasErrors = Object.values(errors).some((error) => error !== "");
     if (hasErrors) {
       toast.error("Validation failed", {
@@ -640,18 +640,18 @@ export default function Dish() {
 
     setFormLoading(true);
     try {
-      // 将扩展格式的口味转换为后端格式
+      // Convert extended format flavors to backend format
       const flavors = convertExtendedToFlavors(extendedFlavors);
       
       if (isEditMode) {
-        // 修改菜品
+        // Update dish
         await updateDishAPI({
           ...formData,
           flavors,
         });
         toast.success("Dish updated");
       } else {
-        // 新增菜品 - 不发送 id
+        // Add dish - don't send id
         const newDishData: Omit<DishFormData, "id"> = {
           name: formData.name,
           categoryId: formData.categoryId,
@@ -665,10 +665,10 @@ export default function Dish() {
         toast.success("Dish created");
       }
       setFormDialogOpen(false);
-      // 操作成功后刷新列表
+      // Refresh list after successful operation
       reloadData();
     } catch (error) {
-      console.error(`${isEditMode ? "修改" : "新增"}菜品失败:`, error);
+      console.error(`${isEditMode ? "Update" : "Add"} dish failed:`, error);
       toast.error(`${isEditMode ? "Failed to update" : "Failed to create"} dish`, {
         description: getErrorMessage(error) || "Please try again"
       });
@@ -677,16 +677,16 @@ export default function Dish() {
     }
   };
 
-  // 计算总页数
+  // Calculate total pages
   const totalPages = Math.ceil(total / reqData.pageSize);
   const isAllSelected = list.length > 0 && selectedIds.length === list.length;
   const isIndeterminate = selectedIds.length > 0 && selectedIds.length < list.length;
 
   return (
     <div className="h-full flex flex-col gap-3">
-      {/* 顶部操作栏 */}
+      {/* Top action bar */}
       <div className="flex items-center justify-between">
-        {/* 左侧：搜索区域 */}
+        {/* Left: search area */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Label htmlFor="dish-name" className="whitespace-nowrap text-sm">
@@ -799,7 +799,7 @@ export default function Dish() {
           </Button>
         </div>
 
-        {/* 右侧：操作按钮 */}
+        {/* Right: action buttons */}
         <div className="flex items-center gap-2">
           <Button
             size="sm"
@@ -820,7 +820,7 @@ export default function Dish() {
         </div>
       </div>
 
-      {/* 下方表格区域 */}
+      {/* Table area below */}
       <Card className="flex-1 flex flex-col">
         <CardContent className="p-4 flex-1 flex flex-col">
           {loading ? (
@@ -833,7 +833,7 @@ export default function Dish() {
             </div>
           ) : (
             <>
-              {/* 表格 */}
+              {/* Table */}
               <div className="flex-1 overflow-auto rounded-md border">
                 <Table>
                   <TableHeader>
@@ -950,7 +950,7 @@ export default function Dish() {
                 </Table>
               </div>
 
-              {/* 分页组件 */}
+              {/* Pagination component */}
               {total > 0 && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
@@ -1077,7 +1077,7 @@ export default function Dish() {
         </CardContent>
       </Card>
 
-      {/* 启用/禁用确认对话框 */}
+      {/* Enable/disable confirm dialog */}
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -1110,7 +1110,7 @@ export default function Dish() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 删除确认对话框 */}
+      {/* Delete confirm dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -1135,7 +1135,7 @@ export default function Dish() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 批量删除确认对话框 */}
+      {/* Batch delete confirm dialog */}
       <AlertDialog
         open={batchDeleteDialogOpen}
         onOpenChange={setBatchDeleteDialogOpen}
@@ -1159,14 +1159,14 @@ export default function Dish() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 新增/修改菜品表单对话框 */}
+      {/* Add/edit dish form dialog */}
       <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isEditMode ? "Edit dish" : "New dish"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            {/* 菜品名称 */}
+            {/* Dish name */}
             <div className="grid gap-2">
               <Label htmlFor="form-name" className="text-sm">
                 <span className="text-destructive">*</span> Name:
@@ -1190,7 +1190,7 @@ export default function Dish() {
               )}
             </div>
 
-            {/* 菜品分类 */}
+            {/* Dish category */}
             <div className="grid gap-2">
               <Label htmlFor="form-category" className="text-sm">
                 <span className="text-destructive">*</span> Category:
@@ -1230,7 +1230,7 @@ export default function Dish() {
               )}
             </div>
 
-            {/* 菜品价格 */}
+            {/* Dish price */}
             <div className="grid gap-2">
               <Label htmlFor="form-price" className="text-sm">
                 <span className="text-destructive">*</span> Price:
@@ -1261,7 +1261,7 @@ export default function Dish() {
               )}
             </div>
 
-            {/* 口味做法配置 */}
+            {/* Flavor configuration */}
             <div className="grid gap-2">
               <Label className="text-sm">Flavors & options</Label>
               <Button
@@ -1276,19 +1276,19 @@ export default function Dish() {
               {extendedFlavors.length > 0 && (
                 <div className="space-y-4 mt-2">
                   {extendedFlavors.map((flavor, index) => {
-                    // 获取已选择的类型（排除当前项）
+                    // Get selected types (excluding current item)
                     const selectedTypes = extendedFlavors
                       .map((f, i) => (i !== index && f.type ? f.type : null))
                       .filter((t): t is FlavorType => t !== null);
                     
-                    // 获取可选的类型（排除已选择的）
+                    // Get available types (excluding already selected)
                     const availableTypes = Object.keys(FLAVOR_OPTIONS).filter(
                       (type) => !selectedTypes.includes(type as FlavorType)
                     ) as FlavorType[];
 
                     return (
                       <div key={index} className="border rounded-md p-4 space-y-3">
-                        {/* 口味类型选择 */}
+                        {/* Flavor type selection */}
                         <div className="flex items-center gap-2">
                           <Label className="text-sm whitespace-nowrap">
                             Type:
@@ -1345,7 +1345,7 @@ export default function Dish() {
                           </Button>
                         </div>
 
-                        {/* 口味选项 */}
+                        {/* Flavor options */}
                         {flavor.type && (
                           <div className="flex flex-wrap gap-2">
                             {FLAVOR_OPTIONS[flavor.type]
@@ -1381,7 +1381,7 @@ export default function Dish() {
               )}
             </div>
 
-            {/* 菜品图片 */}
+            {/* Dish image */}
             <div className="grid gap-2">
               <Label className="text-sm">
                 <span className="text-destructive">*</span> Image:
@@ -1436,7 +1436,7 @@ export default function Dish() {
               )}
             </div>
 
-            {/* 菜品描述 */}
+            {/* Dish description */}
             <div className="grid gap-2">
               <Label htmlFor="form-description" className="text-sm">
                 Description:

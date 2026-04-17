@@ -1,55 +1,55 @@
 import request from "./request";
 
-// 员工数据类型定义
-// 对应后端的EmployeeVO
+// Employee data type definition
+// Corresponds to backend EmployeeVO
 export interface Employee {
   id: string;
   username: string;
   name: string;
   phone: string;
-  sex: string; // "1" 或 "0"
+  sex: string; // "1" or "0"
   idNumber: string;
   status: number;
   updateTime: string;
 }
 
-// 分页查询请求参数
+// Paginated query request parameters
 export interface EmployeePageQuery {
   name?: string;
   page: number;
   pageSize: number;
 }
 
-// 分页查询响应数据
+// Paginated query response data
 export interface EmployeePageResponse {
   total: string;
   records: Employee[];
 }
 
 /**
- * 员工分页查询
- * @param params 查询参数
- * @returns 分页数据
+ * Employee paginated query
+ * @param params Query parameters
+ * @returns Paginated data
  */
 export const getEmployeeListAPI = async (
   params: EmployeePageQuery
 ): Promise<EmployeePageResponse> => {
-  // GET 请求，将参数作为 query string
+  // GET request, parameters as query string
   const queryParams = new URLSearchParams();
   if (params.name) {
     queryParams.append("name", params.name);
   }
   queryParams.append("page", params.page.toString());
   queryParams.append("pageSize", params.pageSize.toString());
-  
+
   return request.get(`/employee/page?${queryParams.toString()}`);
 };
 
 /**
- * 启用/禁用员工账号
- * @param status 状态：1-启用，0-禁用
- * @param employeeId 员工ID
- * @returns 操作结果
+ * Enable/Disable employee account
+ * @param status Status: 1-Enabled, 0-Disabled
+ * @param employeeId Employee ID
+ * @returns Operation result
  */
 export const enableOrDisableEmployeeAPI = async (
   status: number,
@@ -58,44 +58,44 @@ export const enableOrDisableEmployeeAPI = async (
   return request.post(`/employee/status/${status}?id=${employeeId}`);
 };
 
-// 员工表单数据类型
+// Employee form data type
 export interface EmployeeFormData {
   id: string;
   username: string;
   name: string;
   phone: string;
-  sex: string; // "1" 或 "0"
+  sex: string; // "1" or "0"
   idNumber: string;
 }
 
 /**
- * 根据id查询员工信息
- * @param id 员工ID
- * @returns 员工信息
+ * Query employee by ID
+ * @param id Employee ID
+ * @returns Employee information
  */
 export const getEmployeeByIdAPI = async (id: string): Promise<Employee> => {
   return request.get(`/employee/${id}`);
 };
 
 /**
- * 新增员工
- * @param data 员工表单数据
- * @returns 操作结果
+ * Add new employee
+ * @param data Employee form data
+ * @returns Operation result
  */
 export const saveEmployeeAPI = async (data: EmployeeFormData): Promise<string> => {
   return request.post("/employee", data);
 };
 
 /**
- * 编辑员工信息
- * @param data 员工表单数据
- * @returns 操作结果
+ * Update employee information
+ * @param data Employee form data
+ * @returns Operation result
  */
 export const updateEmployeeAPI = async (data: EmployeeFormData): Promise<void> => {
   return request.put("/employee", data);
 };
 
-// 修改密码请求参数
+// Password update request parameters
 export interface PasswordEditDTO {
   empId: number;
   oldPassword: string;
@@ -103,11 +103,10 @@ export interface PasswordEditDTO {
 }
 
 /**
- * 修改密码
- * @param data 密码修改数据
- * @returns 操作结果
+ * Update password
+ * @param data Password update data
+ * @returns Operation result
  */
 export const updatePasswordAPI = async (data: PasswordEditDTO): Promise<void> => {
   return request.put("/employee/editPassword", data);
 };
-

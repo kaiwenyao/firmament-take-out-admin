@@ -60,29 +60,29 @@ import {
 } from "@/api/employee";
 import { toast } from "sonner";
 
-// 提取错误信息的辅助函数
+// Helper function to extract error messages
 const getErrorMessage = (error: unknown): string => {
-  // 如果是字符串，直接返回
+  // If it's a string, return directly
   if (typeof error === "string") {
     return error;
   }
 
-  // 如果是 Error 对象，检查是否有 response
+  // If it's an Error object, check if it has response
   if (error && typeof error === "object" && "response" in error) {
     const axiosError = error as {
       response?: { data?: { msg?: string }; status?: number };
     };
-    // 后端返回的错误格式：{ code: 0, msg: "错误信息" }
+    // Backend error format: { code: 0, msg: "error message" }
     if (axiosError.response?.data?.msg) {
       return axiosError.response.data.msg;
     }
-    // HTTP 状态码错误
+    // HTTP status code error
     if (axiosError.response?.status) {
       return `Request failed (${axiosError.response.status})`;
     }
   }
 
-  // 如果是 Error 对象，返回 message
+  // If it's an Error object, return message
   if (error && typeof error === "object" && "message" in error) {
     const err = error as { message?: string };
     if (err.message) {
@@ -94,19 +94,19 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 export default function Employee() {
-  // 定义状态
+  // State definitions
   const [list, setList] = useState<Employee[]>([]);
-  const [name, setName] = useState(""); // 搜索框绑定的值
-  const [total, setTotal] = useState(0); // 总条数
-  const [loading, setLoading] = useState(false); // 加载状态
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // 确认对话框状态
-  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null); // 当前操作的员工
-  const [formDialogOpen, setFormDialogOpen] = useState(false); // 表单对话框状态
-  const [isEditMode, setIsEditMode] = useState(false); // 是否为编辑模式
+  const [name, setName] = useState(""); // Search input value
+  const [total, setTotal] = useState(0); // Total count
+  const [loading, setLoading] = useState(false); // Loading state
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // Confirm dialog state
+  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null); // Currently operated employee
+  const [formDialogOpen, setFormDialogOpen] = useState(false); // Form dialog state
+  const [isEditMode, setIsEditMode] = useState(false); // Whether it's edit mode
   const [reqData, setReqData] = useState<EmployeePageQuery>({
     page: 1,
     pageSize: 10,
-    name: undefined, // 初始没有搜索词
+    name: undefined, // Initial no search term
   });
   const [formData, setFormData] = useState<EmployeeFormData>({
     id: "",
@@ -115,19 +115,19 @@ export default function Employee() {
     phone: "",
     sex: "1",
     idNumber: "",
-  }); // 表单数据
-  const [formLoading, setFormLoading] = useState(false); // 表单提交加载状态
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({}); // 表单错误信息
+  }); // Form data
+  const [formLoading, setFormLoading] = useState(false); // Form submission loading state
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({}); // Form error messages
 
   useEffect(() => {
-    // 定义在内部，无需 useCallback
+    // Defined internally, no need for useCallback
     const fetchData = async () => {
       setLoading(true);
       try {
-        console.log("发起请求，参数:", reqData);
+        console.log("Sending request with params:", reqData);
         const res = await getEmployeeListAPI({
-          ...reqData, // 1. 先把 page, pageSize 自动解构进去
-          // 2. 手动覆盖 name 属性，保留你的"判空"逻辑
+          ...reqData, // 1. First automatically destructure page and pageSize
+          // 2. Manually override the name property, keeping the "null check" logic
           name: reqData.name || undefined,
         });
         setList(res.records);
@@ -140,25 +140,25 @@ export default function Employee() {
       }
     };
     fetchData();
-    // 🔥 核心魔法：只依赖 reqData
-    // 因为 reqData 是对象，每次 setReqData({...reqData}) 都会生成新地址
-    // React 比较：旧对象地址 !== 新对象地址 -> 触发！
+    // 🔥 Core magic: only depend on reqData
+    // Because reqData is an object, each setReqData({...reqData}) generates a new reference
+    // React compares: old object reference !== new object reference -> triggers update!
   }, [reqData]);
 
   const reloadData = () => {
-    // 复制一份自己，内容一样，但内存地址变了
+    // Create a copy with same content but different memory reference
     setReqData((prev) => ({ ...prev }));
   };
 
   const handleSearch = () => {
     setReqData((prev) => ({
-      ...prev, // 保留 pageSize 等其他参数
-      page: 1, // 搜索新词，回到第一页
-      name: name, // 把输入框的值“提交”进 reqData
+      ...prev, // Keep pageSize and other parameters
+      page: 1, // New search term, go back to first page
+      name: name, // "Submit" the input value into reqData
     }));
   };
 
-  // 分页处理
+  // Pagination handling
   const handlePageChange = (newPage: number) => {
     setReqData((prev) => ({
       ...prev,
@@ -166,22 +166,22 @@ export default function Employee() {
     }));
   };
 
-  // 每页条数变化处理
+  // Page size change handling
   const handlePageSizeChange = (newPageSize: string) => {
     setReqData((prev) => ({
       ...prev,
       pageSize: Number(newPageSize),
-      page: 1, // 重置到第一页
+      page: 1, // Reset to first page
     }));
   };
 
-  // 打开确认对话框
+  // Open confirm dialog
   const handleOpenConfirmDialog = (employee: Employee) => {
     setCurrentEmployee(employee);
     setConfirmDialogOpen(true);
   };
 
-  // 确认启用/禁用员工账号
+  // Confirm enable/disable employee account
   const handleConfirmToggleStatus = async () => {
     if (!currentEmployee) return;
 
@@ -193,10 +193,10 @@ export default function Employee() {
       setConfirmDialogOpen(false);
       setCurrentEmployee(null);
       toast.success(`Account ${action.toLowerCase()}`);
-      // 操作成功后刷新列表
+      // Refresh list after successful operation
       reloadData();
     } catch (error) {
-      console.error(`${action}员工账号失败:`, error);
+      console.error(`${action} employee account failed:`, error);
       setConfirmDialogOpen(false);
       toast.error("Failed to update account", {
         description: getErrorMessage(error) || "Please try again",
@@ -204,16 +204,16 @@ export default function Employee() {
     }
   };
 
-  // 打开添加员工表单
+  // Open add employee form
   const handleOpenAddForm = () => {
     setIsEditMode(false);
     setFormErrors({});
     setFormDialogOpen(true);
 
-    // 🤔 思考：添加表单是纯前端操作，不需要去后端拿数据
-    // 所以根本不需要设置 Loading，也不需要 setTimeout
+    // 🤔 Note: Add form is pure frontend operation, no need to fetch data from backend
+    // So there's no need to set Loading or use setTimeout
 
-    // 直接重置数据即可，这是瞬间完成的
+    // Just reset data directly, this is done instantly
     setFormData({
       id: "",
       username: "",
@@ -224,12 +224,12 @@ export default function Employee() {
     });
   };
 
-  // 打开修改员工表单
+  // Open edit employee form
   const handleOpenEditForm = async (employee: Employee) => {
     setIsEditMode(true);
     setFormErrors({});
-    setFormDialogOpen(true); // ✅ 立即弹窗
-    setFormLoading(true); // ✅ 立即显示骨架屏/转圈
+    setFormDialogOpen(true); // ✅ Show dialog immediately
+    setFormLoading(true); // ✅ Immediately show loading indicator
 
     try {
       const employeeDetail = await getEmployeeByIdAPI(employee.id);
@@ -239,26 +239,26 @@ export default function Employee() {
         username: employeeDetail.username,
         name: employeeDetail.name,
         phone: employeeDetail.phone,
-        // 🚨 再次提醒：如果后端返回数字，这里记得转字符串，否则 Radio 选不中
+        // 🚨 Reminder: If the backend returns a number, remember to convert to string, otherwise Radio won't work
         sex: String(employeeDetail.sex),
         idNumber: employeeDetail.idNumber,
       });
 
-      // ❌ 这里不用写 setFormLoading(false) 了
+      // ❌ No need to write setFormLoading(false) here
     } catch (error) {
-      console.error("获取员工详情失败:", error);
+      console.error("Failed to get employee details:", error);
       toast.error("Failed to load employee");
-      setFormDialogOpen(false); // 失败了关掉弹窗是合理的
+      setFormDialogOpen(false); // Closing dialog on failure is reasonable
 
-      // ❌ 这里也不用写 setFormLoading(false) 了
+      // ❌ No need to write setFormLoading(false) here either
     } finally {
-      // ✅ 放在这里！
-      // 只要 try 跑完了，或者 catch 跑完了，这一行一定会执行
+      // ✅ Put it here!
+      // As long as try or catch finishes executing, this line will definitely run
       setFormLoading(false);
     }
   };
 
-  // 校验单个字段
+  // Validate single field
   const validateField = (field: string, value: string): string => {
     switch (field) {
       case "username":
@@ -299,7 +299,7 @@ export default function Employee() {
     }
   };
 
-  // 处理字段失焦校验
+  // Handle field blur validation
   const handleFieldBlur = (field: string, value: string) => {
     const error = validateField(field, value);
     setFormErrors((prev) => ({
@@ -308,9 +308,9 @@ export default function Employee() {
     }));
   };
 
-  // 提交表单
+  // Submit form
   const handleSubmitForm = async () => {
-    // 校验所有字段
+    // Validate all fields
     const errors: Record<string, string> = {};
     errors.username = validateField("username", formData.username);
     errors.name = validateField("name", formData.name);
@@ -319,7 +319,7 @@ export default function Employee() {
 
     setFormErrors(errors);
 
-    // 检查是否有错误
+    // Check if there are errors
     const hasErrors = Object.values(errors).some((error) => error !== "");
     if (hasErrors) {
       toast.error("Validation failed", {
@@ -331,19 +331,19 @@ export default function Employee() {
     setFormLoading(true);
     try {
       if (isEditMode) {
-        // 修改员工
+        // Update employee
         await updateEmployeeAPI(formData);
         toast.success("Employee updated");
       } else {
-        // 添加员工
+        // Add employee
         await saveEmployeeAPI(formData);
         toast.success("Employee added");
       }
       setFormDialogOpen(false);
-      // 操作成功后刷新列表
+      // Refresh list after successful operation
       reloadData();
     } catch (error) {
-      console.error(`${isEditMode ? "修改" : "添加"}员工失败:`, error);
+      console.error(`${isEditMode ? "Update" : "Add"} employee failed:`, error);
       toast.error(`${isEditMode ? "Failed to update" : "Failed to add"} employee`, {
         description: getErrorMessage(error) || "Please try again",
       });
@@ -352,13 +352,13 @@ export default function Employee() {
     }
   };
 
-  // 计算总页数
+  // Calculate total pages
   const totalPages = Math.ceil(total / reqData.pageSize);
   return (
     <div className="h-full flex flex-col gap-3">
-      {/* 顶部操作栏 */}
+      {/* Top action bar */}
       <div className="flex items-center justify-between">
-        {/* 左侧：搜索区域 */}
+        {/* Left: Search area */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Label
@@ -390,14 +390,14 @@ export default function Employee() {
           </Button>
         </div>
 
-        {/* 右侧：添加按钮 */}
+        {/* Right: Add button */}
         <Button size="sm" className="h-8" onClick={handleOpenAddForm}>
           <Plus className="h-4 w-4" />
           Add employee
         </Button>
       </div>
 
-      {/* 下方表格区域 */}
+      {/* Bottom table area */}
       <Card className="flex-1 flex flex-col">
         <CardContent className="p-4 flex-1 flex flex-col">
           {loading ? (
@@ -410,7 +410,7 @@ export default function Employee() {
             </div>
           ) : (
             <>
-              {/* 表格 */}
+              {/* Table */}
               <div className="flex-1 overflow-auto rounded-md border">
                 <Table>
                   <TableHeader>
@@ -493,7 +493,7 @@ export default function Employee() {
                 </Table>
               </div>
 
-              {/* 分页组件 */}
+              {/* Pagination component */}
               {total > 0 && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
@@ -623,7 +623,7 @@ export default function Employee() {
         </CardContent>
       </Card>
 
-      {/* 确认对话框 */}
+      {/* Confirm dialog */}
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -656,7 +656,7 @@ export default function Employee() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 添加/修改员工表单对话框 */}
+      {/* Add/Edit employee form dialog */}
       <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -673,7 +673,7 @@ export default function Employee() {
                 value={formData.username}
                 onChange={(e) => {
                   setFormData({ ...formData, username: e.target.value });
-                  // 清除该字段的错误信息
+                  // Clear error message for this field
                   if (formErrors.username) {
                     setFormErrors((prev) => ({ ...prev, username: "" }));
                   }

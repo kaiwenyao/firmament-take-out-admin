@@ -66,26 +66,26 @@ import {
 import { toast } from "sonner";
 import { DateTimePicker } from "@/components/DateTimePicker";
 
-// 订单状态类型
-// 根据 DTO: 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消 7退款
+// Order status type
+// According to DTO: 1 pending payment 2 pending acceptance 3 accepted 4 out for delivery 5 completed 6 cancelled 7 refunded
 type OrderStatus = "all" | 2 | 3 | 4 | 5 | 6;
 
-// 订单状态配置
-// 根据后端 DTO 定义：1待付款 2待接单 3已接单 4派送中 5已完成 6已取消 7退款
+// Order status config
+// According to backend DTO: 1 pending payment 2 pending acceptance 3 accepted 4 out for delivery 5 completed 6 cancelled 7 refunded
 const ORDER_STATUS_CONFIG: Record<
   OrderStatus,
   { label: string; status?: number; badge?: string }
 > = {
   all: { label: "All orders", status: undefined },
-  2: { label: "Pending acceptance", status: 2 }, // 待接单
-  3: { label: "Pending delivery", status: 3 }, // 已接单（待派送）
-  4: { label: "Out for delivery", status: 4 }, // 派送中
-  5: { label: "Completed", status: 5 }, // 已完成
-  6: { label: "Cancelled", status: 6 }, // 已取消
+  2: { label: "Pending acceptance", status: 2 }, // Pending acceptance
+  3: { label: "Pending delivery", status: 3 }, // Accepted (pending dispatch)
+  4: { label: "Out for delivery", status: 4 }, // Out for delivery
+  5: { label: "Completed", status: 5 }, // Completed
+  6: { label: "Cancelled", status: 6 }, // Cancelled
 };
 
-// 获取订单状态显示文本
-// 根据 DTO: 1待付款 2待接单 3已接单 4派送中 5已完成 6已取消 7退款
+// Get order status display text
+// According to DTO: 1 pending payment 2 pending acceptance 3 accepted 4 out for delivery 5 completed 6 cancelled 7 refunded
 const getOrderStatusText = (status: number): string => {
   switch (status) {
     case 1:
@@ -107,29 +107,29 @@ const getOrderStatusText = (status: number): string => {
   }
 };
 
-// 获取订单状态颜色
+// Get order status color
 const getOrderStatusColor = (status: number): string => {
   switch (status) {
     case 1:
-      return "bg-yellow-100 text-yellow-800"; // 待付款
+      return "bg-yellow-100 text-yellow-800"; // Pending payment
     case 2:
-      return "bg-orange-100 text-orange-800"; // 待接单
+      return "bg-orange-100 text-orange-800"; // Pending acceptance
     case 3:
-      return "bg-blue-100 text-blue-800"; // 已接单（待派送）
+      return "bg-blue-100 text-blue-800"; // Accepted (pending dispatch)
     case 4:
-      return "bg-purple-100 text-purple-800"; // 派送中
+      return "bg-purple-100 text-purple-800"; // Out for delivery
     case 5:
-      return "bg-green-100 text-green-800"; // 已完成
+      return "bg-green-100 text-green-800"; // Completed
     case 6:
-      return "bg-gray-100 text-gray-800"; // 已取消
+      return "bg-gray-100 text-gray-800"; // Cancelled
     case 7:
-      return "bg-red-100 text-red-800"; // 退款
+      return "bg-red-100 text-red-800"; // Refunded
     default:
       return "bg-gray-100 text-gray-800";
   }
 };
 
-// 获取支付方式文本
+// Get payment method text
 const getPayMethodText = (payMethod?: number): string => {
   switch (payMethod) {
     case 1:
@@ -142,15 +142,15 @@ const getPayMethodText = (payMethod?: number): string => {
 };
 
 export default function Order() {
-  // 定义状态
+  // State definitions
   const [list, setList] = useState<Order[]>([]);
-  const [activeStatus, setActiveStatus] = useState<OrderStatus>("all"); // 当前选中的订单状态
-  const [orderNumber, setOrderNumber] = useState(""); // 订单号
-  const [phone, setPhone] = useState(""); // 手机号
-  const [beginTime, setBeginTime] = useState(""); // 开始时间
-  const [endTime, setEndTime] = useState(""); // 结束时间
-  const [total, setTotal] = useState(0); // 总条数
-  const [loading, setLoading] = useState(false); // 加载状态
+  const [activeStatus, setActiveStatus] = useState<OrderStatus>("all"); // Current selected order status
+  const [orderNumber, setOrderNumber] = useState(""); // Order number
+  const [phone, setPhone] = useState(""); // Phone number
+  const [beginTime, setBeginTime] = useState(""); // Start time
+  const [endTime, setEndTime] = useState(""); // End time
+  const [total, setTotal] = useState(0); // Total count
+  const [loading, setLoading] = useState(false); // Loading state
   const [reqData, setReqData] = useState<OrderPageQuery>({
     page: 1,
     pageSize: 10,
@@ -160,23 +160,23 @@ export default function Order() {
     beginTime: undefined,
     endTime: undefined,
   });
-  const [statistics, setStatistics] = useState<OrderStatistics | null>(null); // 订单统计
-  const [currentOrder, setCurrentOrder] = useState<Order | null>(null); // 当前操作的订单
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // 接单确认对话框
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false); // 拒单对话框
-  const [cancelDialogOpen, setCancelDialogOpen] = useState(false); // 取消订单对话框
-  const [rejectionReason, setRejectionReason] = useState(""); // 拒单原因
-  const [cancelReason, setCancelReason] = useState(""); // 取消原因
-  const [selectedCancelReason, setSelectedCancelReason] = useState<string>(""); // 选中的取消原因类型
-  const [customCancelReason, setCustomCancelReason] = useState(""); // 自定义取消原因
-  const [actionLoading, setActionLoading] = useState(false); // 操作加载状态
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false); // 订单详情对话框
-  const [orderDetail, setOrderDetail] = useState<Order | null>(null); // 订单详情数据
-  const [detailLoading, setDetailLoading] = useState(false); // 详情加载状态
+  const [statistics, setStatistics] = useState<OrderStatistics | null>(null); // Order statistics
+  const [currentOrder, setCurrentOrder] = useState<Order | null>(null); // Current operated order
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // Accept order confirm dialog
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false); // Reject order dialog
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false); // Cancel order dialog
+  const [rejectionReason, setRejectionReason] = useState(""); // Rejection reason
+  const [cancelReason, setCancelReason] = useState(""); // Cancel reason
+  const [selectedCancelReason, setSelectedCancelReason] = useState<string>(""); // Selected cancel reason type
+  const [customCancelReason, setCustomCancelReason] = useState(""); // Custom cancel reason
+  const [actionLoading, setActionLoading] = useState(false); // Action loading state
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false); // Order detail dialog
+  const [orderDetail, setOrderDetail] = useState<Order | null>(null); // Order detail data
+  const [detailLoading, setDetailLoading] = useState(false); // Detail loading state
 
   const CUSTOM_CANCEL_REASON = "Custom reason";
 
-  // 取消原因选项列表
+  // Cancel reason options list
   const CANCEL_REASON_OPTIONS = [
     "High order volume — cannot accept orders right now",
     "Items sold out — cannot accept orders right now",
@@ -185,14 +185,14 @@ export default function Order() {
     CUSTOM_CANCEL_REASON,
   ];
 
-  // 获取订单统计
+  // Get order statistics
   useEffect(() => {
     const fetchStatistics = async () => {
       try {
         const stats = await getOrderStatisticsAPI();
         setStatistics(stats);
       } catch (error) {
-        console.error("获取订单统计失败:", error);
+        console.error("Failed to get order statistics:", error);
         toast.error("Failed to load order statistics. Please try again.");
       }
     };
@@ -200,11 +200,11 @@ export default function Order() {
   }, []);
 
   useEffect(() => {
-    // 定义在内部，无需 useCallback
+    // Defined internally, no need for useCallback
     const fetchData = async () => {
       setLoading(true);
       try {
-        console.log("发起请求，参数:", reqData);
+        console.log("Sending request with params:", reqData);
         const res = await getOrderListAPI({
           ...reqData,
           number: reqData.number || undefined,
@@ -223,20 +223,20 @@ export default function Order() {
       }
     };
     fetchData();
-    // 🔥 核心魔法：只依赖 reqData
+    // 🔥 Core magic: only depend on reqData
   }, [reqData]);
 
   const reloadData = () => {
-    // 复制一份自己，内容一样，但内存地址变了
+    // Create a copy with same content but different memory reference
     setReqData((prev) => ({ ...prev }));
   };
 
-  // 搜索功能
+  // Search function
   const handleSearch = () => {
     const statusConfig = ORDER_STATUS_CONFIG[activeStatus];
     setReqData((prev) => ({
       ...prev,
-      page: 1, // 搜索新词，回到第一页
+      page: 1, // New search term, go back to first page
       number: orderNumber || undefined,
       phone: phone || undefined,
       status: statusConfig.status,
@@ -245,7 +245,7 @@ export default function Order() {
     }));
   };
 
-  // 重置搜索
+  // Reset search
   const handleReset = () => {
     setOrderNumber("");
     setPhone("");
@@ -263,7 +263,7 @@ export default function Order() {
     });
   };
 
-  // 分页处理
+  // Pagination handling
   const handlePageChange = (newPage: number) => {
     setReqData((prev) => ({
       ...prev,
@@ -271,93 +271,93 @@ export default function Order() {
     }));
   };
 
-  // 每页条数变化处理
+  // Page size change handling
   const handlePageSizeChange = (newPageSize: string) => {
     setReqData((prev) => ({
       ...prev,
       pageSize: Number(newPageSize),
-      page: 1, // 重置到第一页
+      page: 1, // Reset to first page
     }));
   };
 
-  // 切换订单状态
+  // Switch order status
   const handleStatusChange = (status: OrderStatus) => {
     setActiveStatus(status);
     const statusConfig = ORDER_STATUS_CONFIG[status];
     setReqData((prev) => ({
       ...prev,
-      page: 1, // 切换状态时重置到第一页
+      page: 1, // Reset to first page when switching status
       status: statusConfig.status,
     }));
   };
 
-  // 将 OrderStatus 转换为字符串（用于 Tabs value）
+  // Convert OrderStatus to string (for Tabs value)
   const statusToString = (status: OrderStatus): string => {
     return status === "all" ? "all" : status.toString();
   };
 
-  // 将字符串转换为 OrderStatus（用于 Tabs onChange）
+  // Convert string to OrderStatus (for Tabs onChange)
   const stringToStatus = (value: string): OrderStatus => {
     if (value === "all") return "all";
     const num = parseInt(value, 10);
     return num as OrderStatus;
   };
 
-  // 获取状态对应的订单数量
-  // 根据 OrderStatisticsVO: toBeConfirmed(待接单-状态2), confirmed(待派送-状态3), deliveryInProgress(派送中-状态4)
+  // Get order count for status
+  // According to OrderStatisticsVO: toBeConfirmed(pending acceptance-status 2), confirmed(pending dispatch-status 3), deliveryInProgress(delivering-status 4)
   const getStatusCount = (status: OrderStatus): number => {
     if (!statistics) return 0;
     switch (status) {
       case 2:
-        return statistics.toBeConfirmed || 0; // 待接单
+        return statistics.toBeConfirmed || 0; // Pending acceptance
       case 3:
-        return statistics.confirmed || 0; // 已接单（待派送）
+        return statistics.confirmed || 0; // Accepted (pending dispatch)
       case 4:
-        return statistics.deliveryInProgress || 0; // 派送中
+        return statistics.deliveryInProgress || 0; // Out for delivery
       default:
         return 0;
     }
   };
 
-  // 打开接单确认对话框
+  // Open accept order confirm dialog
   const handleOpenConfirmDialog = (order: Order) => {
     setCurrentOrder(order);
     setConfirmDialogOpen(true);
   };
 
-  // 确认接单
-  // 根据 DTO: 从状态2(待接单)变为状态3(已接单)
+  // Confirm accept order
+  // According to DTO: from status 2 (pending acceptance) to status 3 (accepted)
   const handleConfirmOrder = async () => {
     if (!currentOrder) return;
     setActionLoading(true);
     try {
       await confirmOrderAPI({
         id: currentOrder.id,
-        status: 3, // 接单后状态变为3(已接单/待派送)
+        status: 3, // After acceptance status becomes 3 (accepted/pending dispatch)
       });
       toast.success("Order accepted");
       setConfirmDialogOpen(false);
       setCurrentOrder(null);
       reloadData();
-      // 刷新统计
+      // Refresh statistics
       const stats = await getOrderStatisticsAPI();
       setStatistics(stats);
     } catch (error) {
-      console.error("接单失败:", error);
+      console.error("Accept order failed:", error);
       toast.error("Failed to accept order. Please try again.");
     } finally {
       setActionLoading(false);
     }
   };
 
-  // 打开拒单对话框
+  // Open reject order dialog
   const handleOpenRejectDialog = (order: Order) => {
     setCurrentOrder(order);
     setRejectionReason("");
     setRejectDialogOpen(true);
   };
 
-  // 确认拒单
+  // Confirm reject order
   const handleRejectOrder = async () => {
     if (!currentOrder || !rejectionReason.trim()) {
       toast.error("Please enter a rejection reason");
@@ -374,18 +374,18 @@ export default function Order() {
       setCurrentOrder(null);
       setRejectionReason("");
       reloadData();
-      // 刷新统计
+      // Refresh statistics
       const stats = await getOrderStatisticsAPI();
       setStatistics(stats);
     } catch (error) {
-      console.error("拒单失败:", error);
+      console.error("Reject order failed:", error);
       toast.error("Failed to reject order. Please try again.");
     } finally {
       setActionLoading(false);
     }
   };
 
-  // 打开取消订单对话框
+  // Open cancel order dialog
   const handleOpenCancelDialog = (order: Order) => {
     setCurrentOrder(order);
     setCancelReason("");
@@ -394,7 +394,7 @@ export default function Order() {
     setCancelDialogOpen(true);
   };
 
-  // 处理取消原因选择
+  // Handle cancel reason selection
   const handleCancelReasonSelect = (reason: string) => {
     setSelectedCancelReason(reason);
     if (reason !== CUSTOM_CANCEL_REASON) {
@@ -405,20 +405,20 @@ export default function Order() {
     }
   };
 
-  // 处理自定义原因输入
+  // Handle custom reason input
   const handleCustomCancelReasonChange = (value: string) => {
     setCustomCancelReason(value);
     setCancelReason(value);
   };
 
-  // 确认取消订单
+  // Confirm cancel order
   const handleCancelOrder = async () => {
     if (!currentOrder) {
       toast.error("Invalid order");
       return;
     }
     
-    // 验证取消原因
+    // Validate cancel reason
     if (!selectedCancelReason) {
       toast.error("Please select a cancellation reason");
       return;
@@ -447,54 +447,54 @@ export default function Order() {
       setSelectedCancelReason("");
       setCustomCancelReason("");
       reloadData();
-      // 刷新统计
+      // Refresh statistics
       const stats = await getOrderStatisticsAPI();
       setStatistics(stats);
     } catch (error) {
-      console.error("取消订单失败:", error);
+      console.error("Cancel order failed:", error);
       toast.error("Failed to cancel order. Please try again.");
     } finally {
       setActionLoading(false);
     }
   };
 
-  // 派送订单
+  // Dispatch order
   const handleDeliveryOrder = async (order: Order) => {
     setActionLoading(true);
     try {
       await deliveryOrderAPI(order.id);
       toast.success("Order marked as out for delivery");
       reloadData();
-      // 刷新统计
+      // Refresh statistics
       const stats = await getOrderStatisticsAPI();
       setStatistics(stats);
     } catch (error) {
-      console.error("派送订单失败:", error);
+      console.error("Dispatch order failed:", error);
       toast.error("Failed to update delivery status. Please try again.");
     } finally {
       setActionLoading(false);
     }
   };
 
-  // 完成订单
+  // Complete order
   const handleCompleteOrder = async (order: Order) => {
     setActionLoading(true);
     try {
       await completeOrderAPI(order.id);
       toast.success("Order completed");
       reloadData();
-      // 刷新统计
+      // Refresh statistics
       const stats = await getOrderStatisticsAPI();
       setStatistics(stats);
     } catch (error) {
-      console.error("完成订单失败:", error);
+      console.error("Complete order failed:", error);
       toast.error("Failed to complete order. Please try again.");
     } finally {
       setActionLoading(false);
     }
   };
 
-  // 打开订单详情对话框
+  // Open order detail dialog
   const handleOpenDetailDialog = async (order: Order) => {
     setDetailDialogOpen(true);
     setDetailLoading(true);
@@ -503,7 +503,7 @@ export default function Order() {
       const detail = await getOrderDetailsAPI(order.id);
       setOrderDetail(detail);
     } catch (error) {
-      console.error("获取订单详情失败:", error);
+      console.error("Failed to get order details:", error);
       toast.error("Failed to load order details. Please try again.");
       setDetailDialogOpen(false);
     } finally {
@@ -512,16 +512,16 @@ export default function Order() {
   };
 
 
-  // 计算总页数
+  // Calculate total pages
   const totalPages = Math.ceil(total / reqData.pageSize);
 
-  // 定义 tabs 的显示顺序（按照图片顺序）
-  // 根据后端状态定义：全部订单、待接单(2)、待派送(3)、派送中(4)、已完成(5)、已取消(6)
+  // Define tabs display order (according to image order)
+  // According to backend status: all orders, pending acceptance(2), pending dispatch(3), out for delivery(4), completed(5), cancelled(6)
   const ORDER_STATUS_ORDER: OrderStatus[] = ["all", 2, 3, 4, 5, 6];
 
   return (
     <div className="h-full flex flex-col gap-4">
-      {/* 顶部 Filter Tabs */}
+      {/* Top Filter Tabs */}
       <Tabs
         value={statusToString(activeStatus)}
         onValueChange={(value) => handleStatusChange(stringToStatus(value))}
@@ -532,7 +532,7 @@ export default function Order() {
             {ORDER_STATUS_ORDER.map((status) => {
               const config = ORDER_STATUS_CONFIG[status];
               const count = getStatusCount(status);
-              // 只有待接单(2)、待派送(3)、派送中(4)显示 badge，无论是否选中都显示
+              // Only show badge for pending acceptance(2), pending dispatch(3), out for delivery(4), show regardless of selection
               const showBadge = (status === 2 || status === 3 || status === 4) && count > 0;
               
               return (
@@ -548,7 +548,7 @@ export default function Order() {
                   `}
                 >
                   {config.label}
-                  {/* 显示红色小圆点 badge（仅待接单(2)、待派送(3)、派送中(4)） */}
+                  {/* Show red dot badge (only for pending acceptance(2), pending dispatch(3), out for delivery(4)) */}
                   {showBadge && (
                     <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white px-1">
                       {count > 99 ? "99+" : count}
@@ -561,7 +561,7 @@ export default function Order() {
         </div>
       </Tabs>
 
-      {/* 搜索区域 */}
+      {/* Search area */}
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-4 flex-wrap">
@@ -641,7 +641,7 @@ export default function Order() {
         </CardContent>
       </Card>
 
-      {/* 表格区域 */}
+      {/* Table area */}
       <Card className="flex-1 flex flex-col">
         <CardContent className="p-4 flex-1 flex flex-col">
           {loading ? (
@@ -654,7 +654,7 @@ export default function Order() {
             </div>
           ) : (
             <>
-              {/* 表格 */}
+              {/* Table */}
               <div className="flex-1 overflow-auto rounded-md border">
                 <Table>
                   <TableHeader>
@@ -721,15 +721,15 @@ export default function Order() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              {/* 查看详情按钮 - 所有状态都显示 */}
+                              {/* View details button - shown for all statuses */}
                               <button
                                 onClick={() => handleOpenDetailDialog(item)}
                                 className="text-primary hover:text-primary/80 hover:underline text-sm font-medium cursor-pointer transition-colors"
                               >
                                 View details
                               </button>
-                              {/* 根据订单状态显示不同的操作按钮 */}
-                              {/* 状态2: 待接单 - 可以接单或拒单 */}
+                              {/* Show different action buttons based on order status */}
+                              {/* Status 2: Pending acceptance - can accept or reject */}
                               {item.status === 2 && (
                                 <>
                                   <Separator orientation="vertical" className="h-4" />
@@ -750,7 +750,7 @@ export default function Order() {
                                   </button>
                                 </>
                               )}
-                              {/* 状态3: 已接单(待派送) - 可以派送或取消 */}
+                              {/* Status 3: Accepted (pending dispatch) - can dispatch or cancel */}
                               {item.status === 3 && (
                                 <>
                                   <Separator orientation="vertical" className="h-4" />
@@ -771,7 +771,7 @@ export default function Order() {
                                   </button>
                                 </>
                               )}
-                              {/* 状态4: 派送中 - 可以完成 */}
+                              {/* Status 4: Out for delivery - can complete */}
                               {item.status === 4 && (
                                 <>
                                   <Separator orientation="vertical" className="h-4" />
@@ -793,7 +793,7 @@ export default function Order() {
                 </Table>
               </div>
 
-              {/* 分页组件 */}
+              {/* Pagination component */}
               {total > 0 && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="flex items-center gap-4 flex-shrink-0 min-w-fit">
@@ -920,7 +920,7 @@ export default function Order() {
         </CardContent>
       </Card>
 
-      {/* 接单确认对话框 */}
+      {/* Accept order confirm dialog */}
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -946,7 +946,7 @@ export default function Order() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* 拒单对话框 */}
+      {/* Reject order dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -984,7 +984,7 @@ export default function Order() {
         </DialogContent>
       </Dialog>
 
-      {/* 取消订单对话框 */}
+      {/* Cancel order dialog */}
       <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -1025,7 +1025,7 @@ export default function Order() {
               </DropdownMenu>
             </div>
             
-            {/* 自定义原因输入框 */}
+            {/* Custom reason input */}
             {selectedCancelReason === CUSTOM_CANCEL_REASON && (
               <div>
                 <Label htmlFor="custom-cancel-reason" className="text-sm">
@@ -1070,7 +1070,7 @@ export default function Order() {
         </DialogContent>
       </Dialog>
 
-      {/* 订单详情对话框 */}
+      {/* Order detail dialog */}
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -1084,7 +1084,7 @@ export default function Order() {
             </div>
           ) : orderDetail ? (
             <div className="space-y-6 py-4">
-              {/* 用户信息 */}
+              {/* User info */}
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold border-b pb-2">Customer</h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -1109,7 +1109,7 @@ export default function Order() {
 
               <Separator />
 
-              {/* 订单信息 */}
+              {/* Order info */}
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold border-b pb-2">Order</h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -1154,7 +1154,7 @@ export default function Order() {
 
               <Separator />
 
-              {/* 菜品信息 */}
+              {/* Dish info */}
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold border-b pb-2">Line items</h3>
                 {orderDetail.orderDetailList && orderDetail.orderDetailList.length > 0 ? (

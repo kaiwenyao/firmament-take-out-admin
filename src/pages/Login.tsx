@@ -11,7 +11,7 @@ import logoImage from "@/assets/imgs/logo.png";
 export default function Login() {
   const navigate = useNavigate();
   
-  // 如果已登录，自动跳转到首页
+  // If already logged in, auto redirect to home
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -41,17 +41,17 @@ export default function Login() {
     try {
       const response = await employeeLoginAPI(formData);
       
-      // 保存 token 到 localStorage
+      // Save token to localStorage
       if (response.token) {
         localStorage.setItem("token", response.token);
-        localStorage.setItem("refreshToken", response.refreshToken);  // ⭐ 保存 Refresh Token
-        // 可以保存其他用户信息
+        localStorage.setItem("refreshToken", response.refreshToken);  // ⭐ Save Refresh Token
+        // Can save other user info
         localStorage.setItem("userName", response.userName);
         localStorage.setItem("name", response.name);
         localStorage.setItem("userId", response.id.toString());
 
         toast.success("Signed in successfully");
-        // 跳转到首页
+        // Navigate to home page
         navigate("/dashboard", { replace: true });
       } else {
         toast.error("Sign-in failed: no token received");
@@ -72,7 +72,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gray-800 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-5xl flex">
-        {/* 左侧图片 */}
+        {/* Left side image */}
         <div className="hidden md:block w-1/2 relative">
           <img
             src={loginImage}
@@ -81,7 +81,7 @@ export default function Login() {
           />
         </div>
 
-        {/* 右侧登录表单 */}
+        {/* Right side login form */}
         <div className="w-full md:w-1/2 flex flex-col justify-center p-12">
           <div className="mb-8 text-center">
             {/* Logo */}
@@ -95,9 +95,9 @@ export default function Login() {
             <p className="text-sm text-gray-500">Firmament Take-Out</p>
           </div>
 
-          {/* 登录表单 */}
+          {/* Login form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* 用户名输入框 */}
+            {/* Username input */}
             <div className="space-y-2">
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -114,7 +114,7 @@ export default function Login() {
               </div>
             </div>
 
-            {/* 密码输入框 */}
+            {/* Password input */}
             <div className="space-y-2">
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -131,7 +131,7 @@ export default function Login() {
               </div>
             </div>
 
-            {/* 登录按钮 */}
+            {/* Sign in button */}
             <Button
               type="submit"
               disabled={loading}

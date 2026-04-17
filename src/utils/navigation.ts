@@ -1,19 +1,19 @@
 import type { NavigateFunction } from "react-router-dom";
 
-// 存储 navigate 函数的变量
+// Variable to store navigate function
 let navigateInstance: NavigateFunction | null = null;
 
 /**
- * 设置 navigate 函数实例
- * 应该在应用启动时从组件中调用
+ * Set navigate function instance
+ * Should be called from component at app startup
  */
 export const setNavigate = (navigate: NavigateFunction) => {
   navigateInstance = navigate;
 };
 
 /**
- * 获取 navigate 函数实例
- * 可以在非组件环境中使用
+ * Get navigate function instance
+ * Can be used in non-component contexts
  */
 export const getNavigate = (): NavigateFunction | null => {
   return navigateInstance;
