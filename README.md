@@ -1,5 +1,11 @@
 # 🍜 Firmament Takeaway — Admin Console
 
+[![React](https://img.shields.io/badge/React-19.2.0-61DAFB?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-7.2.4-646CFF?logo=vite)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.1.18-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 **[中文](./README.zh.md)** — Switch to Chinese
 
 A modern, responsive web admin dashboard for the **Firmament Takeaway** (苍穹外卖) platform. Built with React 19, TypeScript, and Tailwind CSS, it provides a complete back-office solution for managing orders, dishes, set meals, categories, employees, and real-time order notifications.
