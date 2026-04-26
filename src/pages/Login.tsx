@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { User, Lock } from "lucide-react";
+import { User, Lock, Github } from "lucide-react";
 import { employeeLoginAPI, type EmployeeLoginDTO } from "@/api/auth";
 import { toast } from "sonner";
 import loginImage from "@/assets/imgs/login.png";
@@ -140,6 +140,18 @@ export default function Login() {
               {loading ? "Signing in…" : "Sign in"}
             </Button>
           </form>
+
+          <div className="mt-6 flex justify-center">
+            <a
+              href="https://github.com/kaiwenyao/firmament-take-out-admin"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors text-sm"
+            >
+              <Github className="h-4 w-4" />
+              <span>View on GitHub</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>

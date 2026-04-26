@@ -8,6 +8,7 @@ import {
   UtensilsCrossed,
   FolderTree,
   Users,
+  Github,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -31,7 +32,7 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
         isCollapsed ? "w-20" : "w-64"
       }`}
     >
-      <nav className="flex flex-col gap-1 p-4 mt-2">
+      <nav className="flex flex-col gap-1 p-4 mt-2 flex-1">
         {menuItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -59,6 +60,28 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
             </NavLink>
           );
         })}
+
+        <div className="flex-1" />
+
+        <a
+          href="https://github.com/kaiwenyao/firmament-take-out-admin"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-gray-300 hover:text-white"
+        >
+          <Button
+            variant="ghost"
+            className={`w-full ${
+              isCollapsed ? "justify-center px-0" : "justify-start"
+            }`}
+            title={isCollapsed ? "GitHub" : undefined}
+          >
+            <Github
+              className={`${isCollapsed ? "h-5 w-5" : "h-4 w-4 mr-2"}`}
+            />
+            {!isCollapsed && <span>GitHub</span>}
+          </Button>
+        </a>
       </nav>
     </aside>
   );
