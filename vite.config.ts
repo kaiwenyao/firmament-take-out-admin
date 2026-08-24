@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import path from "path"
 import tailwindcss from "@tailwindcss/vite"
@@ -11,7 +12,47 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // --- 新增 server 配置 ---
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: ["./src/test/setup.ts"],
+    css: false,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      reportsDirectory: "./coverage",
+      // Coverage is scoped to the units covered by the unit-test suite:
+      // API layer, hooks, utilities, presentational components and the
+      // simpler pages. See the PR description for the rationale.
+      include: [
+        "src/api/*.ts",
+        "src/hooks/useWebSocket.ts",
+        "src/lib/utils.ts",
+        "src/utils/navigation.ts",
+        "src/utils/upload.ts",
+        "src/App.tsx",
+        "src/components/DateRangePicker.tsx",
+        "src/components/DateTimePicker.tsx",
+        "src/components/Header.tsx",
+        "src/components/ProtectedLayout.tsx",
+        "src/components/Sidebar.tsx",
+        "src/pages/Login.tsx",
+        "src/pages/NotFound.tsx",
+      ],
+      exclude: [
+        "src/test/**",
+        "**/*.d.ts",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+      ],
+      thresholds: {
+        statements: 90,
+        branches: 80,
+        functions: 90,
+        lines: 90,
+      },
+    },
+  },
   server: {
     proxy: {
       // WebSocket 路径：/api/ws/* -> /ws/* (与生产环境 nginx 配置一致)
