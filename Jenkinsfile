@@ -75,6 +75,9 @@ spec:
                     echo '正在运行代码检查...'
                     sh 'npm ci'
                     sh 'npm run lint'
+                    // 运行单元测试并强制覆盖率阈值（不达标则构建失败）
+                    echo '正在运行单元测试并检查覆盖率...'
+                    sh 'npm run test:coverage'
                 }
             }
         }
