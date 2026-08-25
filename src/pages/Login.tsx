@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { User, Lock, Github } from "lucide-react";
+import { User, Lock, Github, Eye, EyeOff } from "lucide-react";
 import { employeeLoginAPI, type EmployeeLoginDTO } from "@/api/auth";
 import { toast } from "sonner";
 import loginImage from "@/assets/imgs/login.png";
@@ -23,6 +23,7 @@ export default function Login() {
     password: "123456",
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,15 +120,28 @@ export default function Login() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   value={formData.password}
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  className="pl-10 h-12 text-base"
+                  className="pl-10 pr-10 h-12 text-base"
                   disabled={loading}
                 />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  disabled={loading}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
             </div>
 

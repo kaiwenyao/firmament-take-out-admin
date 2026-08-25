@@ -54,6 +54,21 @@ describe("Login page", () => {
     expect(screen.getByText("View on GitHub")).toBeInTheDocument();
   });
 
+  it("toggles password visibility", async () => {
+    const user = userEvent.setup();
+    render(<Login />);
+    const pass = screen.getByPlaceholderText("Password");
+    expect(pass).toHaveAttribute("type", "password");
+
+    const toggle = screen.getByRole("button", { name: /show password/i });
+    await user.click(toggle);
+    expect(pass).toHaveAttribute("type", "text");
+    expect(screen.getByRole("button", { name: /hide password/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /hide password/i }));
+    expect(pass).toHaveAttribute("type", "password");
+  });
+
   it("redirects to /dashboard when a token already exists", async () => {
     localStorage.setItem("token", "existing");
     render(<Login />);
