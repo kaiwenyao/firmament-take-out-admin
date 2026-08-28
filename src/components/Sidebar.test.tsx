@@ -26,9 +26,10 @@ describe("Sidebar", () => {
   });
 
   it("renders the user app link pointing at the configured URL", () => {
+    vi.stubEnv("VITE_USER_CLIENT_URL", "https://user.example.com");
     render(<Sidebar isCollapsed={false} />);
     const link = screen.getByText("User App").closest("a")!;
-    expect(link).toHaveAttribute("href", "http://localhost:5173");
+    expect(link).toHaveAttribute("href", "https://user.example.com");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
   });
