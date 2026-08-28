@@ -100,17 +100,18 @@ spec:
                 container('docker') {
                     script {
                         // 用户端 URL 存放在 secret file 凭证 'firmament-take-out-admin'
-                        // 中（文件内容就是完整 URL，例如 http://<user-app-host>），
-                        // 构建镜像时通过 --build-arg 注入。文件为空时应用内会回退
-                        // 到 http://localhost:5173。
+                        // 中，文件是 env 格式的键值对（VITE_USER_CLIENT_URL=<URL>）。
+                        // 按 key 解析出 value 传给 --build-arg；key 不存在时为空，
+                        // 应用内会回退到 http://localhost:5173。
                         withCredentials([
                             usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS'),
                             file(credentialsId: 'firmament-take-out-admin', variable: 'USER_CLIENT_URL_FILE')
                         ]) {
                             sh '''
                                 echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                                VITE_USER_CLIENT_URL="$(sed -n 's/^VITE_USER_CLIENT_URL=//p' "${USER_CLIENT_URL_FILE}" | tail -n 1 | tr -d '\\r"')"
                                 docker build \
-                                    --build-arg VITE_USER_CLIENT_URL="$(cat "${USER_CLIENT_URL_FILE}")" \
+                                    --build-arg VITE_USER_CLIENT_URL="${VITE_USER_CLIENT_URL}" \
                                     -t ${DOCKER_USER}/firmament-admin:latest -f Dockerfile .
                                 docker push ${DOCKER_USER}/firmament-admin:latest
                             '''
