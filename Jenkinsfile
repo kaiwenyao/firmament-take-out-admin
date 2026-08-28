@@ -99,10 +99,19 @@ spec:
             steps {
                 container('docker') {
                     script {
-                        withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        // 用户端 URL 存放在 secret file 凭证 'firmament-take-out-admin'
+                        // 中（文件内容就是完整 URL，例如 http://<user-app-host>），
+                        // 构建镜像时通过 --build-arg 注入。文件为空时应用内会回退
+                        // 到 http://localhost:5173。
+                        withCredentials([
+                            usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS'),
+                            file(credentialsId: 'firmament-take-out-admin', variable: 'USER_CLIENT_URL_FILE')
+                        ]) {
                             sh '''
                                 echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                                docker build -t ${DOCKER_USER}/firmament-admin:latest -f Dockerfile .
+                                docker build \
+                                    --build-arg VITE_USER_CLIENT_URL="$(cat "${USER_CLIENT_URL_FILE}")" \
+                                    -t ${DOCKER_USER}/firmament-admin:latest -f Dockerfile .
                                 docker push ${DOCKER_USER}/firmament-admin:latest
                             '''
                         }
