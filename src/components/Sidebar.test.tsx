@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import Sidebar from "./Sidebar";
 
 // NavLink renders its children through a render-prop. We mock it to simply
@@ -23,6 +23,26 @@ describe("Sidebar", () => {
   it("renders the GitHub link", () => {
     render(<Sidebar isCollapsed={false} />);
     expect(screen.getByText("GitHub")).toBeInTheDocument();
+  });
+
+  it("renders the user app link pointing at the configured URL", () => {
+    render(<Sidebar isCollapsed={false} />);
+    const link = screen.getByText("User App").closest("a")!;
+    expect(link).toHaveAttribute("href", "http://localhost:5173");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it("falls back to the default URL when VITE_USER_CLIENT_URL is empty", () => {
+    vi.stubEnv("VITE_USER_CLIENT_URL", "");
+    render(<Sidebar isCollapsed={false} />);
+    const link = screen.getByText("User App").closest("a")!;
+    expect(link).toHaveAttribute("href", "http://localhost:5173");
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllEnvs();
   });
 
   it("uses the expanded width class when not collapsed", () => {

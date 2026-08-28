@@ -9,6 +9,7 @@ import {
   FolderTree,
   Users,
   Github,
+  Store,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -16,6 +17,11 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isCollapsed }: SidebarProps) {
+  // Address of the customer-facing app. Override with VITE_USER_CLIENT_URL
+  // when the user frontend is deployed on another host or port.
+  const userAppUrl =
+    import.meta.env.VITE_USER_CLIENT_URL || "http://localhost:5173";
+
   const menuItems = [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/statistics", label: "Statistics", icon: BarChart3 },
@@ -62,6 +68,26 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
         })}
 
         <div className="flex-1" />
+
+        <a
+          href={userAppUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-gray-300 hover:text-white"
+        >
+          <Button
+            variant="ghost"
+            className={`w-full ${
+              isCollapsed ? "justify-center px-0" : "justify-start"
+            }`}
+            title={isCollapsed ? "User App" : undefined}
+          >
+            <Store
+              className={`${isCollapsed ? "h-5 w-5" : "h-4 w-4 mr-2"}`}
+            />
+            {!isCollapsed && <span>User App</span>}
+          </Button>
+        </a>
 
         <a
           href="https://github.com/kaiwenyao/firmament-take-out-admin"
