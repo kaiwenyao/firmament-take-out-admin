@@ -99,10 +99,16 @@ spec:
             steps {
                 container('docker') {
                     script {
+                        // VITE_USER_CLIENT_URL 在 Jenkins 侧配置（Manage Jenkins ->
+                        // System -> Global properties -> Environment variables），
+                        // 例如 http://<user-app-host>。未设置时留空，应用内会回退
+                        // 到 http://localhost:5173。
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                             sh '''
                                 echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                                docker build -t ${DOCKER_USER}/firmament-admin:latest -f Dockerfile .
+                                docker build \
+                                    --build-arg VITE_USER_CLIENT_URL="${VITE_USER_CLIENT_URL:-}" \
+                                    -t ${DOCKER_USER}/firmament-admin:latest -f Dockerfile .
                                 docker push ${DOCKER_USER}/firmament-admin:latest
                             '''
                         }
