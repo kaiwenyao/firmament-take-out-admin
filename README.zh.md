@@ -4,6 +4,8 @@
 
 **苍穹外卖**（Firmament Takeaway）平台的后台管理系统。基于 React 19、TypeScript 和 Tailwind CSS 构建，提供订单管理、菜品管理、套餐管理、分类管理、员工管理及实时订单通知等完整的后台运营解决方案。
 
+![苍穹外卖 — 管理端数据看板](docs/images/admin-dashboard.png)
+
 ---
 
 ## 📋 目录
@@ -38,7 +40,16 @@
 
 ## 🖼️ 截图预览
 
-> 🚧 截图即将补充。欢迎访问 [在线演示](https://firmament-admin.kaiwen.dev) 体验完整功能！
+| | |
+|---|---|
+| ![管理端数据看板](docs/images/admin-dashboard.png) | ![销售统计分析](docs/images/admin-statistics.png) |
+| **管理端数据看板** — 实时经营概览：今日营收、有效订单、完成率与实时订单队列 | **销售统计分析** — 任意日期范围内的营收 / 用户 / 订单趋势与销量 Top 10 |
+| ![订单管理](docs/images/admin-order.png) | ![菜品管理](docs/images/admin-dish.png) |
+| **订单管理** — 按状态流转的订单流水线，支持搜索、筛选与一键接单 / 派送 / 完成 | **菜品管理** — 菜品增删改查，支持图片、分类、定价与起售状态管理 |
+| ![套餐管理](docs/images/admin-setmeal.png) | ![管理端登录](docs/images/admin-login.png) |
+| **套餐管理** — 组合套餐创建与管理，支持菜品绑定与定价 | **管理端登录** — 简洁美观的登录体验 |
+
+> 🚀 想直接体验？欢迎访问[在线演示](https://firmament-admin.kaiwen.dev)。
 
 ---
 
