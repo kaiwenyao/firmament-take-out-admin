@@ -10,6 +10,8 @@
 
 A modern, responsive web admin dashboard for the **Firmament Takeaway** (苍穹外卖) platform. Built with React 19, TypeScript, and Tailwind CSS, it provides a complete back-office solution for managing orders, dishes, set meals, categories, employees, and real-time order notifications.
 
+![Firmament Takeaway — Admin Dashboard](docs/images/admin-dashboard.png)
+
 ---
 
 ## 📋 Table of Contents
@@ -44,7 +46,16 @@ A modern, responsive web admin dashboard for the **Firmament Takeaway** (苍穹�
 
 ## 🖼️ Screenshots
 
-> 🚧 Screenshots will be added soon. Check out the [live demo](https://firmament-admin.kaiwen.dev) to see the app in action!
+| | |
+|---|---|
+| ![Admin Dashboard](docs/images/admin-dashboard.png) | ![Sales Statistics](docs/images/admin-statistics.png) |
+| **Admin Dashboard** — real-time business overview: today's revenue, valid orders, completion rate and the live order queue | **Sales Statistics** — revenue, user and order trends plus the top-10 best sellers over any date range |
+| ![Order Management](docs/images/admin-order.png) | ![Dish Management](docs/images/admin-dish.png) |
+| **Order Management** — status-aware order pipeline with search, filters and one-click accept / dispatch / complete | **Dish Management** — menu CRUD with photos, categories, pricing and sale status |
+| ![Set Meal Management](docs/images/admin-setmeal.png) | ![Admin Sign-in](docs/images/admin-login.png) |
+| **Set Meal Management** — combo meals bundling dishes with pricing and photos | **Admin Sign-in** — clean, responsive login experience |
+
+> 🚀 Want to see it live? Check out the [online demo](https://firmament-admin.kaiwen.dev).
 
 ---
 
