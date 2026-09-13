@@ -4,6 +4,11 @@ pipeline {
             // 指向你在 Jenkins 系统管理里配置的云名称，通常默认为 "kubernetes"
             cloud 'kubernetes' 
             
+            // 继承 ci-base 公共 Pod 模板：节点选择、拓扑打散等公共调度规则由父模板统一维护
+            inheritFrom 'ci-base'
+            // merge() 按字段合并父子模板 yaml；插件默认的覆盖策略会让公共调度规则失效
+            yamlMergeStrategy merge()
+            
             // Pod Template 配置
             yaml '''
 apiVersion: v1
